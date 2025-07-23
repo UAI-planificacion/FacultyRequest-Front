@@ -2,7 +2,7 @@
 
 import { JSX } from "react";
 
-import { Search, Plus, Filter } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 
 import {
     Select,
@@ -10,22 +10,18 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue
-}                   from "@/components/ui/select";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-}                   from "@/components/ui/card";
-import { Button }   from "@/components/ui/button";
-import { Input }    from "@/components/ui/input";
-import { Label }    from "@/components/ui/label";
+}                               from "@/components/ui/select";
+import { Card, CardContent }    from "@/components/ui/card";
+import { Button }               from "@/components/ui/button";
+import { Input }                from "@/components/ui/input";
+import { Label }                from "@/components/ui/label";
 
 import { Status } from "@/types/request";
 
 export interface RequestFilter {
     title                   : string;
     setTitle                : ( title: string ) => void;
+    setOpen                 : ( ) => void;
     statusFilter            : Status | "ALL";
     setStatusFilter         : ( statusFilter: Status | "ALL" ) => void;
     consecutiveFilter       : "ALL" | "TRUE" | "FALSE";
@@ -40,6 +36,7 @@ export interface RequestFilter {
 export function RequestFilter({
     title,
     setTitle,
+    setOpen,
     statusFilter,
     setStatusFilter,
     consecutiveFilter,
@@ -51,22 +48,6 @@ export function RequestFilter({
 }: RequestFilter ): JSX.Element {
     return (
         <Card>
-            {/* <CardHeader>
-                <div className="flex justify-between">
-                    <CardTitle className="flex items-center gap-2 text-xl">
-                        <Filter className="h-5 w-5" />
-                        Filtros y Búsqueda
-                    </CardTitle>
-
-                    <Button
-                        onClick={() => {}}
-                    >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Crear Solicitud
-                    </Button>
-                </div>
-            </CardHeader> */}
-
             <CardContent>
                 <div className="flex justify-between items-center">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 items-end">
@@ -153,8 +134,8 @@ export function RequestFilter({
                     </div>
 
                     <Button
-                        onClick={() => {}}
-                        className="mt-5"
+                        onClick     = { setOpen }
+                        className   = "mt-5"
                     >
                         <Plus className="h-4 w-4 mr-2" />
                         Crear Solicitud
