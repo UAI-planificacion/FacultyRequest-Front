@@ -1,12 +1,12 @@
 "use client"
 
-import { JSX, useEffect, useMemo, useState } from "react";
+import { JSX, useEffect, useMemo } from "react";
 
-import { z }                from "zod";
-import { zodResolver }      from "@hookform/resolvers/zod";
-import { useForm }          from "react-hook-form";
-import { Loader2, Plus }    from "lucide-react";
-import { useQuery }         from "@tanstack/react-query";
+import { useQuery}      from "@tanstack/react-query";
+import { z }            from "zod";
+import { zodResolver }  from "@hookform/resolvers/zod";
+import { useForm }      from "react-hook-form";
+import { Loader2 }      from "lucide-react";
 
 import {
     Select,
@@ -92,7 +92,7 @@ const formSchema = z.object({
     comment         : z.string().max( 500, "El comentario no puede tener más de 500 caracteres" ).nullable().default(''),
     level           : z.nativeEnum(Level, { required_error: "Por favor selecciona un nivel" }),
     professorId     : z.string().nullable().optional(),
-    spaceId         : z.string().nullable().default('')
+    spaceId         : z.string().nullable().default( '' )
 }).superRefine(( data, ctx ) => {
     const minimum = data.minimum;
     const maximum = data.maximum;
@@ -155,7 +155,6 @@ export function RequestDetailForm({
     isLoadingModules,
     isErrorModules
 }: RequestDetailFormProps ): JSX.Element {
-    const [isOpenProfessor, setIsOpenProfessor ] = useState( false );
     const {
         data        : sizes,
         isLoading   : isLoadingSizes,
@@ -331,25 +330,6 @@ export function RequestDetailForm({
                                             </ToggleGroupItem>
                                         </ToggleGroup>
 
-                                        {/* <Select
-                                            onValueChange={field.onChange}
-                                            defaultValue={field.value }
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Seleccionar nivel" />
-                                                </SelectTrigger>
-                                            </FormControl>
-
-                                            <SelectContent>
-                                                {Object.values(Level).map((nivel) => (
-                                                    <SelectItem key={nivel} value={nivel}>
-                                                        {getLevelName( nivel )}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select> */}
-
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -363,35 +343,22 @@ export function RequestDetailForm({
                                     <FormItem>
                                         <FormLabel>Profesor</FormLabel>
 
-                                        {isLoadingProfessors ? (
-                                            <div className="flex items-center gap-2 border border-zinc-300 dark:border-zinc-800 p-2 rounded animate-spin">
-                                                <Loader2 className="h-4 w-4" />
-                                                Cargando profesores...
-                                            </div>
-                                        ) : (
-                                            <div className="flex gap-2 items-center">
-                                                <div className="flex-1 min-w-0">
-                                                    <MultiSelectCombobox
-                                                        multiple            = { false }
-                                                        placeholder         = "Seleccionar profesor"
-                                                        defaultValues       = { field.value || '' }
-                                                        onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value ) }
-                                                        options             = { memoizedProfessorOptions }
-                                                        isLoading           = { isLoadingProfessors }
-                                                    />
-                                                </div>
-
-                                                <Button
-                                                    size    = {"icon"}
-                                                    type    = "button"
-                                                    variant = {"outline"}
-                                                    className = "flex-shrink-0"
-                                                    onClick = {() => setIsOpenProfessor( true )}
-                                                >
-                                                    <Plus className="w-5 h-5"/>
-                                                </Button>
-                                            </div>
-                                        )}
+                                        { isErrorProfessors && !isLoadingProfessors ?
+                                            <Input
+                                                {...field}
+                                                placeholder = "Ej: Juan Pérez"
+                                                value       = { field.value || '' }
+                                                onChange    = {( e: React.ChangeEvent<HTMLInputElement> ) => field.onChange( e.target.value )}
+                                            />
+                                        : <MultiSelectCombobox
+                                                multiple            = { false }
+                                                placeholder         = "Seleccionar profesor"
+                                                defaultValues       = { field.value || '' }
+                                                onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value ) }
+                                                options             = { memoizedProfessorOptions }
+                                                isLoading           = { isLoadingProfessors }
+                                            />
+                                        }
 
                                         <FormMessage />
                                     </FormItem>
@@ -421,40 +388,6 @@ export function RequestDetailForm({
                                     </FormItem>
                                 )}
                             />
-
-                            {/* Edificio */}
-                            {/* <FormField
-                                control = { form.control }
-                                name    = "building"
-                                render  = {({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Edificio</FormLabel>
-
-                                        <Select
-                                            onValueChange   = {( value ) => field.onChange( value === "Sin especificar" ? null : value )}
-                                            defaultValue    = { field.value || 'Sin especificar' }
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Seleccionar edificio" />
-                                                </SelectTrigger>
-                                            </FormControl>
-
-                                            <SelectContent>
-                                                <SelectItem value="Sin especificar">Sin especificar</SelectItem>
-
-                                                {Object.values(Building).map((building) => (
-                                                    <SelectItem key={building} value={building}>
-                                                        Edificio {building}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            /> */}
 
                             {/* Tipo de espacio */}
                             <FormField
@@ -566,30 +499,6 @@ export function RequestDetailForm({
                             )}
                         />
 
-                        {/* Prioridad */}
-                        {/* <FormField
-                            control = { form.control }
-                            name    = "isPriority"
-                            render  = {({ field }) => (
-                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                    <div className="space-y-0.5">
-                                        <FormLabel>Es Prioridad</FormLabel>
-
-                                        <p className="text-sm text-muted-foreground">
-                                            Indica si es prioridad
-                                        </p>
-                                    </div>
-
-                                    <FormControl>
-                                        <Switch
-                                            checked         = { field.value }
-                                            onCheckedChange = { field.onChange }
-                                        />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        /> */}
-
                         {/* Módulo */}
                         <FormField
                             control = { form.control }
@@ -687,6 +596,7 @@ export function RequestDetailForm({
                             render  = {({ field }) => (
                                 <FormItem className="col-span-2">
                                     <FormLabel>Comentario</FormLabel>
+
                                     <FormControl>
                                         <Textarea 
                                             placeholder="Agregue un comentario opcional"
@@ -695,9 +605,11 @@ export function RequestDetailForm({
                                             value={field.value || ''}
                                         />
                                     </FormControl>
+
                                     <FormDescription className="flex justify-end">
                                         {field.value?.length || 0 } / 500
                                     </FormDescription>
+
                                     <FormMessage />
                                 </FormItem>
                             )}
