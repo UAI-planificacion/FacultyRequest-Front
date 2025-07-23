@@ -49,15 +49,15 @@ export async function fetchApi<T>(
         if ( !response.ok ) {
             const errorBody = await response.json();
 
-            throw new Error(errorBody.message || `API error: ${response.status} ${response.statusText}`);
+            throw new Error( errorBody.message || `API error: ${response.status} ${response.statusText}` );
         }
 
         return await response.json() as T;
     } catch ( error ) {
-        if (error instanceof Error) {
+        if ( error instanceof Error ) {
             throw error;
         }
 
-        throw new Error('Network or unexpected error occurred.');
+        throw new Error( 'Network or unexpected error occurred.' );
     }
 }
