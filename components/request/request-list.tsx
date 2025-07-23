@@ -12,7 +12,6 @@ import {
     RequestForm,
     RequestFormValues
 }                               from "@/components/request/request-form";
-
 import { 
     RequestCardSkeletonGrid,
     RequestErrorCard 
@@ -22,10 +21,10 @@ import { Card, CardContent }    from "@/components/ui/card";
 import { RequestFilter }        from "@/components/request/request-filter";
 import { RequestCard }          from "@/components/request/request-card";
 
-import { type Request, Status, UpdateRequest }  from "@/types/request";
-import { Method, fetchApi }                     from "@/services/fetch";
-import { errorToast, successToast }             from "@/config/toast/toast.config";
-import { KEY_QUERYS }                           from "@/consts/key-queries";
+import type { Request, Status }     from "@/types/request";
+import { Method, fetchApi }         from "@/services/fetch";
+import { errorToast, successToast } from "@/config/toast/toast.config";
+import { KEY_QUERYS }               from "@/consts/key-queries";
 
 
 interface RequestListProps {
@@ -54,7 +53,7 @@ export function RequestList({
 }: RequestListProps ): JSX.Element {
     const queryClient                               = useQueryClient();
     const [isOpen, setIsOpen]                       = useState( false );
-    const [selectedRequest, setSelectedRequest]     = useState<Request>( startRequest );
+    const [selectedRequest, setSelectedRequest]     = useState<Request | undefined>( undefined );
     const [title, setTitle]                         = useState( "" );
     const [statusFilter, setStatusFilter]           = useState<Status | "ALL">( "ALL" );
     const [consecutiveFilter, setConsecutiveFilter] = useState<ConsecutiveFilter>( "ALL" );
@@ -68,24 +67,8 @@ export function RequestList({
     }, [requests]);
 
 
-    const updateRequestApi = async ( updatedRequest: UpdateRequest ): Promise<Request> =>
-        fetchApi<Request>({ url: `requests/${updatedRequest.id}`, method: Method.PATCH, body: updatedRequest });
-
-
     const deleteRequestApi = async ( requestId: string ): Promise<Request> =>
         fetchApi<Request>({ url: `requests/${requestId}`, method: Method.DELETE });
-
-
-    const updateRequestMutation = useMutation<Request, Error, UpdateRequest>({
-        mutationFn: updateRequestApi,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [KEY_QUERYS.REQUESTS] });
-            setIsOpen( false );
-            setSelectedRequest( startRequest );
-            toast( 'Solicitud actualizada exitosamente', successToast );
-        },
-        onError: ( mutationError ) => toast( `Error al actualizar la solicitud: ${mutationError.message}`, errorToast )
-    });
 
 
     const deleteRequestMutation = useMutation<Request, Error, string>({
@@ -128,14 +111,6 @@ export function RequestList({
     }, [requests, title, statusFilter, consecutiveFilter, sortBy, sortOrder]);
 
 
-    const handleFormSubmit = ( formData: RequestFormValues ): void => {
-        updateRequestMutation.mutate({
-            ...formData,
-            id: selectedRequest.id
-        });
-    };
-
-
     function onEdit( request: Request ): void {
         setSelectedRequest( request );
         setIsOpen(true );
@@ -148,11 +123,18 @@ export function RequestList({
     }
 
 
+    function openFormRequest() {
+        setSelectedRequest( undefined );
+        setIsOpen( true );
+    }
+
+
     return (
         <div className="space-y-4">
             {/* Filters */}
             <RequestFilter
                 title                   = { title }
+                setOpen                 = { openFormRequest }
                 setTitle                = { setTitle }
                 statusFilter            = { statusFilter }
                 setStatusFilter         = { setStatusFilter }
@@ -196,7 +178,6 @@ export function RequestList({
             <RequestForm
                 isOpen      = { isOpen }
                 onClose     = { () => setIsOpen( false )}
-                onSubmit    = { handleFormSubmit }
                 data        = { selectedRequest }
                 facultyId   = { facultyId }
             />
@@ -205,7 +186,7 @@ export function RequestList({
             <DeleteConfirmDialog
                 isOpen      = { isDeleteOpen }
                 onClose     = { () => setIsDeleteOpen( false )}
-                onConfirm   = { () => deleteRequestMutation.mutate( selectedRequest.id || '' )}
+                onConfirm   = { () => deleteRequestMutation.mutate( selectedRequest?.id || '' )}
                 name        = { selectedRequest?.title || '' }
                 type        = "la Solicitud (y todos sus detalles relacionados)"
             />
