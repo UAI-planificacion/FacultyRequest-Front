@@ -1,8 +1,5 @@
-export enum Role {
-    ADMIN   = 'ADMIN',
-    EDITOR  = 'EDITOR',
-    VIEWER  = 'VIEWER',
-}
+import { Role } from "@/types/staff.model";
+
 
 export enum Status {
     PENDING     = "PENDING",
