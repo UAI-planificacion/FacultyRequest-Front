@@ -25,9 +25,15 @@ import { Button }   from "@/components/ui/button";
 
 import type {
     Module,
-    RequestDetail }                     from "@/types/request";
-import { getLevelName, getSpaceType }   from "@/lib/utils";
-import { Professor }                    from "@/types/professor";
+    RequestDetail }         from "@/types/request";
+import {
+    getLevelName,
+    getSpaceType
+}                           from "@/lib/utils";
+import { Professor }        from "@/types/professor";
+import { useQueryClient }   from "@tanstack/react-query";
+import { Role, Staff }      from "@/types/staff.model";
+import { KEY_QUERYS }       from "@/consts/key-queries";
 
 
 export interface RequestDetailCardProps {
@@ -65,6 +71,9 @@ export function RequestDetailCard({
     isLoadingModules,
     isErrorModules
 }: RequestDetailCardProps ): JSX.Element {
+    const queryClient   = useQueryClient();
+    const staff         = queryClient.getQueryData<Staff>([ KEY_QUERYS.STAFF ]);
+
     const memoizedProfessorName = useMemo(() => {
         return professors
             .find( professor => professor.id === detail.professorId )?.name;
@@ -86,20 +95,22 @@ export function RequestDetailCard({
                 <div className="flex items-start justify-between">
                     <CardTitle className="text-sm">ID {detail.id}</CardTitle>
 
-                    <div className="flex gap-1">
-                        <Button variant="outline" size="sm" onClick={() => onEdit(detail)}>
-                            <Edit className="h-4 w-4" />
-                        </Button>
+                    { staff?.role !== Role.VIEWER && 
+                        <div className="flex gap-1">
+                            <Button variant="outline" size="sm" onClick={() => onEdit(detail)}>
+                                <Edit className="h-4 w-4" />
+                            </Button>
 
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onDelete(detail)}
-                            className="text-red-600 hover:text-red-700"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onDelete(detail)}
+                                className="text-red-600 hover:text-red-700"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    }
                 </div>
             </CardHeader>
 
