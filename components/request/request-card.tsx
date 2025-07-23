@@ -2,6 +2,8 @@
 
 import {  Eye, User, BookOpen, Trash, Pencil } from "lucide-react";
 
+import { useQueryClient } from '@tanstack/react-query';
+
 import {
     Card,
     CardContent,
@@ -14,7 +16,9 @@ import { ShowStatus }   from "@/components/shared/status";
 import { ShowDate }     from "@/components/shared/date";
 import { Consecutive }  from "@/components/shared/consecutive";
 
+import { KEY_QUERYS }   from "@/consts/key-queries";
 import { type Request } from "@/types/request";
+import { Role, Staff }  from "@/types/staff.model";
 
 
 export interface RequestCardProps {
@@ -30,6 +34,9 @@ export function RequestCard({
     onEdit,
     onDelete
 }: RequestCardProps ) {
+    const queryClient   = useQueryClient();
+    const staff         = queryClient.getQueryData<Staff>([ KEY_QUERYS.STAFF ]);
+
     return (
         <Card className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
@@ -71,15 +78,17 @@ export function RequestCard({
                     </Badge>
 
                     <div className="flex items-center gap-2">
-                        <Button size="sm" onClick={() => onEdit(request)} className="flex items-center gap-1" variant="outline">
-                            <Pencil className="h-4 w-4 text-blue-500" />
-                        </Button>
+                        { staff?.role !== Role.VIEWER && <>
+                            <Button size="sm" onClick={() => onEdit( request )} className="flex items-center gap-1" variant="outline">
+                                <Pencil className="h-4 w-4 text-blue-500" />
+                            </Button>
 
-                        <Button size="sm" onClick={() => onDelete(request)} className="flex items-center gap-1" variant="outline">
-                            <Trash className="h-4 w-4 text-red-500" />
-                        </Button>
+                            <Button size="sm" onClick={() => onDelete( request )} className="flex items-center gap-1" variant="outline">
+                                <Trash className="h-4 w-4 text-red-500" />
+                            </Button></>
+                        }
 
-                        <Button size="sm" onClick={() => onViewDetails(request)} className="flex items-center gap-1" variant="secondary">
+                        <Button size="sm" onClick={() => onViewDetails( request )} className="flex items-center gap-1" variant="secondary">
                             <Eye className="h-4 w-4" />
                             Ver detalles
                         </Button>
