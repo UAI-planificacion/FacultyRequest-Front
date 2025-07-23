@@ -11,7 +11,6 @@ interface UseSessionReturn {
 	error		: string | null;
 }
 
-
 /**
  * Custom hook to manage user session state
  * @returns Object containing session data, loading state, and error state
@@ -21,9 +20,8 @@ export function useSession(): UseSessionReturn {
 	const [isLoading, setIsLoading]	= useState( true );
 	const [error, setError]			= useState<string | null>( null );
 
-
 	useEffect(() => {
-		const loadSession = async () => {
+		( async () => {
 			try {
 				setIsLoading( true );
 				setError( null );
@@ -36,16 +34,8 @@ export function useSession(): UseSessionReturn {
 			} finally {
 				setIsLoading( false );
 			}
-		};
-
-		loadSession();
+		})();
 	}, []);
-
-    useEffect(() => {
-        console.log("🚀 ~ file: use-session.ts:47 ~ session:", session)
-
-    }, [session])
-
 
 	return {
 		session,
