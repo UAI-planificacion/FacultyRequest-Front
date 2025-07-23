@@ -60,15 +60,15 @@ export function RequestList({
     const [consecutiveFilter, setConsecutiveFilter] = useState<ConsecutiveFilter>( "ALL" );
     const [sortBy, setSortBy]                       = useState<SortBy>( "createdAt" );
     const [sortOrder, setSortOrder]                 = useState<SortOrder>( "desc" );
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen]   = useState( false );
+    const [isDeleteOpen, setIsDeleteOpen]           = useState( false );
 
 
     useEffect(() => {
-        setSelectedRequest( requests[0] || startRequest  );
+        setSelectedRequest( requests[0] || startRequest );
     }, [requests]);
 
 
-    const updateRequestApi = async ( updatedRequest: UpdateRequest ): Promise<Request>  =>
+    const updateRequestApi = async ( updatedRequest: UpdateRequest ): Promise<Request> =>
         fetchApi<Request>({ url: `requests/${updatedRequest.id}`, method: Method.PATCH, body: updatedRequest });
 
 
@@ -92,7 +92,7 @@ export function RequestList({
         mutationFn: deleteRequestApi,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [KEY_QUERYS.REQUESTS] });
-            setIsDeleteDialogOpen( false );
+            setIsDeleteOpen( false );
             toast( 'Solicitud eliminada exitosamente', successToast );
         },
         onError: ( mutationError ) => toast( `Error al eliminar solicitud: ${mutationError.message}`, errorToast )
@@ -143,8 +143,8 @@ export function RequestList({
 
 
     function openDeleteDialog( id: string ): void {
-        setSelectedRequest( requests.find(request => request.id === id) || startRequest );
-        setIsDeleteDialogOpen( true );
+        setSelectedRequest( requests.find( request => request.id === id ) || startRequest );
+        setIsDeleteOpen( true );
     }
 
 
@@ -203,9 +203,9 @@ export function RequestList({
 
             {/* Delete Confirmation Dialog */}
             <DeleteConfirmDialog
-                isOpen      = { isDeleteDialogOpen }
-                onClose     = { () => setIsDeleteDialogOpen( false )}
-                onConfirm   = { () => deleteRequestMutation.mutate( selectedRequest.id || '') }
+                isOpen      = { isDeleteOpen }
+                onClose     = { () => setIsDeleteOpen( false )}
+                onConfirm   = { () => deleteRequestMutation.mutate( selectedRequest.id || '' )}
                 name        = { selectedRequest?.title || '' }
                 type        = "la Solicitud (y todos sus detalles relacionados)"
             />
