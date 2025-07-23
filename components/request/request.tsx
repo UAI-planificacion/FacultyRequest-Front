@@ -19,19 +19,19 @@ interface RequestsManagementProps {
 }
 
 
-export function RequestsManagement({ facultyId, enabled }: RequestsManagementProps ) {
-    const router        = useRouter();
-    const searchParams  = useSearchParams();
-    
-    const { data, isLoading, isError } = useQuery({
+export function RequestsManagement({
+    facultyId,
+    enabled,
+}: RequestsManagementProps ) {
+    const router                        = useRouter();
+    const searchParams                  = useSearchParams();
+    const { data, isLoading, isError }  = useQuery({
         queryKey    : [ KEY_QUERYS.REQUESTS, facultyId ],
         queryFn     : () => fetchApi<Request[]>( { url: `requests/faculty/${facultyId}` } ),
         enabled,
     });
 
     const [selectedRequest, setSelectedRequest] = useState<Request | null>( null );
-
-    // Get detail ID from URL params
     const detailId = searchParams.get( 'detail' );
 
 
@@ -45,7 +45,6 @@ export function RequestsManagement({ facultyId, enabled }: RequestsManagementPro
             if ( foundRequest ) {
                 setSelectedRequest( foundRequest );
             } else {
-                // If request not found, clear the detail param from URL
                 updateUrlParams( null );
             }
         } else if ( !detailId ) {
@@ -59,7 +58,7 @@ export function RequestsManagement({ facultyId, enabled }: RequestsManagementPro
      */
     const updateUrlParams = ( requestId: string | null ): void => {
         const params = new URLSearchParams( searchParams.toString() );
-        
+
         if ( requestId ) {
             params.set( 'detail', requestId );
         } else {
