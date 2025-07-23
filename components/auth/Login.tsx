@@ -1,7 +1,7 @@
 'use client'
 
-import { JSX, useEffect, useState } from "react";
-import Image from "next/image";
+import { JSX }  from "react";
+import Image    from "next/image";
 
 import {
     DropdownMenu,
@@ -10,42 +10,17 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-}                   from "@/components/ui/dropdown-menu"
-import { Button }   from "@/components/ui/button";
+}                       from "@/components/ui/dropdown-menu"
+import { Button }       from "@/components/ui/button";
+import { useSession }   from "@/components/auth/use-session";
 
 import { MicrosoftIcon }    from "@/icons/microsoft";
 import LoaderMini           from "@/icons/LoaderMini";
-
-import { getSession, signIn, signOut } from "@/config/better-auth/auth-client";
+import { signIn, signOut }  from "@/config/better-auth/auth-client";
 
 
 export function Login(): JSX.Element {
-    const [session, setSession]     = useState<any>( null );
-    const [isLoading, setIsLoading] = useState( true );
-
-
-    useEffect(() => {
-        const loadSession = async () => {
-            try {
-                setIsLoading( true );
-                const sessionData = await getSession();
-                setSession( sessionData?.data || null );
-            } catch (error) {
-                console.error( 'Error al cargar sesión:', error );
-                setSession( null );
-            } finally {
-                setIsLoading( false );
-            }
-        };
-
-        loadSession();
-    }, []);
-
-
-    useEffect(() => {
-        console.log( session );
-    }, [session]);
-
+    const { session, isLoading } = useSession();
 
     return (
         <>
