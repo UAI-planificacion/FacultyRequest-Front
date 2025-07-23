@@ -1,6 +1,9 @@
 export const KEY_QUERYS = {
+    FACULTIES       : 'faculties',
     REQUESTS        : 'requests',
     REQUEST_DETAIL  : 'request-detail',
+    STAFF           : 'staff',
+    SUBJECTS        : 'subjects',
 
     SIZE            : 'sizes',
     DAYS            : 'days',
