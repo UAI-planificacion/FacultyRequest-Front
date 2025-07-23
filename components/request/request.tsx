@@ -23,17 +23,15 @@ export function RequestsManagement({
     facultyId,
     enabled,
 }: RequestsManagementProps ) {
-    const router                        = useRouter();
-    const searchParams                  = useSearchParams();
-    const { data, isLoading, isError }  = useQuery({
+    const router                                = useRouter();
+    const searchParams                          = useSearchParams();
+    const [selectedRequest, setSelectedRequest] = useState<Request | null>( null );
+    const detailId                              = searchParams.get( 'detail' );
+    const { data, isLoading, isError }          = useQuery({
         queryKey    : [ KEY_QUERYS.REQUESTS, facultyId ],
-        queryFn     : () => fetchApi<Request[]>( { url: `requests/faculty/${facultyId}` } ),
+        queryFn     : () => fetchApi<Request[]>({ url: `requests/faculty/${facultyId}` }),
         enabled,
     });
-
-    const [selectedRequest, setSelectedRequest] = useState<Request | null>( null );
-    const detailId = searchParams.get( 'detail' );
-
 
     /**
      * Effect to handle URL-based request selection
@@ -42,6 +40,7 @@ export function RequestsManagement({
     useEffect(() => {
         if ( detailId && data ) {
             const foundRequest = data.find( request => request.id === detailId );
+
             if ( foundRequest ) {
                 setSelectedRequest( foundRequest );
             } else {
@@ -51,7 +50,6 @@ export function RequestsManagement({
             setSelectedRequest( null );
         }
     }, [detailId, data]);
-
 
     /**
      * Update URL parameters with detail ID
@@ -69,7 +67,6 @@ export function RequestsManagement({
         router.replace( newUrl );
     };
 
-
     /**
      * Handle viewing request details
      * Updates both state and URL
@@ -78,7 +75,6 @@ export function RequestsManagement({
         setSelectedRequest( request );
         updateUrlParams( request.id );
     };
-
 
     /**
      * Handle going back to request list
