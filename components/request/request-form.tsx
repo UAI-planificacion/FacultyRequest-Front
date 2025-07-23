@@ -2,12 +2,6 @@
 
 import { JSX, useEffect, useMemo } from "react"
 
-import {
-    BadgeCheck,
-    CircleDashed,
-    Eye,
-    OctagonX
-}                       from "lucide-react";
 import { z }            from "zod";
 import { zodResolver }  from "@hookform/resolvers/zod";
 import { useForm }      from "react-hook-form";
@@ -29,21 +23,18 @@ import {
     FormLabel,
     FormMessage
 }                               from "@/components/ui/form";
-import {
-    ToggleGroup,
-    ToggleGroupItem,
-}                               from "@/components/ui/toggle-group"
 import { Input }                from "@/components/ui/input";
 import { Button }               from "@/components/ui/button";
 import { Textarea }             from "@/components/ui/textarea";
 import { ShowDateAt }           from "@/components/shared/date-at";
-import { Consecutive }          from "@/components/shared/consecutive";
 import { MultiSelectCombobox }  from "@/components/shared/Combobox";
+import { ShowStatus }           from "@/components/shared/status";
+import { Switch }               from "@/components/ui/switch";
 
-import { Request, Status }  from "@/types/request";
-import { KEY_QUERYS }       from "@/consts/key-queries";
-import { Subject }          from "@/types/subject.model";
-import { fetchApi }         from "@/services/fetch";
+import { Request }      from "@/types/request";
+import { KEY_QUERYS }   from "@/consts/key-queries";
+import { fetchApi }     from "@/services/fetch";
+import { Subject }      from "@/types/subject.model";
 
 
 export type RequestFormValues = z.infer<typeof formSchema>;
@@ -53,7 +44,7 @@ interface RequestFormProps {
     isOpen      : boolean;
     onClose     : () => void;
     onSubmit    : ( data: RequestFormValues ) => void;
-    data        : Request;
+    data        : Request | undefined;
     facultyId   : string;
 }
 
@@ -62,35 +53,25 @@ const formSchema = z.object({
     title: z.string({
         required_error: "El título es obligatorio",
         invalid_type_error: "El título debe ser un texto"
-    }).min(1, { message: "El título no puede estar vacío" })
-    .max(100, { message: "El título no puede tener más de 100 caracteres" }),
-    status: z.nativeEnum(Status, {
-        required_error: "Debe seleccionar un estado",
-        invalid_type_error: "Estado no válido"
-    }),
-    // isConsecutive: z.boolean(),
-    // description: z.string()
-    //     .max(500, { message: "La descripción no puede tener más de 500 caracteres" })
-    //     .nullable()
-    //     .transform(val => val === "" ? null : val),
-    comment: z.string()
-        .max(500, { message: "El comentario no puede tener más de 500 caracteres" })
+    }).min( 1, { message: "El título no puede estar vacío" })
+    .max( 100, { message: "El título no puede tener más de 100 caracteres" }),
+    isConsecutive: z.boolean(),
+    description: z.string()
+        .max( 500, { message: "La descripción no puede tener más de 500 caracteres" })
         .nullable()
-        .transform(val => val === "" ? null : val),
+        .transform( val => val === "" ? null : val ),
     subjectId: z.string({
         required_error: "Debe seleccionar una asignatura",
         invalid_type_error: "Asignatura no válida"
-    }).min(1, { message: "Debe seleccionar una asignatura" })
-})
+    }).min( 1, { message: "Debe seleccionar una asignatura" })
+});
 
 
-const defaultRequest = ( data : Request ) => ({
-    title           : data.title,
-    status          : data.status,
-    // isConsecutive   : data.isConsecutive,
-    // description     : data.description,
-    comment         : data.comment,
-    subjectId       : data.subject.id,
+const defaultRequest = ( data : Request | undefined ) => ({
+    title           : data?.title           || '',
+    isConsecutive   : data?.isConsecutive   || false,
+    description     : data?.description     || '',
+    subjectId       : data?.subject.id      || '',
 });
 
 
@@ -103,7 +84,7 @@ export function RequestForm({
 }: RequestFormProps ): JSX.Element {
     const { data: subjects, isLoading, isError } = useQuery<Subject[]>({
         queryKey: [KEY_QUERYS.SUBJECTS, facultyId],
-        queryFn: () => fetchApi( { url: `subjects/all/${facultyId}` } ),
+        queryFn : () => fetchApi({ url: `subjects/all/${facultyId}` }),
     });
 
 
@@ -135,8 +116,8 @@ export function RequestForm({
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[600px]">
-                <DialogHeader>
-                    <div className="flex justify-between items-center">
+                <DialogHeader className="space-y-3">
+                    <div className="flex justify-between items-center mr-5">
                         <div className="space-y-1">
                             <DialogTitle>Editar Solicitud</DialogTitle>
 
@@ -145,12 +126,12 @@ export function RequestForm({
                             </DialogDescription>
                         </div>
 
-                        <Consecutive isConsecutive={data.isConsecutive} />
+                        { data && <ShowStatus status={data.status} /> }
                     </div>
                 </DialogHeader>
 
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                    <form onSubmit={form.handleSubmit( handleSubmit )} className="space-y-4">
                         <div className="grid grid-cols-1 gap-4">
                             {/* Title */}
                             <FormField
@@ -159,101 +140,18 @@ export function RequestForm({
                                 render  = {({ field }) => (
                                     <FormItem>
                                         <FormLabel>Título</FormLabel>
+
                                         <FormControl>
                                             <Input 
                                                 placeholder="Ingrese el título de la solicitud"
                                                 {...field} 
                                             />
                                         </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Status */}
-                            <FormField
-                                control = { form.control }
-                                name    = "status"
-                                render  = {({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Estado</FormLabel>
-
-                                        <FormControl>
-                                            <ToggleGroup
-                                                type            = "single"
-                                                value           = { field.value }
-                                                onValueChange   = {( value: Status ) => {
-                                                    if ( value ) field.onChange( value )
-                                                }}
-                                                className       = "w-full"
-                                                defaultValue    = { field.value }
-                                            >
-                                                <ToggleGroupItem
-                                                    value       = "PENDING"
-                                                    aria-label  = "Pendiente"
-                                                    className   = "flex-1 rounded-tl-lg rounded-bl-lg rounded-tr-none rounded-br-none border-t border-l border-b border-zinc-200 dark:border-zinc-700 data-[state=on]:bg-amber-400 data-[state=on]:dark:bg-amber-500 data-[state=on]:text-black data-[state=on]:dark:text-white data-[state=on]:hover:bg-amber-500 data-[state=on]:dark:hover:bg-amber-600"
-                                                >
-                                                    <CircleDashed className="mr-2 h-4 w-4"/>
-                                                    Pendiente
-                                                </ToggleGroupItem>
-
-                                                <ToggleGroupItem
-                                                    value       = "REVIEWING"
-                                                    aria-label  = "Revisando"
-                                                    className   = "flex-1 rounded-none border-t border-b border-zinc-200 dark:border-zinc-700 data-[state=on]:bg-blue-400 data-[state=on]:dark:bg-blue-500 data-[state=on]:text-black data-[state=on]:dark:text-white data-[state=on]:hover:bg-blue-500 data-[state=on]:dark:hover:bg-blue-600"
-                                                >
-                                                    <Eye className="mr-2 h-4 w-4"/>
-                                                    Revisando
-                                                </ToggleGroupItem>
-
-                                                <ToggleGroupItem
-                                                    value       = "APPROVED"
-                                                    aria-label  = "Aprobado"
-                                                    className   = "flex-1 rounded-none border-t border-b border-zinc-200 dark:border-zinc-700 data-[state=on]:bg-green-400 data-[state=on]:dark:bg-green-500 data-[state=on]:text-black data-[state=on]:dark:text-white data-[state=on]:hover:bg-green-500 data-[state=on]:dark:hover:bg-green-600"
-                                                >
-                                                    <BadgeCheck className="mr-2 h-4 w-4"/>
-                                                    Aprobado
-                                                </ToggleGroupItem>
-
-                                                <ToggleGroupItem
-                                                    value       = "REJECTED"
-                                                    aria-label  = "Rechazado"
-                                                    className   = "flex-1 rounded-tl-none rounded-bl-none rounded-tr-lg rounded-br-lg border-t border-r border-b border-zinc-200 dark:border-zinc-700 data-[state=on]:bg-red-400 data-[state=on]:dark:bg-red-500 data-[state=on]:text-black data-[state=on]:dark:text-white data-[state=on]:hover:bg-red-500 data-[state=on]:dark:hover:bg-red-600"
-                                                >
-                                                    <OctagonX className="mr-2 h-4 w-4"/>
-                                                    Rechazado
-                                                </ToggleGroupItem>
-                                            </ToggleGroup>
-                                        </FormControl>
 
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
-
-                            {/* Is Consecutive */}
-                            {/* <FormField
-                                control = { form.control }
-                                name    = "isConsecutive"
-                                render  = {({ field }) => (
-                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                        <div className="space-y-0.5">
-                                            <FormLabel className="text-base">Es consecutivo</FormLabel>
-
-                                            <FormDescription>
-                                                Marque si la solicitud es para horarios consecutivos
-                                            </FormDescription>
-                                        </div>
-
-                                        <FormControl>
-                                            <Switch
-                                                checked={field.value}
-                                                onCheckedChange={field.onChange}
-                                            />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            /> */}
 
                             {/* Subject */}
                             <FormField
@@ -295,23 +193,41 @@ export function RequestForm({
                                 }}
                             />
 
-                            {/* Description */}
-                            <div className="flex flex-col space-y-1">
-                                <label>Descripción</label>
-                                <p>{data.description}</p>
-                            </div>
-
-                            {/* Comment */}
+                            {/* Is Consecutive */}
                             <FormField
                                 control = { form.control }
-                                name    = "comment"
+                                name    = "isConsecutive"
+                                render  = {({ field }) => (
+                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                        <div className="space-y-0.5">
+                                            <FormLabel className="text-base">Es consecutivo</FormLabel>
+
+                                            <FormDescription>
+                                                Marque si la solicitud es para horarios consecutivos
+                                            </FormDescription>
+                                        </div>
+
+                                        <FormControl>
+                                            <Switch
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Description */}
+                            <FormField
+                                control = { form.control }
+                                name    = "description"
                                 render  = {({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Comentario</FormLabel>
+                                        <FormLabel>Descripción</FormLabel>
 
                                         <FormControl>
                                             <Textarea
-                                                placeholder="Agregue un comentario (opcional)"
+                                                placeholder="Agregue una descripción (opcional)"
                                                 className="min-h-[100px] max-h-[200px]"
                                                 {...field}
                                                 value={field.value || ''}
@@ -327,34 +243,13 @@ export function RequestForm({
                                 )}
                             />
 
-                            {/* Staff Create - Readonly */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <FormLabel>Creado por</FormLabel>
-
-                                    <Input 
-                                        value = { data.staffCreate?.name || '-' }
-                                        readOnly 
-                                        disabled 
-                                    />
+                            {/* Comments */}
+                            { data && 
+                                <div className="flex flex-col space-y-1">
+                                    <label>Comentarios</label>
+                                    <p>{data.comment || 'Sin comentarios.'}</p>
                                 </div>
-
-                                {/* Staff Update - Readonly */}
-                                <div className="space-y-2">
-                                    <FormLabel>Última actualización por</FormLabel>
-
-                                    <Input 
-                                        value = { data.staffUpdate?.name || '-' }
-                                        readOnly 
-                                        disabled 
-                                    />
-                                </div>
-                            </div>
-
-                            <ShowDateAt
-                                createdAt = { data.createdAt }
-                                updatedAt = { data.updatedAt }
-                            />
+                            }
                         </div>
 
                         <div className="flex justify-between space-x-4 pt-4">
