@@ -2,10 +2,16 @@
 
 import { JSX, useEffect, useMemo } from "react"
 
-import { z }            from "zod";
-import { zodResolver }  from "@hookform/resolvers/zod";
-import { useForm }      from "react-hook-form";
-import { useQuery }     from "@tanstack/react-query";
+
+import {
+    useMutation,
+    useQuery,
+    useQueryClient
+}                                   from "@tanstack/react-query";
+import { z }                        from "zod";
+import { toast }                    from "sonner";
+import { zodResolver }              from "@hookform/resolvers/zod";
+import { useForm, SubmitHandler }   from "react-hook-form";
 
 import {
     Dialog,
@@ -31,19 +37,21 @@ import { MultiSelectCombobox }  from "@/components/shared/Combobox";
 import { ShowStatus }           from "@/components/shared/status";
 import { Switch }               from "@/components/ui/switch";
 
-import { Request }      from "@/types/request";
-import { KEY_QUERYS }   from "@/consts/key-queries";
-import { fetchApi }     from "@/services/fetch";
-import { Subject }      from "@/types/subject.model";
-
-
-export type RequestFormValues = z.infer<typeof formSchema>;
+import {
+    CreateRequest,
+    Request,
+    UpdateRequest
+}                                   from "@/types/request";
+import { KEY_QUERYS }               from "@/consts/key-queries";
+import { fetchApi, Method }         from "@/services/fetch";
+import { Subject }                  from "@/types/subject.model";
+import { errorToast, successToast } from "@/config/toast/toast.config";
+import { Staff }                    from "@/types/staff.model";
 
 
 interface RequestFormProps {
     isOpen      : boolean;
     onClose     : () => void;
-    onSubmit    : ( data: RequestFormValues ) => void;
     data        : Request | undefined;
     facultyId   : string;
 }
@@ -67,6 +75,9 @@ const formSchema = z.object({
 });
 
 
+export type RequestFormValues = z.infer<typeof formSchema>;
+
+
 const defaultRequest = ( data : Request | undefined ) => ({
     title           : data?.title           || '',
     isConsecutive   : data?.isConsecutive   || false,
@@ -78,10 +89,48 @@ const defaultRequest = ( data : Request | undefined ) => ({
 export function RequestForm({
     isOpen,
     onClose,
-    onSubmit,
     data,
     facultyId
 }: RequestFormProps ): JSX.Element {
+    const queryClient   = useQueryClient();
+    const staff         = queryClient.getQueryData<Staff>([ KEY_QUERYS.STAFF ]);
+
+
+    const createRequestApi = async ( request: CreateRequest ): Promise<Request> =>
+        fetchApi<Request>({ url: `requests`, method: Method.POST, body: request });
+
+
+    const updateRequestApi = async ( updatedRequest: UpdateRequest ): Promise<Request> =>
+        fetchApi<Request>({
+            url     : `requests/${updatedRequest.id}`,
+            method  : Method.PATCH,
+            body    : updatedRequest
+        });
+
+
+    const createRequestMutation = useMutation<Request, Error, CreateRequest>({
+        mutationFn: createRequestApi,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [KEY_QUERYS.REQUESTS] });
+            // setIsOpen( false );
+            // setSelectedRequest( startRequest );
+        },
+        onError: ( mutationError ) => toast( `Error al crear solicitud: ${mutationError.message}`, errorToast )
+    });
+
+
+    const updateRequestMutation = useMutation<Request, Error, UpdateRequest>({
+        mutationFn: updateRequestApi,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [KEY_QUERYS.REQUESTS] });
+            // setIsOpen( false );
+            // setSelectedRequest( startRequest );
+            toast( 'Solicitud actualizada exitosamente', successToast );
+        },
+        onError: ( mutationError ) => toast( `Error al actualizar la solicitud: ${mutationError.message}`, errorToast )
+    });
+
+
     const { data: subjects, isLoading, isError } = useQuery<Subject[]>({
         queryKey: [KEY_QUERYS.SUBJECTS, facultyId],
         queryFn : () => fetchApi({ url: `subjects/all/${facultyId}` }),
@@ -108,9 +157,21 @@ export function RequestForm({
     }, [data, isOpen]);
 
 
-    const handleSubmit = ( data: RequestFormValues ) => {
-        console.log('🚀 ~ file: request-form.tsx:71 ~ data:', data)
-        onSubmit( data );
+    const handleSubmit: SubmitHandler<RequestFormValues> = ( formData ) => {
+        if ( data ) {
+            updateRequestMutation.mutate({
+                ...formData,
+                id: data!.id
+            } as UpdateRequest );
+        } else {
+            const createRequest = {
+                ...formData,
+                staffCreateId: staff?.id
+            }  as CreateRequest;
+
+            console.log( "🚀 ~ file: request-form.tsx:164 ~ createRequest:", createRequest );
+            createRequestMutation.mutate( createRequest );
+        }
     }
 
     return (
