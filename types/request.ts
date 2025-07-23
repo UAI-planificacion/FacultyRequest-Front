@@ -151,12 +151,20 @@ export interface Request {
     totalDetails    : number;
 }
 
+export interface CreateRequest {
+    id?             : string | null;
+    title           : string;
+    isConsecutive   : boolean;
+    description?    : string | null;
+    subjectId?      : string;
+    staffCreateId   : string;
+}
+
 
 export interface UpdateRequest {
     id              : string;
-    title?          : string;
-    status?         : Status;
+    title          : string;
     isConsecutive?  : boolean;
     subjectId?      : string;
-    comment?        : string | null;
+    description?    : string | null;
 }
