@@ -1,10 +1,9 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { clsx, type ClassValue }    from 'clsx';
+import { twMerge }                  from 'tailwind-merge';
+import { format }                   from "@formkit/tempo"
 
-import { Level, SpaceType, Status } from '@/types/request';
-
-import { format } from "@formkit/tempo"
-
+import { Status } from '@/types/request';
+import { SpaceType, Level } from '@/types/request-detail.model';
 
 
 export function cn(...inputs: ClassValue[]) {
