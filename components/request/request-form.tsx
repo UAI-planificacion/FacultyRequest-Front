@@ -1,7 +1,6 @@
 "use client"
 
-import { JSX, useEffect, useMemo } from "react"
-
+import { JSX, useEffect, useMemo } from "react";
 
 import {
     useMutation,
@@ -32,7 +31,6 @@ import {
 import { Input }                from "@/components/ui/input";
 import { Button }               from "@/components/ui/button";
 import { Textarea }             from "@/components/ui/textarea";
-import { ShowDateAt }           from "@/components/shared/date-at";
 import { MultiSelectCombobox }  from "@/components/shared/Combobox";
 import { ShowStatus }           from "@/components/shared/status";
 import { Switch }               from "@/components/ui/switch";
@@ -46,7 +44,7 @@ import { KEY_QUERYS }               from "@/consts/key-queries";
 import { fetchApi, Method }         from "@/services/fetch";
 import { Subject }                  from "@/types/subject.model";
 import { errorToast, successToast } from "@/config/toast/toast.config";
-import { Staff }                    from "@/types/staff.model";
+import { Staff, Role }              from "@/types/staff.model";
 
 
 interface RequestFormProps {
@@ -54,6 +52,7 @@ interface RequestFormProps {
     onClose     : () => void;
     data        : Request | undefined;
     facultyId   : string;
+    staff       : Staff | undefined;
 }
 
 
@@ -90,10 +89,11 @@ export function RequestForm({
     isOpen,
     onClose,
     data,
-    facultyId
+    facultyId,
+    staff
 }: RequestFormProps ): JSX.Element {
     const queryClient   = useQueryClient();
-    const staff         = queryClient.getQueryData<Staff>([ KEY_QUERYS.STAFF ]);
+    const isReadOnly    = staff?.role === Role.VIEWER;
 
 
     const createRequestApi = async ( request: CreateRequest ): Promise<Request> =>
@@ -112,8 +112,8 @@ export function RequestForm({
         mutationFn: createRequestApi,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [KEY_QUERYS.REQUESTS] });
-            // setIsOpen( false );
-            // setSelectedRequest( startRequest );
+            onClose();
+            toast( 'Solicitud creada exitosamente', successToast );
         },
         onError: ( mutationError ) => toast( `Error al crear solicitud: ${mutationError.message}`, errorToast )
     });
@@ -123,8 +123,7 @@ export function RequestForm({
         mutationFn: updateRequestApi,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [KEY_QUERYS.REQUESTS] });
-            // setIsOpen( false );
-            // setSelectedRequest( startRequest );
+            onClose();
             toast( 'Solicitud actualizada exitosamente', successToast );
         },
         onError: ( mutationError ) => toast( `Error al actualizar la solicitud: ${mutationError.message}`, errorToast )
@@ -134,6 +133,7 @@ export function RequestForm({
     const { data: subjects, isLoading, isError } = useQuery<Subject[]>({
         queryKey: [KEY_QUERYS.SUBJECTS, facultyId],
         queryFn : () => fetchApi({ url: `subjects/all/${facultyId}` }),
+        enabled : isOpen
     });
 
 
@@ -159,20 +159,23 @@ export function RequestForm({
 
     const handleSubmit: SubmitHandler<RequestFormValues> = ( formData ) => {
         if ( data ) {
-            updateRequestMutation.mutate({
+            const updateRequest = {
                 ...formData,
-                id: data!.id
-            } as UpdateRequest );
+                id: data!.id,
+                staffUpdateId: staff?.id
+            } as UpdateRequest;
+
+            updateRequestMutation.mutate( updateRequest );
         } else {
             const createRequest = {
                 ...formData,
                 staffCreateId: staff?.id
             }  as CreateRequest;
 
-            console.log( "🚀 ~ file: request-form.tsx:164 ~ createRequest:", createRequest );
             createRequestMutation.mutate( createRequest );
         }
     }
+
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -180,10 +183,15 @@ export function RequestForm({
                 <DialogHeader className="space-y-3">
                     <div className="flex justify-between items-center mr-5">
                         <div className="space-y-1">
-                            <DialogTitle>Editar Solicitud</DialogTitle>
+                            <DialogTitle>
+                                { isReadOnly ? 'Ver Solicitud' : ( data ? 'Editar Solicitud' : 'Crear Solicitud' ) }
+                            </DialogTitle>
 
                             <DialogDescription>
-                                Realice los cambios necesarios en la solicitud
+                                { isReadOnly 
+                                    ? 'Visualización de la solicitud en modo solo lectura'
+                                    : 'Realice los cambios necesarios en la solicitud'
+                                }
                             </DialogDescription>
                         </div>
 
@@ -204,7 +212,8 @@ export function RequestForm({
 
                                         <FormControl>
                                             <Input 
-                                                placeholder="Ingrese el título de la solicitud"
+                                                placeholder = "Ingrese el título de la solicitud"
+                                                readOnly    = { isReadOnly }
                                                 {...field} 
                                             />
                                         </FormControl>
@@ -227,9 +236,10 @@ export function RequestForm({
                                                 { isError ? (
                                                     <>
                                                         <Input
-                                                            placeholder="ID de la asignatura"
-                                                            value={field.value || ''}
-                                                            onChange={field.onChange}
+                                                            placeholder = "ID de la asignatura"
+                                                            value       = { field.value || '' }
+                                                            onChange    = { field.onChange }
+                                                            readOnly    = { isReadOnly }
                                                         />
 
                                                         <FormDescription>
@@ -244,6 +254,7 @@ export function RequestForm({
                                                         onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value ) }
                                                         options             = { memoizedSubject }
                                                         isLoading           = { isLoading }
+                                                        disabled            = { isReadOnly }
                                                     />
                                                 )}
                                             </FormControl>
@@ -270,8 +281,9 @@ export function RequestForm({
 
                                         <FormControl>
                                             <Switch
-                                                checked={field.value}
-                                                onCheckedChange={field.onChange}
+                                                checked         = { field.value }
+                                                onCheckedChange = { field.onChange }
+                                                disabled        = { isReadOnly }
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -288,10 +300,11 @@ export function RequestForm({
 
                                         <FormControl>
                                             <Textarea
-                                                placeholder="Agregue una descripción (opcional)"
-                                                className="min-h-[100px] max-h-[200px]"
+                                                placeholder = "Agregue una descripción (opcional)"
+                                                className   = "min-h-[100px] max-h-[200px]"
+                                                readOnly    = { isReadOnly }
                                                 {...field}
-                                                value={field.value || ''}
+                                                value       = { field.value || '' }
                                             />
                                         </FormControl>
 
@@ -315,12 +328,14 @@ export function RequestForm({
 
                         <div className="flex justify-between space-x-4 pt-4">
                             <Button type="button" variant="outline" onClick={onClose}>
-                                Cancelar
+                                { isReadOnly ? 'Cerrar' : 'Cancelar' }
                             </Button>
 
-                            <Button type="submit">
-                                Guardar cambios
-                            </Button>
+                            { !isReadOnly && (
+                                <Button type="submit">
+                                    { data ? 'Guardar cambios' : 'Crear solicitud' }
+                                </Button>
+                            )}
                         </div>
                     </form>
                 </Form>
