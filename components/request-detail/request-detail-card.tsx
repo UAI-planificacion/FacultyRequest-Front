@@ -12,6 +12,7 @@ import {
     Armchair,
     Cuboid,
     Clock,
+    Eye,
 } from "lucide-react"
 
 import {
@@ -23,17 +24,16 @@ import {
 import { Badge }    from "@/components/ui/badge";
 import { Button }   from "@/components/ui/button";
 
-import type {
-    Module,
-    RequestDetail }         from "@/types/request";
 import {
     getLevelName,
     getSpaceType
 }                           from "@/lib/utils";
 import { Professor }        from "@/types/professor";
-import { useQueryClient }   from "@tanstack/react-query";
 import { Role, Staff }      from "@/types/staff.model";
-import { KEY_QUERYS }       from "@/consts/key-queries";
+import { RequestDetail }    from "@/types/request-detail.model";
+import type { Module }      from "@/types/request";
+import LoaderMini           from "@/icons/LoaderMini";
+import { daysName }         from "@/consts/days-names";
 
 
 export interface RequestDetailCardProps {
@@ -46,18 +46,8 @@ export interface RequestDetailCardProps {
     modules                 : Module[];
     isLoadingModules        : boolean;
     isErrorModules          : boolean;
+    staff                  : Staff | undefined;
 }
-
-
-const daysName = [
-    'Lunes',
-    'Martes',
-    'Miercoles',
-    'Jueves',
-    'Viernes',
-    'Sabado',
-    'Domingo'
-];
 
 
 export function RequestDetailCard({
@@ -69,10 +59,10 @@ export function RequestDetailCard({
     isErrorProfessors,
     modules,
     isLoadingModules,
-    isErrorModules
+    isErrorModules,
+    staff
 }: RequestDetailCardProps ): JSX.Element {
-    const queryClient   = useQueryClient();
-    const staff         = queryClient.getQueryData<Staff>([ KEY_QUERYS.STAFF ]);
+    const isReadOnly = staff?.role !== Role.VIEWER;
 
     const memoizedProfessorName = useMemo(() => {
         return professors
@@ -95,22 +85,29 @@ export function RequestDetailCard({
                 <div className="flex items-start justify-between">
                     <CardTitle className="text-sm">ID {detail.id}</CardTitle>
 
-                    { staff?.role !== Role.VIEWER && 
                         <div className="flex gap-1">
-                            <Button variant="outline" size="sm" onClick={() => onEdit(detail)}>
-                                <Edit className="h-4 w-4" />
+                            <Button
+                                variant = "outline"
+                                size    = "sm"
+                                onClick = { () => onEdit( detail )}
+                            >
+                                { isReadOnly
+                                    ? <Edit className="h-4 w-4" />
+                                    : <Eye className="h-4 w-4" />
+                                }
                             </Button>
 
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => onDelete(detail)}
-                                className="text-red-600 hover:text-red-700"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
+                            { isReadOnly && (
+                                <Button
+                                    variant     = "outline"
+                                    size        = "sm"
+                                    onClick     = { () => onDelete( detail )}
+                                    className   = "text-red-600 hover:text-red-700"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            )}
                         </div>
-                    }
                 </div>
             </CardHeader>
 
@@ -159,20 +156,24 @@ export function RequestDetailCard({
                         </div>
                     )}
 
-                    {detail.professorId && (
-                        <div className="flex items-center gap-1 text-xs">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span>{memoizedProfessorName}</span>
-                        </div>
-                    )}
+                    { isLoadingProfessors && !isErrorProfessors
+                        ? <LoaderMini />
+                        : detail.professorId &&
+                            <div className="flex items-center gap-1 text-xs">
+                                <User className="h-4 w-4 text-muted-foreground" />
+                                <span>{memoizedProfessorName}</span>
+                            </div>
+                    }
 
-                    {detail.moduleId && (
-                        <div className="flex items-center gap-1 text-xs">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
+                    { isLoadingModules && !isErrorModules
+                        ? <LoaderMini />
+                        : detail.moduleId &&
+                            <div className="flex items-center gap-1 text-xs">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
 
-                            <span>{memoizedModuleName}</span>
-                        </div>
-                    )}
+                                <span>{memoizedModuleName}</span>
+                            </div>
+                    }
                 </div>
 
                 <div className="flex flex-wrap gap-2">
@@ -191,12 +192,12 @@ export function RequestDetailCard({
                     )}
                 </div>
 
-                {detail.days.length > 0 && (
+                {( detail.days?.length ?? 0 ) > 0 && (
                     <div>
                         <p className="text-xs font-medium text-muted-foreground">Días:</p>
 
                         <div className="flex flex-wrap gap-1 mt-1">
-                            {detail.days.map((day, index) => (
+                            {detail.days?.map((day, index) => (
                                 <Badge key={index} variant="outline" className="text-xs">
                                     {daysName[Number(day) - 1]}
                                 </Badge>
