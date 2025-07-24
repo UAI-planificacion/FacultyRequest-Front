@@ -4,6 +4,7 @@ export const KEY_QUERYS = {
     REQUEST_DETAIL  : 'request-detail',
     STAFF           : 'staff',
     SUBJECTS        : 'subjects',
+    PROFESSORS      : 'professors',
 
     SIZE            : 'sizes',
     DAYS            : 'days',
