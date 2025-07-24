@@ -4,14 +4,15 @@ import { JSX } from "react";
 
 import { Button }   from "@/components/ui/button";
 import { cn }       from "@/lib/utils";
+import { daysName } from "@/consts/days-names";
 
-const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
 interface DaySelectorProps {
     days        : number[];
     value?      : number[];
     onChange?   : (selectedDays: number[]) => void;
     className?  : string;
+    disabled?   : boolean;
 }
 
 
@@ -19,7 +20,8 @@ export function DaySelector({
     days,
     value = [],
     onChange,
-    className
+    className,
+    disabled = false
 }: DaySelectorProps ): JSX.Element {
     const handleDayToggle = ( dayIndex: number ) => {
         const newSelectedDays = value.includes( dayIndex )
@@ -34,7 +36,7 @@ export function DaySelector({
         <div className={cn("flex flex-wrap gap-2", className)}>
             {days.map((dayIndex) => {
                 const isSelected    = value.includes( dayIndex + 1 );
-                const dayName       = DAYS[dayIndex];
+                const dayName       = daysName[dayIndex];
 
                 return (
                     <Button
@@ -43,6 +45,7 @@ export function DaySelector({
                         variant     = "outline"
                         size        = "sm"
                         onClick     = {() => handleDayToggle( dayIndex + 1)}
+                        disabled    = { disabled }
                         className   = {cn(
                             "transition-all duration-200",
                             isSelected
