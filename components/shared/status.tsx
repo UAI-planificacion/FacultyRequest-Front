@@ -1,17 +1,19 @@
 'use client'
 
-import { Status } from "@/types/request"
-import { Badge } from "../ui/badge"
-import { cn, getStatusName } from "@/lib/utils"
 import { BadgeCheck, CircleDashed, Eye, OctagonX } from "lucide-react";
+
+import { Status }               from "@/types/request";
+import { Badge }                from "@/components/ui/badge";
+import { cn, getStatusName }    from "@/lib/utils";
 
 
 export const getStatusColor = ( status: Status ): string => ({
-    [Status.PENDING]    : "bg-amber-500",
-    [Status.APPROVED]   : "bg-green-500",
-    [Status.REJECTED]   : "bg-red-500",
-    [Status.REVIEWING]  : "bg-blue-500",
+    [Status.PENDING]    : "bg-amber-500 hover:bg-amber-500/90",
+    [Status.APPROVED]   : "bg-green-500 hover:bg-green-500/90",
+    [Status.REJECTED]   : "bg-red-500 hover:bg-red-500/90",
+    [Status.REVIEWING]  : "bg-blue-500 hover:bg-blue-500/90",
 })[status] || "bg-gray-100";
+
 
 export const getStatusIcon = ( status: Status ) => ({
     [Status.PENDING]    : <CircleDashed className="h-4 w-4"/>,
