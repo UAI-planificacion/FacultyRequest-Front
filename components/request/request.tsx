@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query";
 
-import { RequestList }          from "@/components/request/request-list"
-import { RequestDetailView }    from "@/components/request-detail/request-detail"
+import { RequestList }          from "@/components/request/request-list";
+import { RequestDetailView }    from "@/components/request-detail/request-detail";
 
 import { KEY_QUERYS }   from "@/consts/key-queries";
 import { type Request } from "@/types/request";
