@@ -21,13 +21,13 @@ export default function RequestsPage(): JSX.Element {
     }, [session]);
 
     const { data: staff, isLoading, isError }  = useQuery({
-        queryKey    : [ KEY_QUERYS.STAFF, email ],
+        queryKey    : [ KEY_QUERYS.STAFF ],
         queryFn     : () => fetchApi<Staff>({ url: `staff/${email}` }),
         enabled     : !!email
     });
 
     return (
-        <main className="container mx-auto py-6 space-y-4">
+        <main className="container mx-auto py-6 space-y-4 px-4">
             <div className="grid">
                 <h1 className="text-2xl font-bold">Facultad</h1>
                 <span className="text-[11px] text-muted-foreground">{staff?.facultyId}</span>
