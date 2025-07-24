@@ -9,30 +9,6 @@ export enum Status {
 }
 
 
-export enum SpaceType {
-    ROOM        = "ROOM",
-    AUDITORIUM  = "AUDITORIUM",
-    COMMUNIC    = "COMMUNIC",
-    LAB         = "LAB",
-    LABPC       = "LABPC",
-    DIS         = "DIS",
-    GARAGE      = "GARAGE",
-    CORE        = "CORE",
-}
-
-export enum Size {
-    XS  = "XS",
-    XE  = "XE",
-    S   = "S",
-    SE  = "SE",
-    MS  = "MS",
-    M   = "M",
-    L   = "L",
-    XL  = "XL",
-    XXL = "XXL",
-}
-
-
 export interface Module {
     id          : number;
     code        : string;
@@ -65,21 +41,6 @@ export interface SizeResponse {
 }
 
 
-export enum Level {
-    PREGRADO        = "PREGRADO",
-    FIRST_GRADE     = "FIRST_GRADE",
-    SECOND_GRADE    = "SECOND_GRADE",
-}
-
-export enum Building {
-    A = "A",
-    B = "B",
-    C = "C",
-    D = "D",
-    E = "E",
-    F = "F",
-}
-
 export interface StaffRequest {
     id      : string;
     name    : string;
@@ -87,52 +48,10 @@ export interface StaffRequest {
     role    : Role;
 }
 
+
 export interface SubjectRequest {
     id      : string;
     name    : string;
-}
-
-
-export interface RequestDetail {
-    id              : string;
-    requestId       : string;
-    minimum         : number | null;
-    maximum         : number | null;
-    spaceType       : SpaceType | null;
-    spaceSize       : Size | null;
-    costCenterId    : string | null;
-    inAfternoon     : boolean;
-    building        : Building | null;
-    description     : string | null;
-    comment         : string | null;
-    moduleId        : string | null;
-    days            : string[];
-    spaceId         : string | null;
-    isPriority      : boolean;
-    level           : Level;
-    professorId     : string | null;
-    staffCreate     : StaffRequest;
-    staffUpdate     : StaffRequest | null;
-    createdAt       : Date;
-    updatedAt       : Date;
-}
-
-export interface UpdateRequestDetail {
-    id              : string;
-    minimum?         : number | null;
-    maximum?         : number | null;
-    spaceType?       : SpaceType | null;
-    spaceSize?       : Size | null;
-    costCenterId?    : string | null;
-    inAfternoon?     : boolean;
-    building?        : Building | null;
-    comment?         : string | null;
-    moduleId?        : string | null;
-    days?            : string[];
-    spaceId?         : string | null;
-    isPriority?      : boolean;
-    level?           : Level;
-    professorId?     : string | null;
 }
 
 
@@ -151,20 +70,22 @@ export interface Request {
     totalDetails    : number;
 }
 
+
 export interface CreateRequest {
     id?             : string | null;
     title           : string;
     isConsecutive   : boolean;
-    description?    : string | null;
     subjectId?      : string;
     staffCreateId   : string;
+    description?    : string | null;
 }
 
 
 export interface UpdateRequest {
     id              : string;
-    title          : string;
-    isConsecutive?  : boolean;
+    title           : string;
+    staffUpdateId   : string;
+    isConsecutive   : boolean;
     subjectId?      : string;
     description?    : string | null;
 }
