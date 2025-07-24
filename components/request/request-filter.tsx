@@ -16,7 +16,10 @@ import { Button }               from "@/components/ui/button";
 import { Input }                from "@/components/ui/input";
 import { Label }                from "@/components/ui/label";
 
-import { Status } from "@/types/request";
+import { Status }       from "@/types/request";
+import { Role, Staff }  from "@/types/staff.model";
+import { cn }           from "@/lib/utils";
+
 
 export interface RequestFilter {
     title                   : string;
@@ -30,6 +33,7 @@ export interface RequestFilter {
     setSortBy               : ( sortBy: "status" | "staffCreate" | "staffUpdate" | "subjectId" | "createdAt" ) => void;
     sortOrder               : "asc" | "desc";
     setSortOrder            : ( sortOrder: "asc" | "desc" ) => void;
+    staff                   : Staff | undefined;
 }
 
 
@@ -44,13 +48,20 @@ export function RequestFilter({
     sortBy,
     setSortBy,
     sortOrder,
-    setSortOrder
+    setSortOrder,
+    staff
 }: RequestFilter ): JSX.Element {
     return (
         <Card>
             <CardContent>
-                <div className="flex justify-between items-center">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 items-end">
+                <div className={cn(
+                    "grid items-center",
+                    staff?.role !== Role.VIEWER ? ' lg:flex lg:justify-between' : ''
+                )}>
+                    <div className={cn(
+                        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 items-end",
+                        staff?.role !== Role.VIEWER ? "lg:w-[80%]" : "w-full"
+                    )}>
                         <div className="space-y-2">
                             <Label htmlFor="search">Buscar por Título</Label>
 
@@ -123,9 +134,9 @@ export function RequestFilter({
                                 </Select>
 
                                 <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                                    variant = "outline"
+                                    size    = "sm"
+                                    onClick = {() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
                                 >
                                     {sortOrder === "asc" ? "↑" : "↓"}
                                 </Button>
@@ -133,15 +144,16 @@ export function RequestFilter({
                         </div>
                     </div>
 
-                    <Button
-                        onClick     = { setOpen }
-                        className   = "mt-5"
-                    >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Crear Solicitud
-                    </Button>
+                    {staff?.role !== Role.VIEWER &&
+                        <Button
+                            onClick     = { setOpen }
+                            className   = "mt-5"
+                        >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Crear Solicitud
+                        </Button>
+                    }
                 </div>
-
             </CardContent>
         </Card>
     );
