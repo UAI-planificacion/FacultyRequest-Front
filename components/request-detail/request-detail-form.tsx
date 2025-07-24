@@ -2,11 +2,16 @@
 
 import { JSX, useEffect, useMemo } from "react";
 
-import { useQuery}      from "@tanstack/react-query";
+import { 
+    useMutation,
+    useQuery,
+    useQueryClient
+}                       from "@tanstack/react-query";
 import { z }            from "zod";
 import { zodResolver }  from "@hookform/resolvers/zod";
 import { useForm }      from "react-hook-form";
 import { Loader2 }      from "lucide-react";
+import { toast }        from "sonner";
 
 import {
     Select,
@@ -45,21 +50,32 @@ import { MultiSelectCombobox }  from "@/components/shared/Combobox";
 import { Badge }                from "@/components/ui/badge";
 
 import {
+    SizeResponse,
+    Day,
+    Module,
+}                        from "@/types/request";
+import  {
     type RequestDetail,
+    type CreateRequestDetail,
+    type UpdateRequestDetail,
     SpaceType,
     Size,
     Level,
     Building,
-    SizeResponse,
-    Day,
-    Module,
-}                       from "@/types/request";
-import { getSpaceType } from "@/lib/utils";
-import { spacesMock }   from "@/data/space";
-import { KEY_QUERYS }   from "@/consts/key-queries";
-import { fetchApi }     from "@/services/fetch";
-import { ENV }          from "@/config/envs/env";
+}                       from "@/types/request-detail.model";
 import { Professor }    from "@/types/professor";
+import { Role, Staff }  from "@/types/staff.model";
+
+import { getSpaceType }     from "@/lib/utils";
+import { spacesMock }       from "@/data/space";
+import { KEY_QUERYS }       from "@/consts/key-queries";
+import { Method, fetchApi } from "@/services/fetch";
+
+import {
+    errorToast,
+    successToast
+}               from "@/config/toast/toast.config";
+import { ENV }  from "@/config/envs/env";
 
 
 const numberOrNull = z.union([
@@ -89,7 +105,7 @@ const formSchema = z.object({
     isPriority      : z.boolean().default( false ),
     moduleId        : z.string().nullable().optional(),
     days            : z.array( z.number() ).default( [] ),
-    comment         : z.string().max( 500, "El comentario no puede tener más de 500 caracteres" ).nullable().default(''),
+    description     : z.string().max( 500, "La descripción no puede tener más de 500 caracteres" ).nullable().default(''),
     level           : z.nativeEnum(Level, { required_error: "Por favor selecciona un nivel" }),
     professorId     : z.string().nullable().optional(),
     spaceId         : z.string().nullable().default( '' )
@@ -111,41 +127,41 @@ export type RequestDetailFormValues = z.infer<typeof formSchema>;
 
 
 interface RequestDetailFormProps {
-    initialData         : RequestDetail;
-    onSubmit            : ( data: RequestDetailFormValues ) => void;
-    onCancel            : () => void;
+    requestDetail?      : RequestDetail | undefined;
+    requestId           : string;
     isOpen              : boolean;
-    onClose             : () => void;
+    onClose?            : () => void;
     professors          : Professor[];
     isLoadingProfessors : boolean;
     isErrorProfessors   : boolean;
     modules             : Module[];
     isLoadingModules    : boolean;
     isErrorModules      : boolean;
+    staff               : Staff | undefined;
 }
 
 
-const defaultRequestDetail = ( data: RequestDetail ) => ({
-    minimum         : data.minimum,
-    maximum         : data.maximum,
-    spaceType       : data.spaceType as SpaceType,
-    spaceSize       : data.spaceSize as Size,
-    building        : data.building as Building,
-    costCenterId    : data.costCenterId,
-    inAfternoon     : data.inAfternoon,
-    isPriority      : data.isPriority,
-    moduleId        : data.moduleId,
-    days            : data.days?.map( day => Number( day )) ?? [],
-    comment         : data.comment,
-    level           : data.level,
-    professorId     : data.professorId,
-    spaceId         : data.spaceId,
+const defaultRequestDetail = ( data?: RequestDetail ) => ({
+    minimum         : data?.minimum || null,
+    maximum         : data?.maximum || null,
+    spaceType       : data?.spaceType as SpaceType || null,
+    spaceSize       : data?.spaceSize as Size || null,
+    building        : data?.building as Building || null,
+    costCenterId    : data?.costCenterId || null,
+    inAfternoon     : data?.inAfternoon || false,
+    isPriority      : data?.isPriority || false,
+    moduleId        : data?.moduleId || null,
+    days            : data?.days?.map( day => Number( day )) ?? [],
+    description     : data?.description || '',
+    level           : data?.level || Level.PREGRADO,
+    professorId     : data?.professorId || null,
+    spaceId         : data?.spaceId || null,
 });
 
 
 export function RequestDetailForm({ 
-    initialData, 
-    onSubmit, 
+    requestDetail, 
+    requestId,
     onClose,
     isOpen,
     professors,
@@ -153,8 +169,51 @@ export function RequestDetailForm({
     isErrorProfessors,
     modules,
     isLoadingModules,
-    isErrorModules
+    isErrorModules,
+    staff
 }: RequestDetailFormProps ): JSX.Element {
+    const queryClient   = useQueryClient();
+    const isReadOnly    = staff?.role === Role.VIEWER;
+
+    const createRequestDetailApi = async (newRequestDetail: CreateRequestDetail): Promise<RequestDetail> =>
+        fetchApi<RequestDetail>({
+            url: 'request-details',
+            method: Method.POST,
+            body: newRequestDetail
+        });
+
+
+    const updateRequestDetailApi = async ( updatedRequestDetail: UpdateRequestDetail ): Promise<RequestDetail> =>
+        fetchApi<RequestDetail>({
+            url     : `request-details/${updatedRequestDetail.id}`,
+            method  : Method.PATCH,
+            body    : updatedRequestDetail
+        });
+
+
+    const createRequestDetailMutation = useMutation<RequestDetail, Error, CreateRequestDetail>({
+        mutationFn: createRequestDetailApi,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [KEY_QUERYS.REQUEST_DETAIL, requestId] });
+            onClose?.();
+            form.reset();
+            toast( 'Detalle creado exitosamente', successToast );
+        },
+        onError: ( mutationError ) => toast( `Error al crear el detalle: ${mutationError.message}`, errorToast )
+    });
+
+
+    const updateRequestDetailMutation = useMutation<RequestDetail, Error, UpdateRequestDetail>({
+        mutationFn: updateRequestDetailApi,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [KEY_QUERYS.REQUEST_DETAIL, requestId] });
+            onClose?.();
+            toast( 'Detalle actualizado exitosamente', successToast );
+        },
+        onError: ( mutationError ) => toast( `Error al actualizar el detalle: ${mutationError.message}`, errorToast )
+    });
+
+
     const {
         data        : sizes,
         isLoading   : isLoadingSizes,
@@ -162,6 +221,7 @@ export function RequestDetailForm({
     } = useQuery({
         queryKey    : [ KEY_QUERYS.SIZE ],
         queryFn     : () => fetchApi<SizeResponse[]>({ url: `${ENV.ACADEMIC_SECTION}sizes`, isApi: false }),
+        enabled     : isOpen
     });
 
 
@@ -172,6 +232,7 @@ export function RequestDetailForm({
     } = useQuery({
         queryKey    : [ KEY_QUERYS.DAYS ],
         queryFn     : () => fetchApi<Day[]>({ url: `${ENV.ACADEMIC_SECTION}days`, isApi: false }),
+        enabled     : isOpen
     });
 
 
@@ -191,19 +252,33 @@ export function RequestDetailForm({
 
     const form = useForm<RequestDetailFormValues>({
         resolver        : zodResolver( formSchema ) as any,
-        defaultValues   : defaultRequestDetail( initialData ),
+        defaultValues   : defaultRequestDetail( requestDetail ),
     });
 
 
     useEffect(() => {
-        form.reset( defaultRequestDetail( initialData ));
-    }, [initialData, isOpen]);
+        form.reset( defaultRequestDetail( requestDetail ));
+    }, [requestDetail, isOpen]);
 
 
     function onSubmitForm( formData: RequestDetailFormValues ): void {
-        console.log( '🚀 ~ file: request-detail-form.tsx:191 ~ formData:', formData );
         formData.building = formData.spaceId?.split('-')[1] as Building;
-        onSubmit( formData );
+
+        if ( requestDetail ) {
+            updateRequestDetailMutation.mutate({
+                ...formData,
+                id      : requestDetail.id,
+                days    : formData.days.map( String ),
+                staffUpdateId : staff?.id || ''
+            });
+        } else {
+            createRequestDetailMutation.mutate({
+                ...formData,
+                requestId,
+                days            : formData.days.map( String ),
+                staffCreateId   : staff?.id || ''
+            });
+        }
     }
 
 
@@ -214,22 +289,28 @@ export function RequestDetailForm({
                     <div className=" flex justify-between items-center gap-2">
                         <div>
                             <DialogTitle>
-                                {initialData ? 'Editar Detalle' : 'Agregar Nuevo Detalle'}
+                                {isReadOnly 
+                                    ? 'Ver Detalle' 
+                                    : (requestDetail ? 'Editar Detalle' : 'Agregar Nuevo Detalle')}
                             </DialogTitle>
 
                             <DialogDescription>
-                                {initialData 
-                                    ? 'Modifique los campos necesarios del detalle.' 
-                                    : 'Complete los campos para agregar un nuevo detalle.'}
+                                {isReadOnly 
+                                    ? 'Visualización del detalle en modo solo lectura.'
+                                    : (requestDetail 
+                                        ? 'Modifique los campos necesarios del detalle.' 
+                                        : 'Complete los campos para agregar un nuevo detalle.')}
                             </DialogDescription>
                         </div>
 
-                        <Badge
-                            className="mr-5"
-                            variant={initialData.isPriority ? 'destructive' : 'default'}
-                        >
-                            {initialData.isPriority ? 'Prioritario' : 'Sin Prioridad' }
-                        </Badge>
+                        {requestDetail && (
+                            <Badge
+                                className="mr-5"
+                                variant={requestDetail.isPriority ? 'destructive' : 'default'}
+                            >
+                                {requestDetail.isPriority ? 'Prioritario' : 'Sin Prioridad' }
+                            </Badge>
+                        )}
                     </div>
                 </DialogHeader>
 
@@ -249,7 +330,10 @@ export function RequestDetailForm({
                                                 {...field}
                                                 type        = "number"
                                                 min         = "1"
+                                                max         = "999999"
+                                                placeholder = "Ej: 10"
                                                 value       = { field.value || '' }
+                                                readOnly    = { isReadOnly }
                                                 onChange    = {( e: React.ChangeEvent<HTMLInputElement> ) => {
                                                     const value = e.target.value === '' ? undefined : Number( e.target.value );
                                                     field.onChange( value );
@@ -275,8 +359,10 @@ export function RequestDetailForm({
                                                 {...field}
                                                 type        = "number"
                                                 min         = "1"
+                                                max         = "999999"
                                                 placeholder = "Ej: 30"
                                                 value       = { field.value || '' }
+                                                readOnly    = { isReadOnly }
                                                 onChange    = {( e: React.ChangeEvent<HTMLInputElement> ) => {
                                                     field.onChange(e.target.value === '' ? undefined : Number( e.target.value ));
                                                 }}
@@ -301,6 +387,7 @@ export function RequestDetailForm({
                                             value           = { field.value }
                                             className       = "w-full"
                                             defaultValue    = { field.value }
+                                            disabled        = { isReadOnly }
                                             onValueChange   = {( value: string ) => {
                                                 if ( value ) field.onChange( value )
                                             }}
@@ -348,6 +435,7 @@ export function RequestDetailForm({
                                                 {...field}
                                                 placeholder = "Ej: Juan Pérez"
                                                 value       = { field.value || '' }
+                                                readOnly    = { isReadOnly }
                                                 onChange    = {( e: React.ChangeEvent<HTMLInputElement> ) => field.onChange( e.target.value )}
                                             />
                                         : <MultiSelectCombobox
@@ -357,6 +445,7 @@ export function RequestDetailForm({
                                                 onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value ) }
                                                 options             = { memoizedProfessorOptions }
                                                 isLoading           = { isLoadingProfessors }
+                                                disabled            = { isReadOnly }
                                             />
                                         }
 
@@ -382,6 +471,7 @@ export function RequestDetailForm({
                                             onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value ) }
                                             options             = { spacesMock }
                                             isLoading           = { isLoadingModules }
+                                            disabled            = { isReadOnly }
                                         />
 
                                         <FormMessage />
@@ -400,6 +490,7 @@ export function RequestDetailForm({
                                         <Select
                                             defaultValue    = { field.value ?? 'Sin especificar' }
                                             onValueChange   = {( value ) => field.onChange( value === "Sin especificar" ? null : value )}
+                                            disabled        = { isReadOnly }
                                         >
                                             <FormControl>
                                                 <SelectTrigger>
@@ -437,6 +528,7 @@ export function RequestDetailForm({
                                                     <Input
                                                         placeholder = "Ej: XS (< 30)"
                                                         value       = { field.value || '' }
+                                                        readOnly    = { isReadOnly }
                                                         onChange    = {( e ) => field.onChange( e.target.value || null )}
                                                     />
                                                 </FormControl>
@@ -449,7 +541,7 @@ export function RequestDetailForm({
                                             <Select
                                                 onValueChange   = {( value ) => field.onChange( value === "Sin especificar" ? null : value )}
                                                 defaultValue    = { field.value || 'Sin especificar' }
-                                                disabled        = { isLoadingSizes }
+                                                disabled        = { isLoadingSizes || isReadOnly }
                                             >
                                                 <FormControl>
                                                     <SelectTrigger>
@@ -493,6 +585,7 @@ export function RequestDetailForm({
                                         <Switch
                                             checked         = { field.value }
                                             onCheckedChange = { field.onChange }
+                                            disabled        = { isReadOnly }
                                         />
                                     </FormControl>
                                 </FormItem>
@@ -507,25 +600,34 @@ export function RequestDetailForm({
                                 <FormItem>
                                     <FormLabel>Módulo</FormLabel>
 
-                                    <Select
-                                        defaultValue    = { field.value || 'Sin especificar' }
-                                        disabled        = { isLoadingModules }
-                                        onValueChange   = {( value ) => {
-                                            field.onChange(value === "Sin especificar" ? null : value);
-                                        }}
-                                    >
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Seleccionar módulo" />
-                                            </SelectTrigger>
-                                        </FormControl>
+                                    { isErrorModules
+                                        ? <>
+                                            <FormControl>
+                                                <Input
+                                                    {... field}
+                                                    placeholder="Ingrese el módulo"
+                                                    value = { field.value || '' }
+                                                    onChange    = {( e: React.ChangeEvent<HTMLInputElement> ) => field.onChange( e.target.value )}
+                                                />
+                                            </FormControl>
 
-                                        {isLoadingModules ? (
-                                            <div className="flex items-center gap-2 border border-zinc-300 dark:border-zinc-800 p-2 rounded animate-spin">
-                                                <Loader2 className="h-4 w-4" />
-                                                Cargando módulos...
-                                            </div>
-                                        ) : (
+                                            <FormDescription>
+                                                Error al cargar los módulos. Ingrese manualmente.
+                                            </FormDescription>
+                                        </>
+                                        :  <Select
+                                            defaultValue    = { field.value || 'Sin especificar' }
+                                            disabled        = { isLoadingModules || isReadOnly }
+                                            onValueChange   = {( value ) => {
+                                                field.onChange(value === "Sin especificar" ? null : value);
+                                            }}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Seleccionar módulo" />
+                                                </SelectTrigger>
+                                            </FormControl>
+
                                             <SelectContent>
                                                 <SelectItem value="Sin especificar">Sin especificar</SelectItem>
 
@@ -535,8 +637,8 @@ export function RequestDetailForm({
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
-                                        )}
-                                    </Select>
+                                        </Select>
+                                    }
 
                                     <FormMessage />
                                 </FormItem>
@@ -567,8 +669,10 @@ export function RequestDetailForm({
                                                     days        = { isErrorDays ? [0, 1, 2, 3, 4, 5, 6] : memoizedDays }
                                                     value       = { field.value?.map( day => Number( day )) || []}
                                                     onChange    = { field.onChange }
+                                                    disabled    = { isReadOnly }
                                                 />
                                             </FormControl>
+
                                             {isErrorDays && (
                                                 <FormDescription className="text-destructive">
                                                     Error al obtener los días. Se muestran todos los días disponibles.
@@ -582,27 +686,21 @@ export function RequestDetailForm({
                             )}
                         />
 
-                        {/* Descripción */}
-                        <div className="col-span-2">
-                            <FormLabel>Descripción</FormLabel>
-
-                            <p>{initialData?.description || '-'}</p>
-                        </div>
-
-                        {/* Comentario */}
+                        {/* Description */}
                         <FormField
                             control = { form.control }
-                            name    = "comment"
+                            name    = "description"
                             render  = {({ field }) => (
                                 <FormItem className="col-span-2">
-                                    <FormLabel>Comentario</FormLabel>
+                                    <FormLabel>Descripción</FormLabel>
 
                                     <FormControl>
                                         <Textarea 
-                                            placeholder="Agregue un comentario opcional"
-                                            className="min-h-[100px] max-h-[250px]"
                                             {...field}
-                                            value={field.value || ''}
+                                            placeholder = "Agregue una descripción opcional"
+                                            className   = "min-h-[100px] max-h-[250px]"
+                                            value       = { field.value || '' }
+                                            readOnly    = { isReadOnly }
                                         />
                                     </FormControl>
 
@@ -615,26 +713,39 @@ export function RequestDetailForm({
                             )}
                         />
 
-                        <DialogFooter className="mt-6 flex justify-between items-center">
+                        {/* Comments */}
+                        { requestDetail &&
+                            <div className="col-span-2">
+                                <FormLabel>Comentarios</FormLabel>
+
+                                <p>{requestDetail?.comment || 'Sin comentarios.'}</p>
+                            </div>
+                        }
+
+                        <DialogFooter className="flex items-center justify-between gap-2">
                             <Button
-                                type    = "button"
-                                variant = "outline"
-                                onClick = { onClose }
+                                type="button"
+                                variant="outline"
+                                onClick={onClose}
                             >
-                                Cancelar
+                                {isReadOnly ? 'Cerrar' : 'Cancelar'}
                             </Button>
 
-                            <Button
-                                type        = "submit"
-                                disabled    = { form.formState.isSubmitting }
-                            >
-                                {form.formState.isSubmitting ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Procesando...
-                                    </>
-                                ) : initialData ? 'Actualizar' : 'Crear'}
-                            </Button>
+                            { !isReadOnly && (
+                                <Button
+                                    type="submit"
+                                    disabled={form.formState.isSubmitting || createRequestDetailMutation.isPending || updateRequestDetailMutation.isPending}
+                                >
+                                    {(form.formState.isSubmitting || createRequestDetailMutation.isPending || updateRequestDetailMutation.isPending) ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                            Procesando...
+                                        </>
+                                    ) : (
+                                        requestDetail ? 'Actualizar' : 'Crear'
+                                    )}
+                                </Button>
+                            )}
                         </DialogFooter>
                     </form>
                 </Form>
