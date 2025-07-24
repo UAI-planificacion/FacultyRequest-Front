@@ -25,6 +25,7 @@ import type { Request, Status }     from "@/types/request";
 import { Method, fetchApi }         from "@/services/fetch";
 import { errorToast, successToast } from "@/config/toast/toast.config";
 import { KEY_QUERYS }               from "@/consts/key-queries";
+import { Staff }                    from "@/types/staff.model";
 
 
 interface RequestListProps {
@@ -60,7 +61,7 @@ export function RequestList({
     const [sortBy, setSortBy]                       = useState<SortBy>( "createdAt" );
     const [sortOrder, setSortOrder]                 = useState<SortOrder>( "desc" );
     const [isDeleteOpen, setIsDeleteOpen]           = useState( false );
-
+    const staff                                     = queryClient.getQueryData<Staff>([ KEY_QUERYS.STAFF ]);
 
     useEffect(() => {
         setSelectedRequest( requests[0] || startRequest );
@@ -144,6 +145,7 @@ export function RequestList({
                 setSortBy               = { setSortBy }
                 sortOrder               = { sortOrder }
                 setSortOrder            = { setSortOrder }
+                staff                   = { staff }
             />
 
             {/* Results */}
@@ -161,6 +163,7 @@ export function RequestList({
                                 onViewDetails   = { () => onViewDetails( request )}
                                 onEdit          = { () => onEdit( request )}
                                 onDelete        = { () => openDeleteDialog( request.id )}
+                                staff           = { staff }
                             />
                         ))}
                     </div>
@@ -180,6 +183,7 @@ export function RequestList({
                 onClose     = { () => setIsOpen( false )}
                 data        = { selectedRequest }
                 facultyId   = { facultyId }
+                staff       = { staff }
             />
 
             {/* Delete Confirmation Dialog */}
