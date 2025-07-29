@@ -12,7 +12,7 @@ import {
     DropdownMenuTrigger,
 }                       from "@/components/ui/dropdown-menu"
 import { Button }       from "@/components/ui/button";
-import { useSession }   from "@/components/auth/use-session";
+import { useSession }   from "@/hooks/use-session";
 
 import { MicrosoftIcon }    from "@/icons/microsoft";
 import LoaderMini           from "@/icons/LoaderMini";
