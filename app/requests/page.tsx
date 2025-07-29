@@ -5,7 +5,7 @@ import { JSX, useEffect, useState }  from "react";
 import { useQuery } from '@tanstack/react-query';
 
 import { RequestsManagement }   from "@/components/request/request";
-import { useSession }           from "@/components/auth/use-session";
+import { useSession }           from "@/hooks/use-session";
 
 import { KEY_QUERYS }   from "@/consts/key-queries";
 import { fetchApi }     from "@/services/fetch";
