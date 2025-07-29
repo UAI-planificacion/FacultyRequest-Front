@@ -10,6 +10,7 @@ export const KEY_QUERYS = {
     DAYS            : 'days',
     SPACES          : 'spaces',
     MODULES         : 'modules',
+    COMMENTS        : "comments",
 
     COST_CENTERS    : 'cost-centers',
 }
