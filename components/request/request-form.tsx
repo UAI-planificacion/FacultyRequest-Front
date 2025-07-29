@@ -1,6 +1,6 @@
 "use client"
 
-import { JSX, useEffect, useMemo } from "react";
+import { JSX, useEffect, useMemo, useState } from "react";
 
 import {
     useMutation,
@@ -12,6 +12,12 @@ import { toast }                    from "sonner";
 import { zodResolver }              from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler }   from "react-hook-form";
 
+import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+}                               from "@/components/ui/tabs";
 import {
     Dialog,
     DialogContent,
@@ -45,12 +51,14 @@ import { fetchApi, Method }         from "@/services/fetch";
 import { Subject }                  from "@/types/subject.model";
 import { errorToast, successToast } from "@/config/toast/toast.config";
 import { Staff, Role }              from "@/types/staff.model";
+import { CommentSection } from "../comment/comment-section";
+import { cn } from "@/lib/utils";
 
 
 interface RequestFormProps {
     isOpen      : boolean;
     onClose     : () => void;
-    data        : Request | undefined;
+    request     : Request | undefined;
     facultyId   : string;
     staff       : Staff | undefined;
 }
@@ -76,6 +84,8 @@ const formSchema = z.object({
 
 export type RequestFormValues = z.infer<typeof formSchema>;
 
+type Tab = 'form' | 'comments';
+
 
 const defaultRequest = ( data : Request | undefined ) => ({
     title           : data?.title           || '',
@@ -88,12 +98,13 @@ const defaultRequest = ( data : Request | undefined ) => ({
 export function RequestForm({
     isOpen,
     onClose,
-    data,
+    request,
     facultyId,
     staff
 }: RequestFormProps ): JSX.Element {
     const queryClient   = useQueryClient();
     const isReadOnly    = staff?.role === Role.VIEWER;
+    const [tab, setTab] = useState<Tab>( 'form' );
 
 
     const createRequestApi = async ( request: CreateRequest ): Promise<Request> =>
@@ -148,20 +159,21 @@ export function RequestForm({
 
     const form = useForm<RequestFormValues>({
         resolver        : zodResolver( formSchema ),
-        defaultValues   : defaultRequest( data )
+        defaultValues   : defaultRequest( request )
     });
 
 
     useEffect(() => {
-        form.reset( defaultRequest( data ));
-    }, [data, isOpen]);
+        form.reset( defaultRequest( request ));
+        setTab( 'form' );
+    }, [request, isOpen]);
 
 
     const handleSubmit: SubmitHandler<RequestFormValues> = ( formData ) => {
-        if ( data ) {
+        if ( request ) {
             const updateRequest = {
                 ...formData,
-                id: data!.id,
+                id: request!.id,
                 staffUpdateId: staff?.id
             } as UpdateRequest;
 
@@ -184,7 +196,7 @@ export function RequestForm({
                     <div className="flex justify-between items-center mr-5">
                         <div className="space-y-1">
                             <DialogTitle>
-                                { isReadOnly ? 'Ver Solicitud' : ( data ? 'Editar Solicitud' : 'Crear Solicitud' ) }
+                                { isReadOnly ? 'Ver Solicitud' : ( request ? 'Editar Solicitud' : 'Crear Solicitud' ) }
                             </DialogTitle>
 
                             <DialogDescription>
@@ -195,150 +207,176 @@ export function RequestForm({
                             </DialogDescription>
                         </div>
 
-                        { data && <ShowStatus status={data.status} /> }
+                        { request && <ShowStatus status={request.status} /> }
                     </div>
                 </DialogHeader>
 
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit( handleSubmit )} className="space-y-4">
-                        <div className="grid grid-cols-1 gap-4">
-                            {/* Title */}
-                            <FormField
-                                control = { form.control }
-                                name    = "title"
-                                render  = {({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Título</FormLabel>
+                <Tabs defaultValue={tab} onValueChange={( value ) => setTab( value as Tab )} className="w-full">
+                    { request && (
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="form">
+                                Información
+                            </TabsTrigger>
 
-                                        <FormControl>
-                                            <Input 
-                                                placeholder = "Ingrese el título de la solicitud"
-                                                readOnly    = { isReadOnly }
-                                                {...field} 
-                                            />
-                                        </FormControl>
+                            <TabsTrigger value="comments">
+                                Comentarios 
+                            </TabsTrigger>
+                        </TabsList>
+                    )}
 
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                    <TabsContent value="form" className={cn( request ? "space-y-4 mt-4" : '' )}>
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit( handleSubmit )} className="space-y-4">
+                                <div className="grid grid-cols-1 gap-4">
+                                    {/* Title */}
+                                    <FormField
+                                        control = { form.control }
+                                        name    = "title"
+                                        render  = {({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Título</FormLabel>
 
-                            {/* Subject */}
-                            <FormField
-                                control = { form.control }
-                                name    = "subjectId"
-                                render  = {({ field }) => {
-                                    return (
-                                        <FormItem>
-                                            <FormLabel>Asignatura</FormLabel>
-
-                                            <FormControl>
-                                                { isError ? (
-                                                    <>
-                                                        <Input
-                                                            placeholder = "ID de la asignatura"
-                                                            value       = { field.value || '' }
-                                                            onChange    = { field.onChange }
-                                                            readOnly    = { isReadOnly }
-                                                        />
-
-                                                        <FormDescription>
-                                                            Error al cargar las asignaturas. Ingrese el ID manualmente.
-                                                        </FormDescription>
-                                                    </>
-                                                ) : (
-                                                    <MultiSelectCombobox
-                                                        multiple            = { false }
-                                                        placeholder         = "Seleccionar una asignatura"
-                                                        defaultValues       = { field.value || '' }
-                                                        onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value ) }
-                                                        options             = { memoizedSubject }
-                                                        isLoading           = { isLoading }
-                                                        disabled            = { isReadOnly }
+                                                <FormControl>
+                                                    <Input 
+                                                        placeholder = "Ingrese el título de la solicitud"
+                                                        readOnly    = { isReadOnly }
+                                                        {...field} 
                                                     />
-                                                )}
-                                            </FormControl>
+                                                </FormControl>
 
-                                            <FormMessage />
-                                        </FormItem>
-                                    );
-                                }}
-                            />
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
 
-                            {/* Is Consecutive */}
-                            <FormField
-                                control = { form.control }
-                                name    = "isConsecutive"
-                                render  = {({ field }) => (
-                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                        <div className="space-y-0.5">
-                                            <FormLabel className="text-base">Es consecutivo</FormLabel>
+                                    {/* Subject */}
+                                    <FormField
+                                        control = { form.control }
+                                        name    = "subjectId"
+                                        render  = {({ field }) => {
+                                            return (
+                                                <FormItem>
+                                                    <FormLabel>Asignatura</FormLabel>
 
-                                            <FormDescription>
-                                                Marque si la solicitud es para horarios consecutivos
-                                            </FormDescription>
+                                                    <FormControl>
+                                                        { isError ? (
+                                                            <>
+                                                                <Input
+                                                                    placeholder = "ID de la asignatura"
+                                                                    value       = { field.value || '' }
+                                                                    onChange    = { field.onChange }
+                                                                    readOnly    = { isReadOnly }
+                                                                />
+
+                                                                <FormDescription>
+                                                                    Error al cargar las asignaturas. Ingrese el ID manualmente.
+                                                                </FormDescription>
+                                                            </>
+                                                        ) : (
+                                                            <MultiSelectCombobox
+                                                                multiple            = { false }
+                                                                placeholder         = "Seleccionar una asignatura"
+                                                                defaultValues       = { field.value || '' }
+                                                                onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value ) }
+                                                                options             = { memoizedSubject }
+                                                                isLoading           = { isLoading }
+                                                                disabled            = { isReadOnly }
+                                                            />
+                                                        )}
+                                                    </FormControl>
+
+                                                    <FormMessage />
+                                                </FormItem>
+                                            );
+                                        }}
+                                    />
+
+                                    {/* Is Consecutive */}
+                                    <FormField
+                                        control = { form.control }
+                                        name    = "isConsecutive"
+                                        render  = {({ field }) => (
+                                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                                <div className="space-y-0.5">
+                                                    <FormLabel className="text-base">Es consecutivo</FormLabel>
+
+                                                    <FormDescription>
+                                                        Marque si la solicitud es para horarios consecutivos
+                                                    </FormDescription>
+                                                </div>
+
+                                                <FormControl>
+                                                    <Switch
+                                                        checked         = { field.value }
+                                                        onCheckedChange = { field.onChange }
+                                                        disabled        = { isReadOnly }
+                                                    />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* Description */}
+                                    <FormField
+                                        control = { form.control }
+                                        name    = "description"
+                                        render  = {({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Descripción</FormLabel>
+
+                                                <FormControl>
+                                                    <Textarea
+                                                        placeholder = "Agregue una descripción (opcional)"
+                                                        className   = "min-h-[100px] max-h-[200px]"
+                                                        readOnly    = { isReadOnly }
+                                                        {...field}
+                                                        value       = { field.value || '' }
+                                                    />
+                                                </FormControl>
+
+                                                <FormDescription className="text-xs flex justify-end">
+                                                    {field.value?.length || 0} / 500
+                                                </FormDescription>
+
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* Comments */}
+                                    { request && 
+                                        <div className="flex flex-col space-y-1">
+                                            <label>Comentarios</label>
+                                            <p>{request.comment || 'Sin comentarios.'}</p>
                                         </div>
-
-                                        <FormControl>
-                                            <Switch
-                                                checked         = { field.value }
-                                                onCheckedChange = { field.onChange }
-                                                disabled        = { isReadOnly }
-                                            />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Description */}
-                            <FormField
-                                control = { form.control }
-                                name    = "description"
-                                render  = {({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Descripción</FormLabel>
-
-                                        <FormControl>
-                                            <Textarea
-                                                placeholder = "Agregue una descripción (opcional)"
-                                                className   = "min-h-[100px] max-h-[200px]"
-                                                readOnly    = { isReadOnly }
-                                                {...field}
-                                                value       = { field.value || '' }
-                                            />
-                                        </FormControl>
-
-                                        <FormDescription className="text-xs flex justify-end">
-                                            {field.value?.length || 0} / 500
-                                        </FormDescription>
-
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Comments */}
-                            { data && 
-                                <div className="flex flex-col space-y-1">
-                                    <label>Comentarios</label>
-                                    <p>{data.comment || 'Sin comentarios.'}</p>
+                                    }
                                 </div>
-                            }
-                        </div>
 
-                        <div className="flex justify-between space-x-4 pt-4">
-                            <Button type="button" variant="outline" onClick={onClose}>
-                                { isReadOnly ? 'Cerrar' : 'Cancelar' }
-                            </Button>
+                                <div className="flex justify-between space-x-4 pt-4">
+                                    <Button type="button" variant="outline" onClick={onClose}>
+                                        { isReadOnly ? 'Cerrar' : 'Cancelar' }
+                                    </Button>
 
-                            { !isReadOnly && (
-                                <Button type="submit">
-                                    { data ? 'Guardar cambios' : 'Crear solicitud' }
-                                </Button>
-                            )}
-                        </div>
-                    </form>
-                </Form>
+                                    { !isReadOnly && (
+                                        <Button type="submit">
+                                            { request ? 'Guardar cambios' : 'Crear solicitud' }
+                                        </Button>
+                                    )}
+                                </div>
+                            </form>
+                        </Form>
+                    </TabsContent>
+
+                    { request && (
+                        <TabsContent value="comments" className="mt-4">
+                            <CommentSection
+                                requestId   = { request.id }
+                                enabled     = { tab === 'comments' }
+                                size        = { 'h-[378px]' }
+                            />
+                        </TabsContent>
+                    )}
+                </Tabs>
             </DialogContent>
         </Dialog>
     );
