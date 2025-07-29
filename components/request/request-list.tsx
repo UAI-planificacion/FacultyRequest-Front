@@ -181,7 +181,7 @@ export function RequestList({
             <RequestForm
                 isOpen      = { isOpen }
                 onClose     = { () => setIsOpen( false )}
-                data        = { selectedRequest }
+                request     = { selectedRequest }
                 facultyId   = { facultyId }
                 staff       = { staff }
             />
