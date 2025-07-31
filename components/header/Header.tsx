@@ -2,12 +2,18 @@
 
 import { useEffect, useState } from "react";
 
-import { Theme }        from "@/components/header/Theme";
-import { Login }        from "@/components/auth/Login";
-import { AlertMessage } from "@/components/dialog/Alert";
+import { Theme }                        from "@/components/header/Theme";
+import { Login }                        from "@/components/auth/Login";
+import { AlertMessage }                 from "@/components/dialog/Alert";
+import { NotificationDialogManager }    from "@/components/header/NotificationDialogManager";
+import { Notifications }                from "@/components/header/Notifications";
+
+import { useSSE } from "@/hooks/use-sse";
 
 
 export default function Header() {
+    useSSE();
+
     const [showAuthMessage, setShowAuthMessage] = useState( false );
 
     useEffect(() => {
@@ -30,6 +36,15 @@ export default function Header() {
 
                     <div className="flex items-center gap-2">
                         <Login />
+
+                        <NotificationDialogManager>
+                            {({ onRequestClick, onRequestDetailClick }) => (
+                                <Notifications
+                                    onRequestClick={onRequestClick}
+                                    onRequestDetailClick={onRequestDetailClick}
+                                />
+                            )}
+                        </NotificationDialogManager>
 
                         <Theme />
                     </div>
