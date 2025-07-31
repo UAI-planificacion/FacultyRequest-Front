@@ -68,6 +68,7 @@ export interface Request {
     staffUpdate     : StaffRequest | null;
     subject         : SubjectRequest;
     totalDetails    : number;
+    facultyId       : string;
 }
 
 
