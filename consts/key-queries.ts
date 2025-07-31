@@ -13,4 +13,5 @@ export const KEY_QUERYS = {
     COMMENTS        : "comments",
 
     COST_CENTERS    : 'cost-centers',
+    NOTIFICATIONS   : 'notifications',
 }
