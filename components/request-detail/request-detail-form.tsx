@@ -73,16 +73,16 @@ import  {
 import { Professor }    from "@/types/professor";
 import { Role, Staff }  from "@/types/staff.model";
 
-import { cn, getSpaceType } from "@/lib/utils";
-import { spacesMock }       from "@/data/space";
-import { KEY_QUERYS }       from "@/consts/key-queries";
-import { Method, fetchApi } from "@/services/fetch";
-
 import {
     errorToast,
     successToast
-}               from "@/config/toast/toast.config";
-import { ENV }  from "@/config/envs/env";
+}                           from "@/config/toast/toast.config";
+import { ENV }              from "@/config/envs/env";
+import { useCostCenter }    from "@/hooks/use-cost-center";
+import { useSpace }         from "@/hooks/use-space";
+import { KEY_QUERYS }       from "@/consts/key-queries";
+import { Method, fetchApi } from "@/services/fetch";
+import { cn, getSpaceType } from "@/lib/utils";
 
 
 const numberOrNull = z.union([
@@ -185,6 +185,18 @@ export function RequestDetailForm({
     const queryClient   = useQueryClient();
     const isReadOnly    = staff?.role === Role.VIEWER;
     const [tab, setTab] = useState<Tab>( 'form' );
+
+    const {
+        costCenter,
+        isLoading: isLoadingCostCenter,
+    } = useCostCenter({ enabled: true });
+
+
+    const {
+        spaces,
+        isLoading: isLoadingSpaces,
+    } = useSpace({ enabled: true });
+
 
     const createRequestDetailApi = async (newRequestDetail: CreateRequestDetail): Promise<RequestDetail> =>
         fetchApi<RequestDetail>({
@@ -495,8 +507,8 @@ export function RequestDetailForm({
                                                     placeholder         = "Seleccionar espacio"
                                                     defaultValues       = { field.value || '' }
                                                     onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value ) }
-                                                    options             = { spacesMock }
-                                                    isLoading           = { isLoadingModules }
+                                                    options             = { spaces }
+                                                    isLoading           = { isLoadingSpaces }
                                                     disabled            = { isReadOnly }
                                                 />
 
@@ -614,6 +626,31 @@ export function RequestDetailForm({
                                                     disabled        = { isReadOnly }
                                                 />
                                             </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control = { form.control }
+                                    name    = "costCenterId"
+                                    render  = {({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="font-medium">Centro de Costos</FormLabel>
+
+                                            <MultiSelectCombobox
+                                                multiple            = { false }
+                                                placeholder         = "Seleccionar centro de costo"
+                                                defaultValues       = { field.value || '' }
+                                                onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value ) }
+                                                options             = { costCenter }
+                                                isLoading           = { isLoadingCostCenter }
+                                            />
+
+                                            <FormDescription>
+                                                Selecciona el centro de costos asociado
+                                            </FormDescription>
+
+                                            <FormMessage />
                                         </FormItem>
                                     )}
                                 />
