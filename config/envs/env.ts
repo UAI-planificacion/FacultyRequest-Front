@@ -12,6 +12,10 @@ const envSchema = z.object({
     NEXT_PUBLIC_ACADEMIC_SECTION: z.string().min(1),
     NEXT_PUBLIC_ACADEMIC_SSE_ENDPOINT: z.string().min(1),
 
+    NEXT_PUBLIC_ROOM_SYSTEM_URL: z.string().min(1),
+    NEXT_PUBLIC_ROOM_ENDPOINT: z.string().min(1),
+    NEXT_PUBLIC_NODE_ENV: z.string().min(1),
+
     // MSAL Authentication
     NEXT_PUBLIC_MSAL_CLIENT_ID: z.string().min(1, {
         message: 'MSAL Client ID is required',
@@ -55,6 +59,9 @@ const processEnv = {
     NEXT_PUBLIC_REQUEST_ENDPOINT    : process.env.NEXT_PUBLIC_REQUEST_ENDPOINT,
     NEXT_PUBLIC_ACADEMIC_SECTION    : process.env.NEXT_PUBLIC_ACADEMIC_SECTION,
     NEXT_PUBLIC_ACADEMIC_SSE_ENDPOINT: process.env.NEXT_PUBLIC_ACADEMIC_SSE_ENDPOINT,
+    NEXT_PUBLIC_ROOM_SYSTEM_URL     : process.env.NEXT_PUBLIC_ROOM_SYSTEM_URL,
+    NEXT_PUBLIC_NODE_ENV            : process.env.NEXT_PUBLIC_NODE_ENV,
+    NEXT_PUBLIC_ROOM_ENDPOINT       : process.env.NEXT_PUBLIC_ROOM_ENDPOINT,
     NEXT_PUBLIC_MSAL_CLIENT_ID      : process.env.NEXT_PUBLIC_MSAL_CLIENT_ID,
     NEXT_PUBLIC_MSAL_CLIENT_SECRET  : process.env.NEXT_PUBLIC_MSAL_CLIENT_SECRET,
     NEXT_PUBLIC_MSAL_TENANT_ID      : process.env.NEXT_PUBLIC_MSAL_TENANT_ID,
@@ -72,9 +79,9 @@ const processEnv = {
 /**
  * Validate environment variables against schema
  */
-const parsedEnv = envSchema.safeParse(processEnv);
+const parsedEnv = envSchema.safeParse( processEnv );
 
-if (!parsedEnv.success) {
+if ( !parsedEnv.success ) {
     console.error(
         '❌ Invalid environment variables:',
         JSON.stringify( parsedEnv.error.format(), null, 4 )
@@ -92,6 +99,10 @@ export const ENV = {
     REQUEST_ENDPOINT    : parsedEnv.data.NEXT_PUBLIC_REQUEST_ENDPOINT,
     ACADEMIC_SECTION    : parsedEnv.data.NEXT_PUBLIC_ACADEMIC_SECTION,
     SSE_ENDPOINT        : parsedEnv.data.NEXT_PUBLIC_ACADEMIC_SSE_ENDPOINT,
+
+    ROOM_SYSTEM_URL     : parsedEnv.data.NEXT_PUBLIC_ROOM_SYSTEM_URL,
+    ROOM_ENDPOINT       : parsedEnv.data.NEXT_PUBLIC_ROOM_ENDPOINT,
+    NODE_ENV            : parsedEnv.data.NEXT_PUBLIC_NODE_ENV,
 
     // MSAL
     MSAL: {
