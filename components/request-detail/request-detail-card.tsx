@@ -190,15 +190,21 @@ export function RequestDetailCard({
                             Tarde
                         </Badge>
                     )}
+
+                    {detail.costCenterId && (
+                        <Badge variant="default" className="text-xs">
+                            {detail.costCenterId}
+                        </Badge>
+                    )}
                 </div>
 
                 {( detail.days?.length ?? 0 ) > 0 && (
-                    <div>
+                    <div className="flex items-center gap-2">
                         <p className="text-xs font-medium text-muted-foreground">Días:</p>
 
                         <div className="flex flex-wrap gap-1 mt-1">
                             {detail.days?.map((day, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">
+                                <Badge key={index} variant="outline" className="text-xs border border-zinc-300 dark:border-zinc-700">
                                     {daysName[Number(day) - 1]}
                                 </Badge>
                             ))}
