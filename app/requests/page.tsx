@@ -6,10 +6,9 @@ import { useQuery } from '@tanstack/react-query';
 
 import { RequestsManagement }   from "@/components/request/request";
 import { useSession }           from "@/hooks/use-session";
-
-import { KEY_QUERYS }   from "@/consts/key-queries";
-import { fetchApi }     from "@/services/fetch";
-import { Staff }        from "@/types/staff.model";
+import { KEY_QUERYS }           from "@/consts/key-queries";
+import { fetchApi }             from "@/services/fetch";
+import { Staff }                from "@/types/staff.model";
 
 
 export default function RequestsPage(): JSX.Element {
@@ -27,7 +26,7 @@ export default function RequestsPage(): JSX.Element {
     });
 
     return (
-        <main className="container mx-auto py-6 space-y-4 px-4">
+        <main className="min-h-[calc(100vh-75px)] container mx-auto py-6 space-y-4 px-4">
             <div className="grid">
                 <h1 className="text-2xl font-bold">Facultad</h1>
                 <span className="text-[11px] text-muted-foreground">{staff?.facultyId}</span>
