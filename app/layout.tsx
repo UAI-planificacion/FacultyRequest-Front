@@ -6,6 +6,7 @@ import { QueryProvider }    from '@/app/query-provider';
 import Header               from '@/components/header/Header';
 import { ThemeProvider }    from '@/components/theme-provider';
 import { Toaster }          from '@/components/ui/sonner';
+import { Footer }           from '@/components/footer';
 
 
 export const metadata: Metadata = {
@@ -33,13 +34,9 @@ export default function RootLayout({
 
                         <main className="flex-grow">
                             {children}
-
-                            <footer className="border-t border-border py-6">
-                                <div className="container mx-auto text-center text-muted-foreground">
-                                    <p>© 2025 Sistema de Gestión de Facultades. Todos los derechos reservados.</p>
-                                </div>
-                            </footer>
                         </main>
+
+                        <Footer />
                     </ThemeProvider>
                 </QueryProvider>
             </body>
