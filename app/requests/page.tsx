@@ -19,7 +19,7 @@ export default function RequestsPage(): JSX.Element {
         setEmail( session?.user?.email || '' );
     }, [session]);
 
-    const { data: staff, isLoading, isError }  = useQuery({
+    const { data: staff, isLoading, isError } = useQuery({
         queryKey    : [ KEY_QUERYS.STAFF ],
         queryFn     : () => fetchApi<Staff>({ url: `staff/${email}` }),
         enabled     : !!email
@@ -28,7 +28,8 @@ export default function RequestsPage(): JSX.Element {
     return (
         <main className="min-h-[calc(100vh-75px)] container mx-auto py-6 space-y-4 px-4">
             <div className="grid">
-                <h1 className="text-2xl font-bold">Facultad</h1>
+                <h1 className="text-2xl font-bold">Facultad {staff?.facultyName}</h1>
+
                 <span className="text-[11px] text-muted-foreground">{staff?.facultyId}</span>
             </div>
 
