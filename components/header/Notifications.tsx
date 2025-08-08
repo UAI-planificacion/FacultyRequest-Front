@@ -69,22 +69,22 @@ function NotificationItem({
 
 	return (
 		<div
-			className={`p-3 border-b cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+			className={`p-3 border-b cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors ${
 				!notification.read ? 'bg-blue-50 dark:bg-blue-950' : ''
 			}`}
 			onClick={handleClick}
 		>
 			<div className="flex justify-between items-start">
 				<div className="flex-1">
-					<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+					<p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
 						{getTypeText( notification.type )} {getActionText( notification.action )}
 					</p>
 
-					<p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+					<p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
 						{notification.message}
 					</p>
 
-					<p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+					<p className="text-xs text-zinc-500 dark:text-zinc-500 mt-1">
 						{new Date( notification.timestamp ).toLocaleString()}
 					</p>
 				</div>
@@ -185,7 +185,7 @@ export function Notifications({
 
 				<ScrollArea className="h-80">
 					{notificationState.notifications.length === 0 ? (
-						<div className="p-4 text-center text-gray-500 dark:text-gray-400">
+						<div className="p-4 text-center text-zinc-500 dark:text-zinc-400">
 							No hay notificaciones
 						</div>
 					) : (
