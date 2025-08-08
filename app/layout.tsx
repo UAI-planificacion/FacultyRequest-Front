@@ -10,9 +10,15 @@ import { Footer }           from '@/components/footer';
 
 
 export const metadata: Metadata = {
-    title: 'Sistema de Facultades',
-    description: 'Sistema de Facultades',
+	title		: 'Sistema de Solicitud',
+	description	: 'Sistema de Solicitudes de Facultad',
+	icons		: {
+		icon	    : '/favicon.ico',
+		shortcut    : '/favicon.ico',
+		apple	    : '/favicon.ico',
+	},
 };
+
 
 export default function RootLayout({
     children,
