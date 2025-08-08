@@ -117,8 +117,7 @@ const formSchema = z.object({
     professorId     : z.string().nullable().optional(),
     spaceId         : z.string().nullable().default( '' )
 }).superRefine(( data, ctx ) => {
-    const minimum = data.minimum;
-    const maximum = data.maximum;
+    const { minimum, maximum } = data;
 
     if ( minimum !== null && maximum !== null && maximum < minimum ) {
         ctx.addIssue({
@@ -152,20 +151,20 @@ interface RequestDetailFormProps {
 
 
 const defaultRequestDetail = ( data?: RequestDetail ) => ({
-    minimum         : data?.minimum || null,
-    maximum         : data?.maximum || null,
-    spaceType       : data?.spaceType as SpaceType || null,
-    spaceSize       : data?.spaceSize as Size || null,
-    building        : data?.building as Building || null,
-    costCenterId    : data?.costCenterId || null,
-    inAfternoon     : data?.inAfternoon || false,
-    isPriority      : data?.isPriority || false,
-    moduleId        : data?.moduleId || null,
+    minimum         : data?.minimum                 || null,
+    maximum         : data?.maximum                 || null,
+    spaceType       : data?.spaceType as SpaceType  || null,
+    spaceSize       : data?.spaceSize as Size       || null,
+    building        : data?.building as Building    || null,
+    costCenterId    : data?.costCenterId            || null,
+    inAfternoon     : data?.inAfternoon             || false,
+    isPriority      : data?.isPriority              || false,
+    moduleId        : data?.moduleId                || null,
     days            : data?.days?.map( day => Number( day )) ?? [],
-    description     : data?.description || '',
-    level           : data?.level || Level.PREGRADO,
-    professorId     : data?.professorId || null,
-    spaceId         : data?.spaceId || null,
+    description     : data?.description             || '',
+    level           : data?.level                   || Level.PREGRADO,
+    professorId     : data?.professorId             || null,
+    spaceId         : data?.spaceId                 || null,
 });
 
 
@@ -338,7 +337,11 @@ export function RequestDetailForm({
                     </div>
                 </DialogHeader>
 
-                <Tabs defaultValue={tab} onValueChange={( value ) => setTab( value as Tab )} className="w-full">
+                <Tabs
+                    defaultValue    = { tab }
+                    onValueChange   = {( value ) => setTab( value as Tab )}
+                    className       = "w-full"
+                >
                     { requestDetail && (
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="form">
@@ -506,7 +509,7 @@ export function RequestDetailForm({
                                                     multiple            = { false }
                                                     placeholder         = "Seleccionar espacio"
                                                     defaultValues       = { field.value || '' }
-                                                    onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value ) }
+                                                    onSelectionChange   = {( value ) => field.onChange( value === undefined ? null : value )}
                                                     options             = { spaces }
                                                     isLoading           = { isLoadingSpaces }
                                                     disabled            = { isReadOnly }
@@ -646,10 +649,6 @@ export function RequestDetailForm({
                                                 isLoading           = { isLoadingCostCenter }
                                             />
 
-                                            <FormDescription>
-                                                Selecciona el centro de costos asociado
-                                            </FormDescription>
-
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -664,21 +663,21 @@ export function RequestDetailForm({
                                             <FormLabel>Módulo</FormLabel>
 
                                             { isErrorModules
-                                                ? <>
-                                                    <FormControl>
-                                                        <Input
-                                                            {... field}
-                                                            placeholder="Ingrese el módulo"
-                                                            value = { field.value || '' }
-                                                            onChange    = {( e: React.ChangeEvent<HTMLInputElement> ) => field.onChange( e.target.value )}
-                                                        />
-                                                    </FormControl>
+                                            ? <>
+                                                <FormControl>
+                                                    <Input
+                                                        {... field}
+                                                        placeholder="Ingrese el módulo"
+                                                        value = { field.value || '' }
+                                                        onChange    = {( e: React.ChangeEvent<HTMLInputElement> ) => field.onChange( e.target.value )}
+                                                    />
+                                                </FormControl>
 
-                                                    <FormDescription>
-                                                        Error al cargar los módulos. Ingrese manualmente.
-                                                    </FormDescription>
-                                                </>
-                                                :  <Select
+                                                <FormDescription>
+                                                    Error al cargar los módulos. Ingrese manualmente.
+                                                </FormDescription>
+                                            </>
+                                            :  <Select
                                                     defaultValue    = { field.value || 'Sin especificar' }
                                                     disabled        = { isLoadingModules || isReadOnly }
                                                     onValueChange   = {( value ) => {
@@ -775,15 +774,6 @@ export function RequestDetailForm({
                                         </FormItem>
                                     )}
                                 />
-
-                                {/* Comments */}
-                                { requestDetail &&
-                                    <div className="col-span-2">
-                                        <FormLabel>Comentarios</FormLabel>
-
-                                        <p>{requestDetail?.comment || 'Sin comentarios.'}</p>
-                                    </div>
-                                }
 
                                 <DialogFooter className="flex items-center justify-between gap-2">
                                     <Button
