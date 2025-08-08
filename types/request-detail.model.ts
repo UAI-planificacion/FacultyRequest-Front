@@ -52,7 +52,6 @@ export interface BaseRequestDetail {
     inAfternoon?    : boolean;
     building?       : Building | null;
     description?    : string | null;
-    comment?        : string | null;
     moduleId?       : string | null;
     days?           : string[];
     spaceId?        : string | null;
