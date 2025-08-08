@@ -26,7 +26,7 @@ export function Login(): JSX.Element {
         <>
             {isLoading ? (
                 <Button
-                    className   = "bg-black text-white border-zinc-700 hover:bg-zinc-900 hover:text-white"
+                    className   = "bg-black text-white border-zinc-700 hover:bg-zinc-900 hover:text-white gap-1.5"
                     variant     = "outline"
                     disabled    = { true }
                 >
@@ -42,12 +42,12 @@ export function Login(): JSX.Element {
                                 className="gap-2 bg-black text-white border-zinc-700"
                             >
                                 <Image
-                                    src     = { session?.user?.image }
-                                    alt     = { session?.user?.name }
-                                    width   = { 30 }
-                                    height  = { 30 }
-                                    loading = "lazy"
-                                    className="rounded-full"
+                                    src         = { session?.user?.image }
+                                    alt         = { session?.user?.name }
+                                    width       = { 30 }
+                                    height      = { 30 }
+                                    loading     = "lazy"
+                                    className   = "rounded-full"
                                 />
 
                                 <span className="hidden md:flex">{session?.user?.name}</span>
