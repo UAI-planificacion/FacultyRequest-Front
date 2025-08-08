@@ -39,6 +39,7 @@ import { Button }               from "@/components/ui/button";
 import { Textarea }             from "@/components/ui/textarea";
 import { MultiSelectCombobox }  from "@/components/shared/Combobox";
 import { ShowStatus }           from "@/components/shared/status";
+import { CommentSection }       from "@/components/comment/comment-section";
 import { Switch }               from "@/components/ui/switch";
 
 import {
@@ -51,8 +52,7 @@ import { fetchApi, Method }         from "@/services/fetch";
 import { Subject }                  from "@/types/subject.model";
 import { errorToast, successToast } from "@/config/toast/toast.config";
 import { Staff, Role }              from "@/types/staff.model";
-import { CommentSection } from "../comment/comment-section";
-import { cn } from "@/lib/utils";
+import { cn }                       from "@/lib/utils";
 
 
 interface RequestFormProps {
@@ -83,6 +83,7 @@ const formSchema = z.object({
 
 
 export type RequestFormValues = z.infer<typeof formSchema>;
+
 
 type Tab = 'form' | 'comments';
 
@@ -342,18 +343,14 @@ export function RequestForm({
                                             </FormItem>
                                         )}
                                     />
-
-                                    {/* Comments */}
-                                    { request && 
-                                        <div className="flex flex-col space-y-1">
-                                            <label>Comentarios</label>
-                                            <p>{request.comment || 'Sin comentarios.'}</p>
-                                        </div>
-                                    }
                                 </div>
 
                                 <div className="flex justify-between space-x-4 pt-4">
-                                    <Button type="button" variant="outline" onClick={onClose}>
+                                    <Button
+                                        type    = "button"
+                                        variant = "outline"
+                                        onClick = { onClose }
+                                    >
                                         { isReadOnly ? 'Cerrar' : 'Cancelar' }
                                     </Button>
 
