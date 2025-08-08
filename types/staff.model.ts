@@ -16,6 +16,7 @@ export interface Staff extends BaseStaff {
     id          : string;
     isActive    : boolean;
     facultyId   : string;
+    facultyName : string;
     createdAt   : Date;
     updatedAt   : Date;
 }
