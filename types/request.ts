@@ -61,7 +61,6 @@ export interface Request {
     status          : Status;
     isConsecutive   : boolean;
     description     : string | null;
-    comment         : string | null;
     updatedAt       : Date;
     createdAt       : Date;
     staffCreate     : StaffRequest;
