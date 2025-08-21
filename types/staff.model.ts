@@ -1,7 +1,8 @@
 export enum Role {
-    ADMIN   = 'ADMIN',
-    EDITOR  = 'EDITOR',
-    VIEWER  = 'VIEWER',
+    ADMIN           = 'ADMIN',
+    ADMIN_FACULTY   = 'ADMIN_FACULTY',
+    EDITOR          = 'EDITOR',
+    VIEWER          = 'VIEWER',
 }
 
 
@@ -19,4 +20,17 @@ export interface Staff extends BaseStaff {
     facultyName : string;
     createdAt   : Date;
     updatedAt   : Date;
+}
+
+
+export interface CreateStaff extends BaseStaff {
+    facultyId   : string;
+    isActive?    : boolean;
+}
+
+
+export interface UpdateStaff extends Partial<BaseStaff> {
+    id : string;
+    isActive    : boolean;
+
 }
