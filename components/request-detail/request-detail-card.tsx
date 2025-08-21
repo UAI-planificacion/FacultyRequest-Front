@@ -182,7 +182,7 @@ export function RequestDetailCard({
                     </Badge>
 
                     <Badge variant="default" className="text-xs">
-                        {getLevelName(detail.level)}
+                        {getLevelName(detail.grade)}
                     </Badge>
 
                     {detail.inAfternoon && (
@@ -198,7 +198,7 @@ export function RequestDetailCard({
                     )}
                 </div>
 
-                {( detail.days?.length ?? 0 ) > 0 && (
+                {/* {( detail.days?.length ?? 0 ) > 0 && (
                     <div className="flex items-center gap-2">
                         <p className="text-xs font-medium text-muted-foreground">Días:</p>
 
@@ -210,7 +210,7 @@ export function RequestDetailCard({
                             ))}
                         </div>
                     </div>
-                )}
+                )} */}
 
                 {detail.description && (
                     <div>
