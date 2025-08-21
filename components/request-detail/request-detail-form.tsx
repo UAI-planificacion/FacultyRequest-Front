@@ -67,7 +67,7 @@ import  {
     type UpdateRequestDetail,
     SpaceType,
     Size,
-    Level,
+    Grade,
     Building,
 }                       from "@/types/request-detail.model";
 import { Professor }    from "@/types/professor";
@@ -113,13 +113,13 @@ const formSchema = z.object({
     moduleId        : z.string().nullable().optional(),
     days            : z.array( z.number() ).default( [] ),
     description     : z.string().max( 500, "La descripción no puede tener más de 500 caracteres" ).nullable().default(''),
-    level           : z.nativeEnum(Level, { required_error: "Por favor selecciona un nivel" }),
+    gradeId           : z.nativeEnum(Grade, { required_error: "Por favor selecciona un nivel" }),
     professorId     : z.string().nullable().optional(),
     spaceId         : z.string().nullable().default( '' )
 }).superRefine(( data, ctx ) => {
     const { minimum, maximum } = data;
 
-    if ( minimum !== null && maximum !== null && maximum < minimum ) {
+    if ( minimum && maximum && maximum < minimum ) {
         ctx.addIssue({
             code    : z.ZodIssueCode.custom,
             message : "El máximo no puede ser menor que el mínimo.",
@@ -160,9 +160,8 @@ const defaultRequestDetail = ( data?: RequestDetail ) => ({
     inAfternoon     : data?.inAfternoon             || false,
     isPriority      : data?.isPriority              || false,
     moduleId        : data?.moduleId                || null,
-    days            : data?.days?.map( day => Number( day )) ?? [],
     description     : data?.description             || '',
-    level           : data?.level                   || Level.PREGRADO,
+    grade           : data?.grade                   || Grade.PREGRADO,
     professorId     : data?.professorId             || null,
     spaceId         : data?.spaceId                 || null,
 });
@@ -181,6 +180,8 @@ export function RequestDetailForm({
     isErrorModules,
     staff
 }: RequestDetailFormProps ): JSX.Element {
+    console.log("🚀 ~ file: request-detail-form.tsx:173 ~ requestDetail:", requestDetail)
+
     const queryClient   = useQueryClient();
     const isReadOnly    = staff?.role === Role.VIEWER;
     const [tab, setTab] = useState<Tab>( 'form' );
@@ -197,7 +198,7 @@ export function RequestDetailForm({
     } = useSpace({ enabled: true });
 
 
-    const createRequestDetailApi = async (newRequestDetail: CreateRequestDetail): Promise<RequestDetail> =>
+    const createRequestDetailApi = async ( newRequestDetail: CreateRequestDetail ): Promise<RequestDetail> =>
         fetchApi<RequestDetail>({
             url: 'request-details',
             method: Method.POST,
@@ -285,23 +286,33 @@ export function RequestDetailForm({
 
 
     function onSubmitForm( formData: RequestDetailFormValues ): void {
-        formData.building = formData.spaceId?.split('-')[1] as Building;
+        console.log("🚀 ~ file: request-detail-form.tsx:288 ~ formData:", formData)
+        formData.building = ( formData.spaceId as string )?.split('-')[1] as Building;
 
-        if ( requestDetail ) {
-            updateRequestDetailMutation.mutate({
-                ...formData,
-                id      : requestDetail.id,
-                days    : formData.days.map( String ),
-                staffUpdateId : staff?.id || ''
-            });
-        } else {
-            createRequestDetailMutation.mutate({
-                ...formData,
-                requestId,
-                days            : formData.days.map( String ),
-                staffCreateId   : staff?.id || ''
-            });
-        }
+        // if ( requestDetail ) {
+        //     updateRequestDetailMutation.mutate({
+        //         ...formData,
+        //         id      : requestDetail.id,
+        //         days    : formData.days.map( String ),
+        //         staffUpdateId : staff?.id || ''
+        //     });
+        // } else {
+        //     const data  = {
+        //         ...formData,
+        //         requestId,
+        //         days            : formData.days.map( String ),
+        //         staffCreateId   : staff?.id || ''
+        //     }
+
+        //         console.log("🚀 ~ file: request-detail-form.tsx:299 ~ data:", data)
+
+        //     // createRequestDetailMutation.mutate({
+        //     //     ...formData,
+        //     //     requestId,
+        //     //     days            : formData.days.map( String ),
+        //     //     staffCreateId   : staff?.id || ''
+        //     // });
+        // }
     }
 
 
@@ -418,7 +429,7 @@ export function RequestDetailForm({
                                     {/* Level */}
                                     <FormField
                                         control = { form.control }
-                                        name    = "level"
+                                        name    = "gradeId"
                                         render  = {({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Nivel</FormLabel>
@@ -708,7 +719,7 @@ export function RequestDetailForm({
                                 />
 
                                 {/* Días */}
-                                <FormField
+                                {/* <FormField
                                     control = { form.control }
                                     name    = "days"
                                     render  = {({ field }) => (
@@ -746,7 +757,7 @@ export function RequestDetailForm({
                                             <FormMessage />
                                         </FormItem>
                                     )}
-                                />
+                                /> */}
 
                                 {/* Description */}
                                 <FormField
