@@ -139,7 +139,7 @@ export function RequestDetailView({
                     { staff?.role !== Role.VIEWER &&
                         <Button onClick={onAddRequestDetail}>
                             <Plus className="h-4 w-4 mr-2" />
-                            Agregar Detalle
+                            Crear Detalle
                         </Button>
                     }
                 </div>
