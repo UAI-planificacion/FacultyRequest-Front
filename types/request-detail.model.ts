@@ -36,7 +36,7 @@ export enum Size {
 }
 
 
-export enum Level {
+export enum Grade {
     PREGRADO        = "PREGRADO",
     FIRST_GRADE     = "FIRST_GRADE",
     SECOND_GRADE    = "SECOND_GRADE",
@@ -53,10 +53,9 @@ export interface BaseRequestDetail {
     building?       : Building | null;
     description?    : string | null;
     moduleId?       : string | null;
-    days?           : string[];
     spaceId?        : string | null;
     isPriority?     : boolean;
-    level?          : Level;
+    grade?          : Grade;
     professorId?    : string | null;
 }
 
@@ -66,7 +65,7 @@ export interface RequestDetail extends BaseRequestDetail {
     requestId   : string;
     inAfternoon : boolean;
     isPriority  : boolean;
-    level       : Level;
+    grade       : Grade;
     staffCreate : StaffRequest;
     staffUpdate : StaffRequest | null;
     createdAt   : Date;
@@ -78,7 +77,7 @@ export interface CreateRequestDetail extends Omit<BaseRequestDetail, 'comment'> 
     requestId       : string;
     inAfternoon     : boolean;
     isPriority      : boolean;
-    level           : Level;
+    grade           : Grade;
     staffCreateId   : string;
 }
 
