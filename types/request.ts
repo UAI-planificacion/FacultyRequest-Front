@@ -59,6 +59,7 @@ export interface Request {
     id              : string;
     title           : string;
     status          : Status;
+    periodId        : string;
     isConsecutive   : boolean;
     description     : string | null;
     updatedAt       : Date;
