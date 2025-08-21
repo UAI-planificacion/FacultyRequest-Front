@@ -1,12 +1,25 @@
-export interface Subject {
+interface BaseSubject {
     id              : string;
-    facultyId       : string;
     name            : string;
-    isActive        : boolean;
+    startDate       : Date[];
+    endDate         : Date[];
     students        : number;
-    startDate?      : Date;
-    endDate?        : Date;
+    costCenterId    : string;
+    isEnglish       : boolean;
+}
+
+
+export interface Subject extends BaseSubject {
+    facultyId       : string;
+    isActive        : boolean;
     createdAt       : Date;
     updatedAt       : Date;
-    costCenterId    : string;
 }
+
+
+export interface CreateSubject extends BaseSubject {
+    facultyId       : string;
+}
+
+
+export interface UpdateSubject extends Partial<BaseSubject> {}
