@@ -70,6 +70,10 @@ const formSchema = z.object({
         invalid_type_error: "El título debe ser un texto"
     }).min( 1, { message: "El título no puede estar vacío" })
     .max( 100, { message: "El título no puede tener más de 100 caracteres" }),
+    periodId: z.string({
+        required_error: "Debe seleccionar un período",
+        invalid_type_error: "Período no válido"
+    }).min( 1, { message: "Debe seleccionar un período" }),
     isConsecutive: z.boolean(),
     description: z.string()
         .max( 500, { message: "La descripción no puede tener más de 500 caracteres" })
@@ -250,47 +254,92 @@ export function RequestForm({
                                         )}
                                     />
 
-                                    {/* Subject */}
-                                    <FormField
-                                        control = { form.control }
-                                        name    = "subjectId"
-                                        render  = {({ field }) => {
-                                            return (
-                                                <FormItem>
-                                                    <FormLabel>Asignatura</FormLabel>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {/* Subject */}
+                                        <FormField
+                                            control = { form.control }
+                                            name    = "subjectId"
+                                            render  = {({ field }) => {
+                                                return (
+                                                    <FormItem>
+                                                        <FormLabel>Asignatura</FormLabel>
 
-                                                    <FormControl>
-                                                        { isError ? (
-                                                            <>
-                                                                <Input
-                                                                    placeholder = "ID de la asignatura"
-                                                                    value       = { field.value || '' }
-                                                                    onChange    = { field.onChange }
-                                                                    readOnly    = { isReadOnly }
+                                                        <FormControl>
+                                                            { isError ? (
+                                                                <>
+                                                                    <Input
+                                                                        placeholder = "ID de la asignatura"
+                                                                        value       = { field.value || '' }
+                                                                        onChange    = { field.onChange }
+                                                                        readOnly    = { isReadOnly }
+                                                                    />
+
+                                                                    <FormDescription>
+                                                                        Error al cargar las asignaturas. Ingrese el ID manualmente.
+                                                                    </FormDescription>
+                                                                </>
+                                                            ) : (
+                                                                <MultiSelectCombobox
+                                                                    multiple            = { false }
+                                                                    placeholder         = "Seleccionar una asignatura"
+                                                                    defaultValues       = { field.value || '' }
+                                                                    onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value ) }
+                                                                    options             = { memoizedSubject }
+                                                                    isLoading           = { isLoading }
+                                                                    disabled            = { isReadOnly }
                                                                 />
+                                                            )}
+                                                        </FormControl>
 
-                                                                <FormDescription>
-                                                                    Error al cargar las asignaturas. Ingrese el ID manualmente.
-                                                                </FormDescription>
-                                                            </>
-                                                        ) : (
-                                                            <MultiSelectCombobox
-                                                                multiple            = { false }
-                                                                placeholder         = "Seleccionar una asignatura"
-                                                                defaultValues       = { field.value || '' }
-                                                                onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value ) }
-                                                                options             = { memoizedSubject }
-                                                                isLoading           = { isLoading }
-                                                                disabled            = { isReadOnly }
-                                                            />
-                                                        )}
-                                                    </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                );
+                                            }}
+                                        />
 
-                                                    <FormMessage />
-                                                </FormItem>
-                                            );
-                                        }}
-                                    />
+
+                                        {/* Subject */}
+                                        <FormField
+                                            control = { form.control }
+                                            name    = "subjectId"
+                                            render  = {({ field }) => {
+                                                return (
+                                                    <FormItem>
+                                                        <FormLabel>Asignatura</FormLabel>
+
+                                                        <FormControl>
+                                                            { isError ? (
+                                                                <>
+                                                                    <Input
+                                                                        placeholder = "ID de la asignatura"
+                                                                        value       = { field.value || '' }
+                                                                        onChange    = { field.onChange }
+                                                                        readOnly    = { isReadOnly }
+                                                                    />
+
+                                                                    <FormDescription>
+                                                                        Error al cargar las asignaturas. Ingrese el ID manualmente.
+                                                                    </FormDescription>
+                                                                </>
+                                                            ) : (
+                                                                <MultiSelectCombobox
+                                                                    multiple            = { false }
+                                                                    placeholder         = "Seleccionar una asignatura"
+                                                                    defaultValues       = { field.value || '' }
+                                                                    onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value ) }
+                                                                    options             = { memoizedSubject }
+                                                                    isLoading           = { isLoading }
+                                                                    disabled            = { isReadOnly }
+                                                                />
+                                                            )}
+                                                        </FormControl>
+
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                );
+                                            }}
+                                        />
+                                    </div>
 
                                     {/* Is Consecutive */}
                                     <FormField
