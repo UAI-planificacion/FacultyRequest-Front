@@ -1,6 +1,6 @@
 "use client"
 
-import { JSX, useState } from "react";
+import { JSX, useMemo, useState } from "react";
 
 import {
     useMutation,
@@ -10,19 +10,15 @@ import {
 import { toast }    from "sonner";
 import { Plus }     from "lucide-react";
 
-import {
-    RequestDetailCardSkeleton,
-    RequestDetailErrorCard
-}                               from "@/components/request-detail/request-detail-card-skeleton";
-import { DeleteConfirmDialog }  from "@/components/dialog/DeleteConfirmDialog";
-import { Card, CardContent }    from "@/components/ui/card";
-import { RequestInfoCard }      from "@/components/request-detail/request-info-card";
-import { RequestDetailCard }    from "@/components/request-detail/request-detail-card";
-import { Button }               from "@/components/ui/button";
-import { RequestDetailForm }    from "@/components/request-detail/request-detail-form";
-
-import { KEY_QUERYS }       from "@/consts/key-queries";
-import { Method, fetchApi } from "@/services/fetch";
+import { RequestDetailErrorCard }   from "@/components/request-detail/request-detail-card-skeleton";
+import { DeleteConfirmDialog }      from "@/components/dialog/DeleteConfirmDialog";
+import { RequestInfoCard }          from "@/components/request-detail/request-info-card";
+import { Button }                   from "@/components/ui/button";
+import { RequestDetailForm }        from "@/components/request-detail/request-detail-form";
+import { ViewMode }                 from "@/components/shared/view-mode";
+import { RequestDetailList }        from "@/components/request-detail/request-detail-list";
+import { RequestDetailTable }       from "@/components/request-detail/request-detail-table";
+import { DataPagination }           from "@/components/ui/data-pagination";
 
 import type { Module, Request } from "@/types/request";
 import type { RequestDetail }   from "@/types/request-detail.model";
@@ -32,8 +28,11 @@ import { Role, Staff }          from "@/types/staff.model";
 import {
     errorToast,
     successToast
-}               from "@/config/toast/toast.config";
-import { ENV }  from "@/config/envs/env";
+}                           from "@/config/toast/toast.config";
+import { ENV }              from "@/config/envs/env";
+import { useViewMode }      from "@/hooks/use-view-mode";
+import { Method, fetchApi } from "@/services/fetch";
+import { KEY_QUERYS }       from "@/consts/key-queries";
 
 
 interface RequestDetailViewProps {
@@ -46,8 +45,11 @@ export function RequestDetailView({
     request,
     onBack,
 }: RequestDetailViewProps ): JSX.Element {
-    const queryClient   = useQueryClient();
-    const staff         = queryClient.getQueryData<Staff>([ KEY_QUERYS.STAFF ]);
+    const queryClient                       = useQueryClient();
+    const staff                             = queryClient.getQueryData<Staff>([ KEY_QUERYS.STAFF ]);
+    const { viewMode, onViewChange }        = useViewMode({ queryName: 'viewDetail' });
+    const [currentPage, setCurrentPage]     = useState( 1 );
+    const [itemsPerPage, setItemsPerPage]   = useState( 15 );
 
 
     const {
@@ -85,7 +87,23 @@ export function RequestDetailView({
     const [ isOpenDelete, setIsOpenDelete ]     = useState( false );
 
 
-    function onEditRequestDetail( detail: RequestDetail ): void {
+    const paginatedData = useMemo(() => {
+        if ( !data ) return [];
+
+        const startIndex    = ( currentPage - 1 ) * itemsPerPage;
+        const endIndex      = startIndex + itemsPerPage;
+
+        return data.slice( startIndex, endIndex );
+    }, [data, currentPage, itemsPerPage]);
+
+
+    const totalPages    = Math.ceil(( data?.length || 0 ) / itemsPerPage );
+    const startIndex    = ( currentPage - 1 ) * itemsPerPage;
+    const endIndex      = startIndex + itemsPerPage;
+
+
+    function onEditRequesDetail( detail: RequestDetail ) {
+        console.log('🚀 ~ file: request-detail.tsx:47 ~ detail:', detail)
         setIsOpen( true );
         setSelectedDetail( detail );
     }
@@ -122,6 +140,17 @@ export function RequestDetailView({
     }
 
 
+    function handlePageChange( page: number ): void {
+        setCurrentPage( page );
+    }
+
+
+    function handleItemsPerPageChange( newItemsPerPage: number ): void {
+        setItemsPerPage( newItemsPerPage );
+        setCurrentPage( 1 );
+    }
+
+
     return (
         <>
         <div className="space-y-4">
@@ -136,53 +165,66 @@ export function RequestDetailView({
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold">Detalles de la Solicitud ({data?.length ?? 0})</h2>
 
-                    { staff?.role !== Role.VIEWER &&
-                        <Button onClick={onAddRequestDetail}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Crear Detalle
-                        </Button>
-                    }
+                    <div className="flex items-end gap-2 sm:gap-4">
+                        <ViewMode
+                            viewMode        = { viewMode }
+                            onViewChange    = { onViewChange }
+                        />
+
+                        { staff?.role !== Role.VIEWER &&
+                            <Button onClick={ onAddRequestDetail }>
+                                <Plus className="h-4 w-4 mr-2" />
+                                Crear Detalle
+                            </Button>
+                        }
+                    </div>
                 </div>
 
                 {isError ? (
                     <RequestDetailErrorCard />
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                            {isLoading ? (
-                                Array.from({ length: 3 }).map((_, index) => (
-                                    <RequestDetailCardSkeleton key={`skeleton-${index}`} />
-                                ))
-                            ): (
-                                data?.map( detail => (
-                                    <RequestDetailCard
-                                        key                 = { detail.id }
-                                        detail              = { detail }
-                                        onEdit              = { onEditRequestDetail }
-                                        onDelete            = { openDeleteDialog }
-                                        professors          = { professors ?? [] }
-                                        isLoadingProfessors = { isLoadingProfessors }
-                                        isErrorProfessors   = { isErrorProfessors }
-                                        modules             = { modules ?? [] }
-                                        isLoadingModules    = { isLoadingModules }
-                                        isErrorModules      = { isErrorModules }
-                                        staff               = { staff }
-                                    />
-                                ))
-                            )}
-                        </div>
+                        {viewMode === 'cards' ? (
+                            <RequestDetailList
+                                data                = { paginatedData }
+                                isLoading           = { isLoading }
+                                onEdit              = { onEditRequesDetail }
+                                onDelete            = { openDeleteDialog }
+                                professors          = { professors ?? [] }
+                                isLoadingProfessors = { isLoadingProfessors }
+                                isErrorProfessors   = { isErrorProfessors }
+                                modules             = { modules ?? [] }
+                                isLoadingModules    = { isLoadingModules }
+                                isErrorModules      = { isErrorModules }
+                                staff = { staff }
+                            />
+                        ) : (
+                            <RequestDetailTable
+                                data                = { paginatedData }
+                                isLoading           = { isLoading }
+                                onEdit              = { onEditRequesDetail }
+                                onDelete            = { openDeleteDialog }
+                                professors          = { professors ?? [] }
+                                isLoadingProfessors = { isLoadingProfessors }
+                                isErrorProfessors   = { isErrorProfessors }
+                                modules             = { modules ?? [] }
+                                isLoadingModules    = { isLoadingModules }
+                                isErrorModules      = { isErrorModules }
+                            />
+                        )}
 
-                        {!isLoading && data?.length === 0 && (
-                            <Card>
-                                <CardContent className="text-center py-8">
-                                    <p className="text-muted-foreground">No hay detalles para esta solicitud.</p>
-
-                                    <Button className="mt-4" onClick={ onAddRequestDetail }>
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Agregar Primer Detalle
-                                    </Button>
-                                </CardContent>
-                            </Card>
+                        {/* Pagination */}
+                        {!isLoading && !isError && data && data.length > 0 && (
+                            <DataPagination
+                                currentPage             = { currentPage }
+                                totalPages              = { totalPages }
+                                totalItems              = { data.length }
+                                itemsPerPage            = { itemsPerPage }
+                                onPageChange            = { handlePageChange }
+                                onItemsPerPageChange    = { handleItemsPerPageChange }
+                                startIndex              = { startIndex }
+                                endIndex                = { Math.min(endIndex, data.length) }
+                            />
                         )}
                     </>
                 )}
