@@ -77,6 +77,7 @@ export function StaffManagement({
     const [editingStaff, setEditingStaff]               = useState<Staff | undefined>( undefined );
     const [isDeleteDialogOpen, setIsDeleteDialogOpen]   = useState( false );
     const [deletingStaffId, setDeletingStaffId]         = useState<string | undefined>( undefined );
+    const isAdmin                                       = staff.role === Role.ADMIN_FACULTY || staff.role === Role.ADMIN;
     const { data: staffList, isLoading, isError }       = useQuery({
         queryKey    : [ KEY_QUERYS.STAFF, facultyId ],
         queryFn     : () => fetchApi<Staff[]>( { url: `staff/all/${facultyId}` } ),
@@ -94,7 +95,9 @@ export function StaffManagement({
             || ( roleFilter === 'editor' && staff.role === 'EDITOR' )
             || ( roleFilter === 'viewer' && staff.role === 'VIEWER' );
 
-        const matchesStatus = statusFilter === 'active';
+        const matchesStatus = statusFilter === 'all'
+            || ( statusFilter === 'active' && staff.isActive )
+            || ( statusFilter === 'inactive' && !staff.isActive );
 
         return matchesSearch && matchesRole && matchesStatus;
     }) || [];
@@ -206,6 +209,8 @@ export function StaffManagement({
 
 
     function handleFormSubmit( formData: StaffFormValues ): void {
+        if ( staff.role === Role.VIEWER ) return;
+
         if ( editingStaff ) {
             updateStaffMutation.mutate({
                 ...formData,
@@ -283,7 +288,7 @@ export function StaffManagement({
                             </div>
                         </div>
 
-                        { staff.role !== Role.VIEWER &&
+                        { isAdmin &&
                             <Button
                                 onClick     = { openNewStaffForm }
                                 className   = "flex items-center gap-1 w-full lg:w-40"
@@ -316,7 +321,7 @@ export function StaffManagement({
 
                                         <TableHead className="bg-background w-[120px]">Activo</TableHead>
 
-                                        { staff.role !== Role.VIEWER &&
+                                        { isAdmin &&
                                             <TableHead className="text-right bg-background w-[120px]">Acciones</TableHead>
                                         }
                                     </TableRow>
@@ -331,26 +336,26 @@ export function StaffManagement({
                                 <ScrollArea className="h-[calc(100vh-600px)]">
                                     <Table>
                                         <TableBody>
-                                            { paginatedStaff.map( staff => (
-                                                <TableRow key={ staff.id }>
-                                                    <TableCell className="font-medium w-[250px]">{ staff.name }</TableCell>
+                                            { paginatedStaff.map( staffData => (
+                                                <TableRow key={ staffData.id }>
+                                                    <TableCell className="font-medium w-[250px]">{ staffData.name }</TableCell>
 
                                                     <TableCell className="w-[150px]">
-                                                        <RoleBadge role={ staff.role } />
+                                                        <RoleBadge role={ staffData.role } />
                                                     </TableCell>
 
-                                                    <TableCell className="w-[250px]">{ staff.email }</TableCell>
+                                                    <TableCell className="w-[250px]">{ staffData.email }</TableCell>
 
                                                     <TableCell className="w-[120px]">
-                                                        <ActiveBadge isActive={ staff.isActive } />
+                                                        <ActiveBadge isActive={ staffData.isActive } />
                                                     </TableCell>
 
-                                                    { staff.role !== Role.VIEWER &&
+                                                    { isAdmin &&
                                                         <TableCell className="text-right w-[120px]">
                                                             <ActionButton
                                                                 editItem    = { openEditStaffForm }
-                                                                deleteItem  = { () => onOpenDeleteStaff(staff) }
-                                                                item        = { staff }
+                                                                deleteItem  = { () => onOpenDeleteStaff(staffData) }
+                                                                item        = { staffData }
                                                             />
                                                         </TableCell>
                                                     }
