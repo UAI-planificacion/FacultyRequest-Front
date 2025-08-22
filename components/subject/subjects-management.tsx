@@ -74,6 +74,7 @@ export function SubjectsManagement({
     const [selectedCostCenter, setSelectedCostCenter]   = useState<string>( 'all' );
     const [isDeleteDialogOpen, setIsDeleteDialogOpen]   = useState( false );
     const [deletingSubjectId, setDeletingSubjectId]     = useState<string | undefined>( undefined );
+    const isAdmin                                       = staff.role === Role.ADMIN_FACULTY || staff.role === Role.ADMIN;
 
 
     const {
@@ -265,7 +266,7 @@ export function SubjectsManagement({
                             </div>
                         </div>
 
-                        { staff.role !== Role.VIEWER &&
+                        { isAdmin &&
                             <Button
                                 onClick     = { openNewSubjectForm }
                                 className   = "flex items-center gap-1 w-full lg:w-40"
@@ -303,7 +304,7 @@ export function SubjectsManagement({
 
                                         <TableHead className="text-center bg-background w-[100px]">Inglés</TableHead>
 
-                                        { staff.role !== Role.VIEWER &&
+                                        { isAdmin &&
                                             <TableHead className="text-right bg-background w-[100px]">Acciones</TableHead>
                                         }
                                     </TableRow>
@@ -354,7 +355,7 @@ export function SubjectsManagement({
                                                         </Badge>
                                                     </TableCell>
 
-                                                    { staff.role !== Role.VIEWER &&
+                                                    { isAdmin &&
                                                         <TableCell className="text-right w-[100px]">
                                                             <ActionButton
                                                                 editItem    = { openEditSubjectForm }
