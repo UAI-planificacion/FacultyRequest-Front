@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { useQuery } from "@tanstack/react-query";
 
-import { RequestList }          from "@/components/request/request-list";
+import { RequestMain }          from "@/components/request/request-main";
 import { RequestDetailView }    from "@/components/request-detail/request-detail";
 
 import { KEY_QUERYS }   from "@/consts/key-queries";
@@ -93,7 +93,7 @@ export function RequestsManagement({
                 onBack  = { handleBack }
             />
         ) : (
-            <RequestList
+            <RequestMain
                 requests        = { data || [] }
                 onViewDetails   = { handleViewDetails }
                 facultyId       = { facultyId }
