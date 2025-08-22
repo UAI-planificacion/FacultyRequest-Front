@@ -5,6 +5,9 @@ export const KEY_QUERYS = {
     STAFF           : 'staff',
     SUBJECTS        : 'subjects',
     PROFESSORS      : 'professors',
+    PERIODS         : 'periods',
+
+    GRADES          : 'grades',
 
     SIZE            : 'sizes',
     DAYS            : 'days',
