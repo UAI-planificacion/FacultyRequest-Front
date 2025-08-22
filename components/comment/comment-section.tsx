@@ -20,12 +20,11 @@ import { CommentErrorCard }     from "@/components/comment/comment-error-card";
 import { DeleteConfirmDialog }  from "@/components/dialog/DeleteConfirmDialog";
 import { ShowDate }             from "@/components/shared/date";
 
-import { Comment }      from "@/types/comment.model";
-import { useSession }   from "@/hooks/use-session";
-import { useComments }  from "@/hooks/use-comments";
-import { KEY_QUERYS } from "@/consts/key-queries";
-import { Staff } from "@/types/staff.model";
-import { useQueryClient } from "@tanstack/react-query";
+import { Comment }          from "@/types/comment.model";
+import { useComments }      from "@/hooks/use-comments";
+import { KEY_QUERYS }       from "@/consts/key-queries";
+import { Role, Staff }      from "@/types/staff.model";
+import { useQueryClient }   from "@tanstack/react-query";
 
 
 interface CommentSectionProps {
@@ -50,6 +49,7 @@ export function CommentSection( {
 	const [deletingCommentContent, setDeletingCommentContent]   = useState<string>( '' );
     const queryClient                                           = useQueryClient();
     const staff                                                 = queryClient.getQueryData<Staff>([ KEY_QUERYS.STAFF ]);
+    const isAdmin                                               = staff?.role === Role.ADMIN || staff?.role === Role.ADMIN_FACULTY;
 
 
 	const {
@@ -144,12 +144,12 @@ export function CommentSection( {
 				)}
 
 				{/* Loading State */}
-				{isLoading && !isError && (
+				{ isLoading && !isError && (
 					<CommentsSkeleton count={3} />
 				)}
 
 				{/* Empty State */}
-				{!isLoading && !isError && comments.length === 0 && (
+				{ !isLoading && !isError && comments.length === 0 && (
 					<Card className="p-4">
 						<p className="text-sm text-muted-foreground text-center">
 							No hay comentarios aún. ¡Sé el primero en comentar!
@@ -158,7 +158,7 @@ export function CommentSection( {
 				)}
 
 				{/* Comments List */}
-				{!isLoading && !isError && comments.length > 0 && (
+				{ !isLoading && !isError && comments.length > 0 && (
 					<ScrollArea className={`${size} w-full`}>
 						<div className="space-y-3 pr-4">
 							{comments.map( comment => (
@@ -169,6 +169,7 @@ export function CommentSection( {
 									onEdit              = { handleEditComment }
 									onDelete            = { onOpenDeleteComment }
 									isLoading           = { isLoading }
+                                    isAdmin             = { isAdmin }
 								/>
 							))}
 						</div>
@@ -177,43 +178,45 @@ export function CommentSection( {
 			</div>
 
 			{/* Add New Comment */}
-			<Card className="p-4">
-				<div className="space-y-3">
-					<h4 className="text-sm font-medium">Agregar comentario</h4>
+            { isAdmin &&
+                <Card className="p-4">
+                    <div className="space-y-3">
+                        <h4 className="text-sm font-medium">Agregar comentario</h4>
 
-					<Textarea
-						placeholder     = "Escribe tu comentario aquí... (Ctrl+Enter para enviar)"
-						value           = { newComment }
-						onChange        = { ( e ) => setNewComment( e.target.value ) }
-						onKeyDown       = { handleKeyPress }
-						className       = "min-h-[100px] max-h-[200px]"
-						maxLength       = { 500 }
-						disabled        = { isError }
-					/>
+                        <Textarea
+                            placeholder     = "Escribe tu comentario aquí... (Ctrl+Enter para enviar)"
+                            value           = { newComment }
+                            onChange        = { ( e ) => setNewComment( e.target.value ) }
+                            onKeyDown       = { handleKeyPress }
+                            className       = "min-h-[100px] max-h-[200px]"
+                            maxLength       = { 500 }
+                            disabled        = { isError }
+                        />
 
-					<div className="flex justify-between items-center">
-						<span className="text-xs text-muted-foreground">
-							{newComment.length} / 500
-						</span>
+                        <div className="flex justify-between items-center">
+                            <span className="text-xs text-muted-foreground">
+                                {newComment.length} / 500
+                            </span>
 
-						<Button
-							onClick     = { handleSubmitComment }
-							disabled    = { !newComment.trim() || isCreating || isError }
-							size        = "sm"
-						>
-							<Send className="h-4 w-4 mr-2" />
-							{isCreating ? "Enviando..." : "Enviar"}
-						</Button>
-					</div>
+                            <Button
+                                onClick     = { handleSubmitComment }
+                                disabled    = { !newComment.trim() || isCreating || isError }
+                                size        = "sm"
+                            >
+                                <Send className="h-4 w-4 mr-2" />
+                                {isCreating ? "Enviando..." : "Enviar"}
+                            </Button>
+                        </div>
 
-					{/* Error message for commenting */}
-					{isError && (
-						<p className="text-xs text-destructive">
-							Los comentarios están deshabilitados debido a un error al cargar.
-						</p>
-					)}
-				</div>
-			</Card>
+                        {/* Error message for commenting */}
+                        {isError && (
+                            <p className="text-xs text-destructive">
+                                Los comentarios están deshabilitados debido a un error al cargar.
+                            </p>
+                        )}
+                    </div>
+                </Card>
+            }
 
 			{/* Delete Confirmation Dialog */}
 			<DeleteConfirmDialog
@@ -237,6 +240,7 @@ interface CommentItemProps {
 	onEdit              : ( commentId: string, content: string ) => void;
 	onDelete            : ( commentId: string, commentContent: string ) => void;
 	isLoading           : boolean;
+    isAdmin             : boolean;
 }
 
 
@@ -248,7 +252,8 @@ function CommentItem( {
 	currentUserEmail, 
 	onEdit, 
 	onDelete, 
-	isLoading 
+	isLoading,
+    isAdmin
 }: CommentItemProps ): JSX.Element {
 	const [isEditing, setIsEditing]     = useState( false );
 	const [editContent, setEditContent] = useState( comment.content );
@@ -259,6 +264,7 @@ function CommentItem( {
 	 */
 	const canEditComment = () => {
 		if ( !currentUserEmail ) return false;
+        if ( !isAdmin ) return false;
 
 		if ( comment.staff?.email === currentUserEmail ) return true;
 		if ( comment.adminEmail === currentUserEmail ) return true;
