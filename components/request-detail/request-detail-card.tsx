@@ -24,10 +24,7 @@ import {
 import { Badge }    from "@/components/ui/badge";
 import { Button }   from "@/components/ui/button";
 
-import {
-    getLevelName,
-    getSpaceType
-}                           from "@/lib/utils";
+import { getSpaceType }     from "@/lib/utils";
 import { Professor }        from "@/types/professor";
 import { Role, Staff }      from "@/types/staff.model";
 import { RequestDetail }    from "@/types/request-detail.model";
@@ -70,13 +67,31 @@ export function RequestDetailCard({
     }, [professors, detail.professorId]);
 
 
-    const memoizedModuleName = useMemo(() => {
-        const module = modules.find( module => module.id.toString() === detail.moduleId );
+    const memoizedDays = useMemo(() => {
+        const daysRecord: Record<string, string> = {};
 
-        if ( !module ) return '';
+        detail.moduleDays.forEach( moduleDay => {
+            if ( !daysRecord[ moduleDay.day ]) {
+                daysRecord[ moduleDay.day ] = daysName[ Number( moduleDay.day ) - 1 ];
+            }
+        });
 
-        return `${module.startHour}-${module.endHour}`;
-    }, [modules, detail.moduleId]);
+        return daysRecord;
+    }, [detail.moduleDays]);
+
+    const memoizedModules = useMemo(() => {
+        const modulesRecord: Record<string, string> = {};
+
+        detail.moduleDays.forEach(moduleDay => {
+            const module = modules.find( m => m.id.toString() === moduleDay.moduleId.toString() );
+
+            if ( module && !modulesRecord[moduleDay.moduleId ]) {
+                modulesRecord[moduleDay.moduleId] = `${module.startHour}-${module.endHour}`;
+            }
+        });
+
+        return modulesRecord;
+    }, [modules, detail.moduleDays]);
 
 
     return (
@@ -164,26 +179,18 @@ export function RequestDetailCard({
                                 <span>{memoizedProfessorName}</span>
                             </div>
                     }
-
-                    { isLoadingModules && !isErrorModules
-                        ? <LoaderMini />
-                        : detail.moduleId &&
-                            <div className="flex items-center gap-1 text-xs">
-                                <Clock className="h-4 w-4 text-muted-foreground" />
-
-                                <span>{memoizedModuleName}</span>
-                            </div>
-                    }
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                     <Badge variant={detail.isPriority ? "destructive" : "default"} className="text-xs">
-                        {detail.isPriority ? "Con Prioridad" : "Sin Prioridad"}
+                        {detail.isPriority ? "Restrictivo" : "No restrictivo"}
                     </Badge>
 
-                    <Badge variant="default" className="text-xs">
-                        {getLevelName(detail.grade)}
-                    </Badge>
+                    {detail.grade && (
+                        <Badge variant="default" className="text-xs">
+                            {detail.grade.name}
+                        </Badge>
+                    )}
 
                     {detail.inAfternoon && (
                         <Badge variant="default" className="text-xs">
@@ -198,19 +205,33 @@ export function RequestDetailCard({
                     )}
                 </div>
 
-                {/* {( detail.days?.length ?? 0 ) > 0 && (
-                    <div className="flex items-center gap-2">
-                        <p className="text-xs font-medium text-muted-foreground">Días:</p>
+                {detail.moduleDays.length > 0 && (
+                    <div className="space-y-2 items-center gap-2">
+                        <div className="flex items-start gap-2">
+                            <p className="text-xs font-medium text-muted-foreground">Días:</p>
 
-                        <div className="flex flex-wrap gap-1 mt-1">
-                            {detail.days?.map((day, index) => (
-                                <Badge key={index} variant="outline" className="text-xs border border-zinc-300 dark:border-zinc-700">
-                                    {daysName[Number(day) - 1]}
-                                </Badge>
-                            ))}
+                            <div className="flex flex-wrap gap-1">
+                                {Object.entries(memoizedDays).map(([dayId, dayName]) => (
+                                    <Badge key={dayId} variant="outline" className="text-xs border border-zinc-300 dark:border-zinc-700">
+                                        {dayName}
+                                    </Badge>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-2">
+                            <p className="text-xs font-medium text-muted-foreground">Horarios:</p>
+
+                            <div className="flex flex-wrap gap-1">
+                                {Object.entries(memoizedModules).map(([moduleId, moduleTime]) => (
+                                    <Badge key={moduleId} variant="outline" className="text-xs border border-zinc-300 dark:border-zinc-700">
+                                        {moduleTime}
+                                    </Badge>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                )} */}
+                )}
 
                 {detail.description && (
                     <div>
