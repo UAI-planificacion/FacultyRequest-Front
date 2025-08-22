@@ -31,7 +31,7 @@ export function RequestInfoCard({ request, onBack }: RequestInfoCardProps ): JSX
     return (
         <Card>
             <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="grid gap-2 sm:flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Button
                             variant = "secondary"
@@ -47,17 +47,17 @@ export function RequestInfoCard({ request, onBack }: RequestInfoCardProps ): JSX
                         </div>
                     </div>
 
-                    <div className="grid gap-2 justify-end end-1">
+                    <div className="flex sm:grid gap-2 justify-end end-1">
                         <ShowStatus status={request.status} />
 
-                        <Consecutive className="w-full" isConsecutive={request.isConsecutive} />
+                        <Consecutive isConsecutive={request.isConsecutive} />
                     </div>
                 </div>
             </CardHeader>
 
             <CardContent className="space-y-4">
                 {/* Metadata Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     {/* Created By */}
                     <div className="space-y-1">
                         <p className="text-sm font-medium text-muted-foreground">Creado por</p>
@@ -101,21 +101,17 @@ export function RequestInfoCard({ request, onBack }: RequestInfoCardProps ): JSX
                 </div>
 
                 {/* Description and Comments */}
-                <div className="space-y-4 pt-4 border-t">
-                    {request.description && (
-                        <div className="space-y-1">
-                            <p className="text-sm font-medium text-muted-foreground">Descripción</p>
-                            <p className="text-sm whitespace-pre-line">{request.description}</p>
-                        </div>
-                    )}
+                { request.description && (
+                    <div className="pt-2 border-t space-y-1">
+                        <span className="text-sm font-medium text-muted-foreground">
+                            Descripción
+                        </span>
 
-                    {request.comment && (
-                        <div className="space-y-1">
-                            <p className="text-sm font-medium text-muted-foreground">Comentarios</p>
-                            <p className="text-sm text-muted-foreground whitespace-pre-line">{request.comment}</p>
-                        </div>
-                    )}
-                </div>
+                        <p className="text-sm whitespace-pre-line">
+                            { request.description }
+                        </p>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );
