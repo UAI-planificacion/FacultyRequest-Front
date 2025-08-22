@@ -1,4 +1,5 @@
-import { StaffRequest } from "./request";
+import { Grade }        from "@/types/grade";
+import { StaffRequest } from "@/types/request";
 
 
 export enum SpaceType {
@@ -36,10 +37,10 @@ export enum Size {
 }
 
 
-export enum Grade {
-    PREGRADO        = "PREGRADO",
-    FIRST_GRADE     = "FIRST_GRADE",
-    SECOND_GRADE    = "SECOND_GRADE",
+export interface ModuleDay {
+    id?         : string;
+    day         : string;
+    moduleId    : string;
 }
 
 
@@ -55,8 +56,9 @@ export interface BaseRequestDetail {
     moduleId?       : string | null;
     spaceId?        : string | null;
     isPriority?     : boolean;
-    grade?          : Grade;
+    grade?          : Grade | null;
     professorId?    : string | null;
+    moduleDays      : ModuleDay[];
 }
 
 
@@ -77,8 +79,8 @@ export interface CreateRequestDetail extends Omit<BaseRequestDetail, 'comment'> 
     requestId       : string;
     inAfternoon     : boolean;
     isPriority      : boolean;
-    grade           : Grade;
     staffCreateId   : string;
+    gradeId?        : string | null;
 }
 
 
