@@ -28,10 +28,9 @@ import { Staff }        from "@/types/staff.model";
 
 enum TabValue {
     SUBJECTS    = "subjects",
-    PERSONNEL   = "personnel",
+    STAFF       = "staff",
     REQUESTS    = "requests"
 }
-
 
 
 export default function RequestsPage(): JSX.Element {
@@ -39,10 +38,9 @@ export default function RequestsPage(): JSX.Element {
     const searchParams              = useSearchParams();
     const initialTab                = searchParams.get( 'tab' ) as TabValue || TabValue.SUBJECTS;
     const [activeTab, setActiveTab] = useState<TabValue>( initialTab );
+    const { session }               = useSession();
+    const [ email, setEmail ]       = useState( '' );
 
-
-    const { session, isLoading: isSession } = useSession();
-    const [ email, setEmail ]               = useState( '' );
 
     useEffect(() => {
         setEmail( session?.user?.email || '' );
@@ -55,6 +53,7 @@ export default function RequestsPage(): JSX.Element {
         enabled     : !!email
     });
 
+
     useEffect(() => {
         if ( !staff?.facultyId ) return;
 
@@ -63,12 +62,17 @@ export default function RequestsPage(): JSX.Element {
         router.replace( `?${currentParams.toString()}`, { scroll: false });
     }, [ activeTab, staff, router, searchParams ]);
 
+
     return (
         <main className="min-h-[calc(100vh-75px)] container mx-auto py-6 space-y-4 px-4">
             <div className="grid">
-                <h1 className="text-2xl font-bold">Facultad {staff?.facultyName}</h1>
+                <h1 className="text-2xl font-bold">
+                    Facultad {staff?.facultyName }
+                </h1>
 
-                <span className="text-[11px] text-muted-foreground">{staff?.facultyId}</span>
+                <span className="text-[11px] text-muted-foreground">
+                    { staff?.facultyId }
+                </span>
             </div>
 
             <Tabs
@@ -88,7 +92,7 @@ export default function RequestsPage(): JSX.Element {
                     </TabsTrigger>
 
                     <TabsTrigger
-                        value       = { TabValue.PERSONNEL }
+                        value       = { TabValue.STAFF }
                         className   = "h-10 text-md gap-2"
                         title       = "Personal"
                     >
@@ -108,25 +112,25 @@ export default function RequestsPage(): JSX.Element {
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value={TabValue.REQUESTS}>
+                <TabsContent value={ TabValue.REQUESTS }>
                     <RequestsManagement
                         facultyId   = {  staff?.facultyId || '' }
                         enabled     = { activeTab === TabValue.REQUESTS }
                     />
                 </TabsContent>
 
-                <TabsContent value={TabValue.SUBJECTS}>
+                <TabsContent value={ TabValue.SUBJECTS }>
                     <SubjectsManagement 
                         facultyId   = { staff?.facultyId  || '' }
-                        enabled     = { activeTab === TabValue.SUBJECTS }
+                        enabled     = { activeTab === TabValue.SUBJECTS && !!staff?.facultyId }
                         staff       = { staff || {} as Staff }
                     />
                 </TabsContent>
 
-                <TabsContent value={TabValue.PERSONNEL}>
+                <TabsContent value={ TabValue.STAFF }>
                     <StaffManagement 
                         facultyId   = { staff?.facultyId  || '' }
-                        enabled     = { activeTab === TabValue.PERSONNEL }
+                        enabled     = { activeTab === TabValue.STAFF && !!staff?.facultyId }
                         staff       = { staff || {} as Staff }
                     />
                 </TabsContent>
