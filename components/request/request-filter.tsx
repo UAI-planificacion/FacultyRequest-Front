@@ -19,6 +19,7 @@ import { Label }                from "@/components/ui/label";
 import { Status }       from "@/types/request";
 import { Role, Staff }  from "@/types/staff.model";
 import { cn }           from "@/lib/utils";
+import { ViewMode }     from "@/components/shared/view-mode";
 
 
 export interface RequestFilter {
@@ -34,6 +35,8 @@ export interface RequestFilter {
     sortOrder               : "asc" | "desc";
     setSortOrder            : ( sortOrder: "asc" | "desc" ) => void;
     staff                   : Staff | undefined;
+    viewMode                : ViewMode,
+    setViewMode             : ( viewMode: ViewMode ) => void;
 }
 
 
@@ -49,15 +52,14 @@ export function RequestFilter({
     setSortBy,
     sortOrder,
     setSortOrder,
-    staff
+    staff,
+    viewMode,
+    setViewMode,
 }: RequestFilter ): JSX.Element {
     return (
         <Card>
             <CardContent>
-                <div className={cn(
-                    "grid items-center",
-                    staff?.role !== Role.VIEWER ? ' lg:flex lg:justify-between' : ''
-                )}>
+                <div className="grid items-end gap-0 lg:gap-4 lg:flex lg:justify-between">
                     <div className={cn(
                         "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 items-end",
                         staff?.role !== Role.VIEWER ? "lg:w-[80%]" : "w-full"
@@ -144,15 +146,22 @@ export function RequestFilter({
                         </div>
                     </div>
 
-                    {staff?.role !== Role.VIEWER &&
-                        <Button
-                            onClick     = { setOpen }
-                            className   = "mt-5"
-                        >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Crear Solicitud
-                        </Button>
-                    }
+                    <div className="flex items-end gap-2 sm:gap-4 justify-end">
+                        <ViewMode
+                            viewMode        = { viewMode }
+                            onViewChange    = { setViewMode }
+                        />
+
+                        {staff?.role !== Role.VIEWER &&
+                            <Button
+                                onClick     = { setOpen }
+                                className   = "mt-5"
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Crear Solicitud
+                            </Button>
+                        }
+                    </div>
                 </div>
             </CardContent>
         </Card>
