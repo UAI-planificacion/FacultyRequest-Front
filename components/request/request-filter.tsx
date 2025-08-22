@@ -59,7 +59,10 @@ export function RequestFilter({
     return (
         <Card>
             <CardContent>
-                <div className="grid items-end gap-0 lg:gap-4 lg:flex lg:justify-between">
+                <div className={cn(
+                    "grid items-end lg:flex lg:justify-between",
+                    staff?.role !== Role.VIEWER ? 'gap-0 lg:gap-4' : "gap-4"
+                )}>
                     <div className={cn(
                         "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 items-end",
                         staff?.role !== Role.VIEWER ? "lg:w-[80%]" : "w-full"
