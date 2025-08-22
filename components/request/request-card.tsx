@@ -1,6 +1,6 @@
 'use client'
 
-import {  Eye, User, BookOpen, Trash, Pencil } from "lucide-react";
+import {  Eye, User, BookOpen, Trash, Pencil, CalendarDays } from "lucide-react";
 
 import {
     Card,
@@ -16,6 +16,8 @@ import { Consecutive }  from "@/components/shared/consecutive";
 
 import { type Request } from "@/types/request";
 import { Role, Staff }  from "@/types/staff.model";
+import { usePeriods }   from "@/hooks/use-periods";
+import LoaderMini       from "@/icons/LoaderMini";
 
 
 export interface RequestCardProps {
@@ -33,6 +35,9 @@ export function RequestCard({
     onDelete,
     staff
 }: RequestCardProps ) {
+    const { getPeriodName, isLoadingPeriods, isErrorPeriods } = usePeriods();
+
+
     return (
         <Card className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
@@ -53,28 +58,54 @@ export function RequestCard({
                 <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2">
                         <BookOpen className="h-4 w-4" />
-                        <span className="font-medium max-w-full truncate overflow-hidden whitespace-nowrap">{request.subject.name}</span>
+
+                        <span className="font-medium max-w-full truncate overflow-hidden whitespace-nowrap">
+                            { request.subject.name }
+                        </span>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        <span className="max-w-full truncate overflow-hidden whitespace-nowrap">{request.staffCreate.name}</span>
+
+                        <span className="max-w-full truncate overflow-hidden whitespace-nowrap">
+                            { request.staffCreate.name }
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                        <CalendarDays className="h-4 w-4" />
+
+                        { isLoadingPeriods
+                            ? <LoaderMini/>
+                            : <span className="max-w-full truncate overflow-hidden whitespace-nowrap">
+                                { getPeriodName( request.periodId ) }
+                            </span>
+                        }
+
+                        { isErrorPeriods && (
+                            <span className="max-w-full truncate overflow-hidden whitespace-nowrap">
+                                Sin Peridodo
+                            </span>
+                        )}
                     </div>
 
                     <ShowDate date={request.createdAt} />
                 </div>
 
                 {request.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 truncate">{request.description}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2 truncate">
+                        { request.description }
+                    </p>
                 )}
 
-                <div className="flex items-center justify-between pt-2">
-                    <Badge variant="secondary">
-                        {request.totalDetails} detalle{request.totalDetails !== 1 ? "s" : ""}
-                    </Badge>
-
+                <div className="flex items-center justify-end gap-2">
                     <div className="flex items-center gap-2">
-                        <Button size="sm" onClick={() => onEdit( request )} className="flex items-center gap-1" variant="outline">
+                        <Button
+                            size        = "sm"
+                            onClick     = {() => onEdit( request )}
+                            className   = "flex items-center gap-1"
+                            variant     = "outline"
+                        >
                             { staff?.role === Role.VIEWER
                                 ? <Eye className="h-4 w-4" />
                                 : <Pencil className="h-4 w-4 text-blue-500" />
@@ -82,14 +113,25 @@ export function RequestCard({
                         </Button>
 
                         { staff?.role !== Role.VIEWER && <>
-                            <Button size="sm" onClick={() => onDelete( request )} className="flex items-center gap-1" variant="outline">
+                            <Button
+                                size        = "sm"
+                                onClick     = {() => onDelete( request )}
+                                className   = "flex items-center gap-1"
+                                variant     = "outline"
+                            >
                                 <Trash className="h-4 w-4 text-red-500" />
                             </Button></>
                         }
 
-                        <Button size="sm" onClick={() => onViewDetails( request )} className="flex items-center gap-1" variant="secondary">
+                        <Button
+                            size        = "sm"
+                            onClick     = {() => onViewDetails( request )}
+                            className   = "flex items-center gap-1"
+                            variant     = "secondary"
+                        >
                             <Eye className="h-4 w-4" />
-                            Ver <span className="hidden md:flex lg:hidden xl:flex">detalles</span>
+
+                            { request.totalDetails } detalle{ request.totalDetails !== 1 ? "s" : "" }
                         </Button>
                     </div>
                 </div>
