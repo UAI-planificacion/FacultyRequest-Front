@@ -56,7 +56,7 @@ const formSchema = z.object({
     }).regex(/^[a-zA-Z0-9._-]+$/, {
         message: "El email solo puede contener letras, números, puntos, guiones y guiones bajos.",
     }),
-    role: z.enum(["ADMIN", "EDITOR", "VIEWER", "ADMIN_FACULTY"] as const, {
+    role: z.enum([Role.EDITOR, Role.VIEWER, Role.ADMIN_FACULTY] as const, {
         message: "Por favor selecciona un rol válido.",
     }),
     isActive: z.boolean().default(true),
@@ -186,7 +186,6 @@ export function StaffForm({
                                         </FormControl>
 
                                         <SelectContent>
-                                            <SelectItem value="ADMIN">Administrador</SelectItem>
                                             <SelectItem value="ADMIN_FACULTY">Administrador de Facultad</SelectItem>
                                             <SelectItem value="EDITOR">Editor</SelectItem>
                                             <SelectItem value="VIEWER">Visualizador</SelectItem>
@@ -194,11 +193,11 @@ export function StaffForm({
                                     </Select>
 
                                     <FormDescription>
-                                        Administrador: Acceso completo para ver y editar
+                                        Administrador de Facultad: Acceso completo para ver y editar, menos las asignaturas.
                                         <br />
-                                        Editor: Puede ver y hacer cambios
+                                        Editor: Puede ver y hacer cambios.
                                         <br />
-                                        Visualizador: Solo puede ver información
+                                        Visualizador: Solo puede ver información.
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
