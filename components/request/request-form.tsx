@@ -53,6 +53,9 @@ import { Subject }                  from "@/types/subject.model";
 import { errorToast, successToast } from "@/config/toast/toast.config";
 import { Staff, Role }              from "@/types/staff.model";
 import { cn }                       from "@/lib/utils";
+import { Period } from "@/types/periods.model";
+import { ENV } from "@/config/envs/env";
+import { format } from "@formkit/tempo";
 
 
 interface RequestFormProps {
@@ -92,10 +95,18 @@ export type RequestFormValues = z.infer<typeof formSchema>;
 type Tab = 'form' | 'comments';
 
 
+function formatDate( period : Period ) {
+    if ( !period.startDate || !period.endDate ) return '';
+
+    return ` (${format( period.startDate, 'short' )} - ${format( period.endDate, 'short' )})`;
+}
+
+
 const defaultRequest = ( data : Request | undefined ) => ({
     title           : data?.title           || '',
-    isConsecutive   : data?.isConsecutive   || false,
     description     : data?.description     || '',
+    periodId        : data?.periodId        || '',
+    isConsecutive   : data?.isConsecutive   || false,
     subjectId       : data?.subject.id      || '',
 });
 
@@ -154,12 +165,31 @@ export function RequestForm({
 
 
     const memoizedSubject = useMemo(() => {
-        return subjects?.map( professor => ({
-            id      : professor.id,
-            label   : `${professor.id}-${professor.name}`,
-            value   : professor.id,
+        return subjects?.map( subject => ({
+            id      : subject.id,
+            label   : `${subject.id}-${subject.name}`,
+            value   : subject.id,
         })) ?? [];
     }, [subjects]);
+
+
+    const {
+        data        : periods,
+        isLoading   : isLoadingPeriods,
+        isError     : isErrorPeriods
+    } = useQuery<Period[]>({
+        queryKey: [KEY_QUERYS.PERIODS],
+        queryFn: () => fetchApi({ isApi: false, url: `${ENV.ACADEMIC_SECTION}periods` }),
+    });
+
+
+    const memoizedPeriods = useMemo(() => {
+        return periods?.map( period => ({
+            id      : period.id,
+            label   : `${period.id} - ${ period.name }${ formatDate( period )}`,
+            value   : period.id
+        }) ) ?? [];
+    }, [periods]);
 
 
     const form = useForm<RequestFormValues>({
@@ -255,38 +285,36 @@ export function RequestForm({
                                     />
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {/* Subject */}
+                                        {/* Period */}
                                         <FormField
                                             control = { form.control }
-                                            name    = "subjectId"
+                                            name    = "periodId"
                                             render  = {({ field }) => {
                                                 return (
                                                     <FormItem>
-                                                        <FormLabel>Asignatura</FormLabel>
+                                                        <FormLabel>Periodo</FormLabel>
 
                                                         <FormControl>
-                                                            { isError ? (
+                                                            { isErrorPeriods ? (
                                                                 <>
                                                                     <Input
-                                                                        placeholder = "ID de la asignatura"
+                                                                        placeholder = "ID del período"
                                                                         value       = { field.value || '' }
-                                                                        onChange    = { field.onChange }
-                                                                        readOnly    = { isReadOnly }
+                                                                        onChange    = {field.onChange }
                                                                     />
 
                                                                     <FormDescription>
-                                                                        Error al cargar las asignaturas. Ingrese el ID manualmente.
+                                                                        Error al cargar los períodos. Ingrese el ID manualmente.
                                                                     </FormDescription>
                                                                 </>
                                                             ) : (
                                                                 <MultiSelectCombobox
                                                                     multiple            = { false }
-                                                                    placeholder         = "Seleccionar una asignatura"
+                                                                    placeholder         = "Seleccionar un período"
                                                                     defaultValues       = { field.value || '' }
-                                                                    onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value ) }
-                                                                    options             = { memoizedSubject }
-                                                                    isLoading           = { isLoading }
-                                                                    disabled            = { isReadOnly }
+                                                                    onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value )}
+                                                                    options             = { memoizedPeriods }
+                                                                    isLoading           = { isLoadingPeriods }
                                                                 />
                                                             )}
                                                         </FormControl>
