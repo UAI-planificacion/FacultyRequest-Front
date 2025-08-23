@@ -52,7 +52,7 @@ import { Method, fetchApi }         from "@/services/fetch"
 import { errorToast, successToast } from "@/config/toast/toast.config"
 import { usePagination }            from "@/hooks/use-pagination";
 import { useCostCenter }            from "@/hooks/use-cost-center";
-import { Role, Staff } from "@/types/staff.model";
+import { Role, Staff }              from "@/types/staff.model";
 
 
 interface SubjectsManagementProps {
@@ -74,7 +74,7 @@ export function SubjectsManagement({
     const [selectedCostCenter, setSelectedCostCenter]   = useState<string>( 'all' );
     const [isDeleteDialogOpen, setIsDeleteDialogOpen]   = useState( false );
     const [deletingSubjectId, setDeletingSubjectId]     = useState<string | undefined>( undefined );
-    const isAdmin                                       = staff.role === Role.ADMIN_FACULTY || staff.role === Role.ADMIN;
+    const isAdmin                                       = staff.role === Role.ADMIN;
 
 
     const {
