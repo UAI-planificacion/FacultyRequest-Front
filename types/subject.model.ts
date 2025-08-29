@@ -1,3 +1,5 @@
+import { Building, Size, SpaceType } from "@/types/request-detail.model";
+
 interface BaseSubject {
     id              : string;
     name            : string;
@@ -6,6 +8,9 @@ interface BaseSubject {
     students        : number;
     costCenterId    : string;
     isEnglish       : boolean;
+    building        : Building  | null;
+    spaceSize       : Size      | null;
+    spaceType       : SpaceType | null;
 }
 
 
