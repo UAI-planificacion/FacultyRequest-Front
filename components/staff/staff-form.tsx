@@ -56,7 +56,7 @@ const formSchema = z.object({
     }).regex(/^[a-zA-Z0-9._-]+$/, {
         message: "El email solo puede contener letras, números, puntos, guiones y guiones bajos.",
     }),
-    role: z.enum([Role.EDITOR, Role.VIEWER, Role.ADMIN_FACULTY] as const, {
+    role: z.enum([Role.EDITOR, Role.VIEWER, Role.ADMIN_FACULTY, Role.ADMIN] as const, {
         message: "Por favor selecciona un rol válido.",
     }),
     isActive: z.boolean().default(true),
@@ -93,10 +93,10 @@ export function StaffForm({
         if ( !isOpen ) return;
 
         form.reset({
-            name    : staff?.name     || emptyStaff.name,
-            email   : staff?.email    || emptyStaff.email,
-            role    : staff?.role     || emptyStaff.role,
-            isActive: staff?.isActive!,
+            name        : staff?.name     || emptyStaff.name,
+            email       : staff?.email    || emptyStaff.email,
+            role        : staff?.role     || emptyStaff.role,
+            isActive    : staff?.isActive!,
         });
     }, [ isOpen, staff?.id, form ]);
 
