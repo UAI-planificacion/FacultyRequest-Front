@@ -1,15 +1,24 @@
 "use client"
 
-import { JSX, useEffect } from "react";
+import {
+    JSX,
+    useEffect,
+    useMemo,
+    useState
+}                       from "react";
+import { useRouter }    from 'next/navigation';
 
 import {
 	Calendar as CalendarIcon,
+	Grid2x2,
 	Plus,
 	Trash,
 }						from "lucide-react";
 import { zodResolver }	from "@hookform/resolvers/zod";
 import { useForm }		from "react-hook-form";
 import * as z			from "zod";
+import { useQuery }     from "@tanstack/react-query";
+
 
 import {
 	Dialog,
@@ -50,6 +59,17 @@ import {
     TabsList,
     TabsTrigger
 }                           from "@/components/ui/tabs";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
+}                           from "@/components/ui/select";
+import {
+    ToggleGroup,
+    ToggleGroupItem
+}                           from "@/components/ui/toggle-group";
 import { Button }			from "@/components/ui/button";
 import { Input }			from "@/components/ui/input";
 import { Textarea }			from "@/components/ui/textarea";
@@ -57,9 +77,23 @@ import { Calendar }			from "@/components/ui/calendar";
 import { Switch }			from "@/components/ui/switch";
 import { ScrollArea }		from "@/components/ui/scroll-area";
 import { SubjectUpload }    from "@/components/subject/subject-upload";
+import { Checkbox }         from "@/components/ui/checkbox";
 
-import { Subject }			from "@/types/subject.model";
-import { cn, tempoFormat }	from "@/lib/utils";
+import {
+    Building,
+    Size,
+    SpaceType
+}                           from "@/types/request-detail.model";
+import {
+    cn,
+    getSpaceType,
+    tempoFormat
+}                           from "@/lib/utils";
+import { Subject }		    from "@/types/subject.model";
+import { KEY_QUERYS }       from "@/consts/key-queries";
+import { fetchApi }         from "@/services/fetch";
+import { SizeResponse }     from "@/types/request";
+import { ENV }              from "@/config/envs/env";
 
 
 // Interface for date pairs in the form
@@ -92,7 +126,10 @@ const formSchema = z.object({
     }).max(200, {
         message: "El nombre de la asignatura debe tener como máximo 200 caracteres."
     }),
-    dates: z.array(z.object({
+    spaceType   : z.nativeEnum( SpaceType ).optional().nullable(),
+    spaceSize   : z.nativeEnum( Size ).nullable().optional(),
+    building    : z.nativeEnum( Building ).optional().nullable(),
+    dates       : z.array(z.object({
         startDate: z.date({
             required_error: "La fecha de inicio es requerida."
         }),
@@ -162,6 +199,9 @@ const emptySubject = ( subject: Subject | undefined ): Partial<SubjectFormValues
 		costCenterId	: subject?.costCenterId	|| '',
 		dates,
 		isEnglish		: subject?.isEnglish	|| false,
+        spaceType       : subject?.spaceType    || null,
+        spaceSize       : subject?.spaceSize    || null,
+        building        : subject?.building     || null,
 	};
 };
 
@@ -173,7 +213,11 @@ export function SubjectForm({
 	onClose,
 	costCenter,
 }: SubjectFormProps ): JSX.Element {
-	const form = useForm<SubjectFormValues>({
+    const [typeSpace, setTypeSpace] = useState<boolean[]>([ false, false, false ]);
+    const router                    = useRouter();
+
+
+    const form = useForm<SubjectFormValues>({
 		resolver		: zodResolver( formSchema ),
 		defaultValues   : emptySubject( subject ),
 		mode			: 'onChange'
@@ -182,6 +226,16 @@ export function SubjectForm({
 
 	const { watch, setValue } = form;
 	const dates = watch( 'dates' ) || [];
+
+
+    const {
+        data        : sizes,
+        isLoading   : isLoadingSizes,
+        isError     : isErrorSizes,
+    } = useQuery({
+        queryKey    : [ KEY_QUERYS.SIZE ],
+        queryFn     : () => fetchApi<SizeResponse[]>({ url: `${ENV.ACADEMIC_SECTION}sizes`, isApi: false }),
+    });
 
 
 	useEffect(() => {
@@ -307,13 +361,141 @@ export function SubjectForm({
                                     )}
                                 />
 
+                                <FormField
+                                    control = { form.control }
+                                    name    = "costCenterId"
+                                    render  = {({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Centro de Costos</FormLabel>
+
+                                            <FormControl>
+                                                <MultiSelectCombobox
+                                                    multiple			= { false }
+                                                    placeholder			= "Seleccionar centro de costos"
+                                                    defaultValues		= { field.value || '' }
+                                                    onSelectionChange	= {( value ) => field.onChange( value === undefined ? null : value )}
+                                                    options				= { costCenter }
+                                                />
+                                            </FormControl>
+
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <FormField
+                                        control = { form.control }
+                                        name    = "spaceType"
+                                        render  = {({ field }) => (
+                                            <FormItem>
+                                                <FormLabel onClick={() => setTypeSpace([ false, true, false ])}>
+                                                    Tipo de espacio
+                                                </FormLabel>
+
+                                                <div className="flex gap-2 items-center">
+                                                    <Checkbox
+                                                        className		= "cursor-default rounded-full p-[0.6rem] flex justify-center items-center"
+                                                        checked			= { typeSpace[1] }
+                                                        onCheckedChange	= {( checked ) => setTypeSpace( [ false, checked as boolean, false ] )}
+                                                    />
+
+                                                    <Select
+                                                        defaultValue    = { field.value ?? 'Sin especificar' }
+                                                        onValueChange   = {( value ) => field.onChange( value === "Sin especificar" ? null : value )}
+                                                        disabled        = { !typeSpace[1] }
+                                                    >
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Seleccionar tipo" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+
+                                                        <SelectContent>
+                                                            <SelectItem value="Sin especificar">Sin especificar</SelectItem>
+
+                                                            {Object.values( SpaceType ).map( type => (
+                                                                <SelectItem key={type} value={type}>
+                                                                    { getSpaceType( type )}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* Tamaño del espacio */}
+                                    <FormField
+                                        control = { form.control }
+                                        name    = "spaceSize"
+                                        render  = {({ field }) => (
+                                            <FormItem>
+                                                <FormLabel onClick={() => setTypeSpace([ false, false, true ])}>
+                                                    Tamaño del espacio
+                                                </FormLabel>
+
+                                                {isErrorSizes ? (
+                                                    <>
+                                                        <FormControl>
+                                                            <Input
+                                                                placeholder = "Ej: XS (< 30)"
+                                                                value       = { field.value || '' }
+                                                                onChange    = {( e ) => field.onChange( e.target.value || null )}
+                                                            />
+                                                        </FormControl>
+
+                                                        <FormDescription>
+                                                            Error al cargar los tamaños. Ingrese el tamaño manualmente.
+                                                        </FormDescription>
+                                                    </>
+                                                ) : (
+                                                    <div className="flex gap-2 items-center">
+                                                        <Checkbox
+                                                            className		= "cursor-default rounded-full p-[0.6rem] flex justify-center items-center"
+                                                            checked			= { typeSpace[2] }
+                                                            onCheckedChange	= {( checked ) => setTypeSpace([ false, false, checked as boolean ])}
+                                                        />
+
+                                                        <Select
+                                                            onValueChange   = {( value ) => field.onChange( value === "Sin especificar" ? null : value )}
+                                                            defaultValue    = { field.value || 'Sin especificar' }
+                                                            disabled        = { isLoadingSizes || !typeSpace[2] }
+                                                        >
+                                                            <FormControl>
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="Seleccionar tamaño" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+
+                                                            <SelectContent>
+                                                                <SelectItem value="Sin especificar">Sin especificar</SelectItem>
+
+                                                                {sizes?.map( size => (
+                                                                    <SelectItem key={size.id} value={size.id}>
+                                                                        {size.id} ({size.detail})
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                )}
+
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* cupos */}
                                     <FormField
                                         control = { form.control }
                                         name    = "students"
                                         render  = {({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Número Máximo de Estudiantes</FormLabel>
+                                                <FormLabel>Cupos Máximos de Estudiantes</FormLabel>
 
                                                 <FormControl>
                                                     <Input
@@ -333,20 +515,52 @@ export function SubjectForm({
 
                                     <FormField
                                         control = { form.control }
-                                        name    = "costCenterId"
+                                        name    = "building"
                                         render  = {({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Centro de Costos</FormLabel>
+                                                <FormLabel onClick={() => setTypeSpace([ false, true, false ])}>
+                                                    Edificio
+                                                </FormLabel>
 
-                                                <FormControl>
-                                                    <MultiSelectCombobox
-                                                        multiple			= { false }
-                                                        placeholder			= "Seleccionar centro de costos"
-                                                        defaultValues		= { field.value || '' }
-                                                        onSelectionChange	= {( value ) => field.onChange( value === undefined ? null : value )}
-                                                        options				= { costCenter }
-                                                    />
-                                                </FormControl>
+                                                <ToggleGroup
+                                                    type            = "single"
+                                                    variant         = "outline"
+                                                    className       = "w-full"
+                                                    value           = {  field.value as string }
+                                                    onValueChange   = {( value: Building ) => {
+                                                        if ( value ) field.onChange( value )
+                                                    }}
+                                                >
+                                                    { Object.values( Building ).map(( type, index ) => {
+                                                        const { isFirst, isLast, isSingle } = useMemo(() => {
+                                                            const buildingValues = Object.values( Building );
+                                                            return {
+                                                                isFirst     : index === 0,
+                                                                isLast      : index === buildingValues.length - 1,
+                                                                isSingle    : buildingValues.length === 1
+                                                            };
+                                                        }, [ index ]);
+
+                                                        return (
+                                                            <ToggleGroupItem
+                                                                key         = { type }
+                                                                value       = { type }
+                                                                aria-label  = {`Edificio ${type}`}
+                                                                className   = {cn(
+                                                                    "flex-1 border-t border-b border-zinc-200 dark:border-zinc-700 data-[state=on]:bg-black data-[state=on]:dark:bg-white data-[state=on]:text-white data-[state=on]:dark:text-black data-[state=on]:hover:bg-zinc-800 data-[state=on]:dark:hover:bg-zinc-200",
+                                                                    {
+                                                                        "rounded-lg border-l border-r": isSingle,
+                                                                        "rounded-tl-lg rounded-bl-lg rounded-tr-none rounded-br-none border-l": isFirst && !isSingle,
+                                                                        "rounded-tl-none rounded-bl-none rounded-tr-lg rounded-br-lg border-r": isLast && !isSingle,
+                                                                        "rounded-none": !isFirst && !isLast
+                                                                    }
+                                                                )}
+                                                            >
+                                                                { type }
+                                                            </ToggleGroupItem>
+                                                        );
+                                                    })}
+                                                </ToggleGroup>
 
                                                 <FormMessage />
                                             </FormItem>
@@ -491,7 +705,7 @@ export function SubjectForm({
                                     )}
                                 />
 
-                                <div className="flex justify-end space-x-2">
+                                <div className="flex justify-between space-x-2">
                                     <Button
                                         type    = "button"
                                         variant = "outline"
@@ -500,12 +714,26 @@ export function SubjectForm({
                                         Cancelar
                                     </Button>
 
-                                    <Button
-                                        type        = "submit"
-                                        disabled    = { !form.formState.isValid }
-                                    >
-                                        { subject ? "Actualizar" : "Crear" }
-                                    </Button>
+                                    <div className="flex gap-2 items-center">
+                                        {subject &&
+                                                <Button
+                                                    variant     = "outline"
+                                                    onClick     = { () => router.push( `/sections/${subject.id}` )}
+                                                    type        = "button"
+                                                    className   = "gap-2"
+                                                >
+                                                    <Grid2x2 className="w-5 h-5" />
+                                                    Ver Secciones
+                                                </Button>
+                                            }
+
+                                        <Button
+                                            type        = "submit"
+                                            disabled    = { !form.formState.isValid }
+                                        >
+                                            { subject ? "Actualizar" : "Crear" }
+                                        </Button>
+                                    </div>
                                 </div>
                             </form>
                         </Form>
