@@ -1,14 +1,21 @@
 "use client"
 
 import { JSX, useMemo, useState } from "react";
+import { useRouter }            from 'next/navigation';
+
 
 import {
     useMutation,
     useQuery,
     useQueryClient
-}                       from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
-import { toast }        from "sonner";
+}                   from "@tanstack/react-query";
+import {
+    Calendar,
+    Grid2x2,
+    Plus,
+    Search
+}                   from "lucide-react";
+import { toast }    from "sonner";
 
 import {
     Table,
@@ -75,6 +82,8 @@ export function SubjectsManagement({
     const [isDeleteDialogOpen, setIsDeleteDialogOpen]   = useState( false );
     const [deletingSubjectId, setDeletingSubjectId]     = useState<string | undefined>( undefined );
     const isAdmin                                       = staff.role === Role.ADMIN;
+    const router                                        = useRouter();
+
 
 
     const {
@@ -290,22 +299,24 @@ export function SubjectsManagement({
                             <Table>
                                 <TableHeader className="sticky top-0 z-10 bg-background">
                                     <TableRow>
-                                        <TableHead className="bg-background w-[120px]">Código</TableHead>
+                                        <TableHead className="bg-background w-[100px]">Sigla</TableHead>
 
-                                        <TableHead className="bg-background w-[250px]">Nombre</TableHead>
+                                        <TableHead className="bg-background w-[300px]">Nombre</TableHead>
 
-                                        <TableHead className="bg-background w-[200px]">Fecha Inicio</TableHead>
+                                        <TableHead className="text-center bg-background w-[100px]">Fechas</TableHead>
 
-                                        <TableHead className="bg-background w-[200px]">Fecha Fin</TableHead>
+                                        <TableHead className="text-center bg-background w-[50px]">Alumnos</TableHead>
 
-                                        <TableHead className="text-center bg-background w-[80px]">Alumnos</TableHead>
+                                        <TableHead className="text-center bg-background w-[120px]">Centro de Costo</TableHead>
 
-                                        <TableHead className="text-center bg-background w-[150px]">Centro de Costo</TableHead>
+                                        <TableHead className="text-center bg-background w-[50px]">Edificio</TableHead>
 
-                                        <TableHead className="text-center bg-background w-[100px]">Inglés</TableHead>
+                                        <TableHead className="bg-background w-[120px]">Espacio</TableHead>
+
+                                        <TableHead className="text-center bg-background w-[50px]">Inglés</TableHead>
 
                                         { isAdmin &&
-                                            <TableHead className="text-right bg-background w-[100px]">Acciones</TableHead>
+                                            <TableHead className="text-right bg-background w-[160px]">Acciones</TableHead>
                                         }
                                     </TableRow>
                                 </TableHeader>
@@ -321,13 +332,17 @@ export function SubjectsManagement({
                                         <TableBody>
                                             {paginatedSubjects.map((subject) => (
                                                 <TableRow key={subject.id}>
-                                                    <TableCell className="font-medium w-[120px]">{subject.id}</TableCell>
+                                                    <TableCell className="font-medium w-[100px] truncate">
+                                                        { subject.id }
+                                                    </TableCell>
 
-                                                    <TableCell className="w-[250px]">{subject.name}</TableCell>
+                                                    <TableCell className="w-[300px] truncate" title={subject.name}>
+                                                        { subject.name }
+                                                    </TableCell>
 
-                                                    <TableCell className="w-[200px]">
-                                                        <div className="flex gap-2">
-                                                            <ShowDate date={ subject.startDate[0] } />
+                                                    <TableCell className="w-[100px]">
+                                                        <div className="flex gap-2 items-center">
+                                                            <Calendar className="w-4 h-4" />
 
                                                             <Badge variant="outline">
                                                                 { subject.startDate.length }
@@ -335,33 +350,57 @@ export function SubjectsManagement({
                                                         </div>
                                                     </TableCell>
 
-                                                    <TableCell className="w-[200px]">
-                                                        <div className="flex gap-2">
-                                                            <ShowDate date={ subject.endDate.at( -1 )} />
-
-                                                            <Badge variant="outline">
-                                                                { subject.endDate.length }
-                                                            </Badge>
-                                                        </div>
+                                                    <TableCell className="text-center w-[50px]">
+                                                        { subject.students }
                                                     </TableCell>
 
-                                                    <TableCell className="text-center w-[80px]">{subject.students}</TableCell>
+                                                    <TableCell
+                                                        className   = "text-end w-[120px] truncate"
+                                                        title       = { subject.costCenterId }
+                                                    >
+                                                        { subject.costCenterId }
+                                                    </TableCell>
 
-                                                    <TableCell className="text-center w-[150px] truncate">{subject.costCenterId}</TableCell>
+                                                    <TableCell className="text-end w-[50px]">
+                                                        <Badge variant="outline">
+                                                            {subject.building ?? '-'}
+                                                        </Badge>
+                                                    </TableCell>
 
-                                                    <TableCell className="text-right w-[110px]">
+                                                    <TableCell className="w-[120px] text-center">
+                                                        <Badge
+                                                            variant     = "outline"
+                                                            className   = "truncate max-w-full"
+                                                            title       = { subject.spaceType ?? subject.spaceSize ?? '-' }
+                                                        >
+                                                            { subject.spaceType ?? subject.spaceSize ?? '-' }
+                                                        </Badge>
+                                                    </TableCell>
+
+                                                    <TableCell className="text-end w-[50px]">
                                                         <Badge variant="secondary">
                                                             { subject.isEnglish ? 'Sí' : 'No' }
                                                         </Badge>
                                                     </TableCell>
 
                                                     { isAdmin &&
-                                                        <TableCell className="text-right w-[100px]">
-                                                            <ActionButton
-                                                                editItem    = { openEditSubjectForm }
-                                                                deleteItem  = { () => onOpenDeleteSubject( subject )}
-                                                                item        = { subject }
-                                                            />
+                                                        <TableCell className="text-right w-[160px]">
+                                                            <div className="flex gap-2 items-center justify-end">
+                                                                <Button
+                                                                    title   = "Ver Secciones"
+                                                                    size    = "icon"
+                                                                    variant = "outline"
+                                                                    onClick = { () => router.push( `/sections/${subject.id}` )}
+                                                                >
+                                                                    <Grid2x2 className="w-4 h-4" />
+                                                                </Button>
+
+                                                                <ActionButton
+                                                                    editItem    = { openEditSubjectForm }
+                                                                    deleteItem  = { () => onOpenDeleteSubject( subject )}
+                                                                    item        = { subject }
+                                                                />
+                                                            </div>
                                                         </TableCell>
                                                     }
                                                 </TableRow>
@@ -397,8 +436,6 @@ export function SubjectsManagement({
                 itemsPerPage            = { itemsPerPage }
                 onPageChange            = { setCurrentPage }
                 onItemsPerPageChange    = { setItemsPerPage }
-                startIndex              = { startIndex }
-                endIndex                = { endIndex }
             />
 
             {/* Subject Form Dialog */}
