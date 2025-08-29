@@ -138,11 +138,11 @@ export function RequestTable({
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <Button
-                                                variant     = "ghost"
+                                                variant     = "outline"
                                                 size        = "sm"
                                                 onClick     = {() => onViewDetails( request )}
                                                 title       = "Ver detalles"
-                                                className   = "gap-2"
+                                                className   = "gap-2 py-5"
                                             >
                                                 { request.totalDetails }
 
