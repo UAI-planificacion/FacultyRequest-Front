@@ -25,9 +25,6 @@ interface DataPaginationProps {
     itemsPerPage            : number;
     onPageChange            : ( page: number ) => void;
     onItemsPerPageChange    : ( itemsPerPage: number ) => void;
-    startIndex              : number;
-    endIndex                : number;
-    className?              : string;
 }
 
 export function DataPagination({
@@ -37,45 +34,34 @@ export function DataPagination({
     itemsPerPage,
     onPageChange,
     onItemsPerPageChange,
-    startIndex,
-    endIndex,
-    className = ""
-}: DataPaginationProps) {
+}: DataPaginationProps ) {
     const itemsPerPageOptions = [10, 15, 30, 50];
 
     if ( totalItems === 0 ) return null;
 
     return (
-        <div className={`space-y-4 ${className}`}>
-            {/* Selector de elementos por página */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                    <Label htmlFor="items-per-page" className="text-sm font-medium">
-                        Elementos por página:
-                    </Label>
+        <div className="w-full flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+                <Label htmlFor="items-per-page" className="text-sm font-medium hidden sm:inline">
+                    Elementos por página
+                </Label>
 
-                    <Select
-                        value={itemsPerPage.toString()}
-                        onValueChange={(value) => onItemsPerPageChange(Number(value))}
-                    >
-                        <SelectTrigger id="items-per-page" className="w-20">
-                            <SelectValue />
-                        </SelectTrigger>
+                <Select
+                    value={itemsPerPage.toString()}
+                    onValueChange={(value) => onItemsPerPageChange(Number(value))}
+                >
+                    <SelectTrigger id="items-per-page" className="w-20">
+                        <SelectValue />
+                    </SelectTrigger>
 
-                        <SelectContent>
-                            {itemsPerPageOptions.map((option) => (
-                                <SelectItem key={option} value={option.toString()}>
-                                    {option}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                {/* Información de paginación */}
-                <div className="text-sm text-muted-foreground">
-                    Mostrando {startIndex + 1} a {Math.min(endIndex, totalItems)} de {totalItems} resultados
-                </div>
+                    <SelectContent>
+                        {itemsPerPageOptions.map((option) => (
+                            <SelectItem key={option} value={option.toString()}>
+                                {option}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
 
             {/* Paginación */}
@@ -145,13 +131,6 @@ export function DataPagination({
                             </PaginationItem>
                         </PaginationContent>
                     </Pagination>
-                </div>
-            )}
-
-            {/* Información adicional de página */}
-            {totalPages > 1 && (
-                <div className="text-center text-sm text-muted-foreground">
-                    Página {currentPage} de {totalPages}
                 </div>
             )}
         </div>
