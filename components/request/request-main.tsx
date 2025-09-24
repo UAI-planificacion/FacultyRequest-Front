@@ -94,7 +94,7 @@ export function RequestMain({
                 status      : [a.status, b.status],
                 staffCreate : [a.staffCreate.name, b.staffCreate.name],
                 staffUpdate : [a.staffUpdate?.name || "", b.staffUpdate?.name || ""],
-                subjectId   : [a.subject.name, b.subject.name],
+                subjectId   : [a.offer.subject.name, b.offer.subject.name],
                 createdAt   : [a.createdAt, b.createdAt],
             }[sortBy];
 
@@ -222,8 +222,6 @@ export function RequestMain({
                     itemsPerPage            = { itemsPerPage }
                     onPageChange            = { handlePageChange }
                     onItemsPerPageChange    = { handleItemsPerPageChange }
-                    startIndex              = { startIndex }
-                    endIndex                = { endIndex }
                 />
             )}
 
