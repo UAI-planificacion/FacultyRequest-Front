@@ -1,8 +1,6 @@
 "use client"
 
 import { JSX, useMemo, useState } from "react";
-import { useRouter }            from 'next/navigation';
-
 
 import {
     useMutation,
@@ -10,8 +8,7 @@ import {
     useQueryClient
 }                   from "@tanstack/react-query";
 import {
-    Calendar,
-    Grid2x2,
+    Album,
     Plus,
     Search
 }                   from "lucide-react";
@@ -34,20 +31,19 @@ import {
     CardContent,
     CardHeader
 }                               from "@/components/ui/card";
+import { 
+    SubjectTableSkeleton, 
+    SubjectErrorMessage 
+}                               from "@/components/subject/subject-table-skeleton";
 import { DataPagination }       from "@/components/ui/data-pagination";
 import { Button }               from "@/components/ui/button";
 import { ScrollArea }           from "@/components/ui/scroll-area";
 import { DeleteConfirmDialog }  from "@/components/dialog/DeleteConfirmDialog";
 import { Input }                from "@/components/ui/input";
 import { Label }                from "@/components/ui/label";
-import { ShowDate }             from "@/components/shared/date";
 import { ActionButton }         from "@/components/shared/action";
-import { MultiSelectCombobox }  from "@/components/shared/Combobox";
-import { 
-    SubjectTableSkeleton, 
-    SubjectErrorMessage 
-}                               from "@/components/subject/subject-table-skeleton";
-import { Badge }                from "@/components/ui/badge";
+import { ActiveBadge }          from "@/components/shared/active";
+import { SpaceSizeType }        from "@/components/shared/space-size-type";
 
 import {
     CreateSubject,
@@ -58,11 +54,11 @@ import { KEY_QUERYS }               from "@/consts/key-queries"
 import { Method, fetchApi }         from "@/services/fetch"
 import { errorToast, successToast } from "@/config/toast/toast.config"
 import { usePagination }            from "@/hooks/use-pagination";
-import { useCostCenter }            from "@/hooks/use-cost-center";
 import { Role, Staff }              from "@/types/staff.model";
+import { CostCenterSelect } from "../shared/item-select/cost-center";
 
 
-interface SubjectsManagementProps {
+interface Props {
     facultyId   : string;
     enabled     : boolean;
     staff       : Staff;
@@ -73,7 +69,7 @@ export function SubjectsManagement({
     facultyId,
     enabled,
     staff
-}: SubjectsManagementProps ): JSX.Element {
+}: Props ): JSX.Element {
     const queryClient                                   = useQueryClient();
     const [isFormOpen, setIsFormOpen]                   = useState( false );
     const [editingSubject, setEditingSubject]           = useState<Subject | undefined>( undefined );
@@ -82,8 +78,7 @@ export function SubjectsManagement({
     const [isDeleteDialogOpen, setIsDeleteDialogOpen]   = useState( false );
     const [deletingSubjectId, setDeletingSubjectId]     = useState<string | undefined>( undefined );
     const isAdmin                                       = staff.role === Role.ADMIN;
-    const router                                        = useRouter();
-
+    const [isOfferOpen, setIsOfferOpen]                 = useState( false );
 
 
     const {
@@ -95,13 +90,6 @@ export function SubjectsManagement({
         queryFn : () => fetchApi({ url: `subjects/all/${facultyId}` }),
         enabled,
     });
-
-
-    const {
-        costCenter,
-        isLoading: isLoadingCostCenter,
-        isError: isErrorCostCenter
-    } = useCostCenter({ enabled });
 
 
     const filteredSubjects = useMemo(() => {
@@ -131,8 +119,6 @@ export function SubjectsManagement({
         itemsPerPage,
         totalItems,
         totalPages,
-        startIndex,
-        endIndex,
         paginatedData: paginatedSubjects,
         setCurrentPage,
         setItemsPerPage,
@@ -218,15 +204,13 @@ export function SubjectsManagement({
 
 
     function handleFormSubmit( formData: SubjectFormValues ): void {
-        const { dates, ...rest } = formData;
-
         if ( editingSubject ) {
             updateSubjectMutation.mutate({
-                ...rest,
+                ...formData,
             } as UpdateSubject );
         } else {
             createSubjectMutation.mutate({
-                ...rest,
+                ...formData,
                 facultyId,
             } as CreateSubject );
         }
@@ -262,17 +246,14 @@ export function SubjectsManagement({
                                 </div>
                             </div>
 
-                            <div className="grid space-y-2">
-                                <Label htmlFor="costCenter">Centro de Costos</Label>
-
-                                <MultiSelectCombobox
-                                    multiple            = { false }
-                                    placeholder         = "Seleccionar centro de costo"
-                                    defaultValues       = { '' }
-                                    onSelectionChange   = {( value ) => handleFilterChange( 'costCenter', value as string )}
-                                    options             = { costCenter }
-                                />
-                            </div>
+                            <CostCenterSelect
+                                label               = "Centro de Costos"
+                                placeholder         = "Seleccionar centro de costo"
+                                onSelectionChange   = {( value ) => handleFilterChange( 'costCenter', value as string )}
+                                defaultValues       = { '' }
+                                multiple            = { false }
+                                className           = "grid"
+                            />
                         </div>
 
                         { isAdmin &&
@@ -303,21 +284,13 @@ export function SubjectsManagement({
 
                                         <TableHead className="bg-background w-[300px]">Nombre</TableHead>
 
-                                        <TableHead className="text-center bg-background w-[100px]">Fechas</TableHead>
-
-                                        <TableHead className="text-center bg-background w-[50px]">Alumnos</TableHead>
-
-                                        <TableHead className="text-center bg-background w-[120px]">Centro de Costo</TableHead>
-
-                                        <TableHead className="text-center bg-background w-[50px]">Edificio</TableHead>
+                                        <TableHead className="bg-background w-[120px]">Centro de Costo</TableHead>
 
                                         <TableHead className="bg-background w-[120px]">Espacio</TableHead>
 
-                                        <TableHead className="text-center bg-background w-[50px]">Inglés</TableHead>
+                                        <TableHead className="text-left bg-background w-[80px]">Estado</TableHead>
 
-                                        { isAdmin &&
-                                            <TableHead className="text-right bg-background w-[160px]">Acciones</TableHead>
-                                        }
+                                        <TableHead className="text-right bg-background w-[160px]">Acciones</TableHead>
                                     </TableRow>
                                 </TableHeader>
                             </Table>
@@ -332,78 +305,60 @@ export function SubjectsManagement({
                                         <TableBody>
                                             {paginatedSubjects.map((subject) => (
                                                 <TableRow key={subject.id}>
-                                                    <TableCell className="font-medium w-[100px] truncate">
-                                                        { subject.id }
-                                                    </TableCell>
+                                                <TableCell className="font-medium w-[100px] truncate">
+                                                    { subject.id }
+                                                </TableCell>
 
-                                                    <TableCell className="w-[300px] truncate" title={subject.name}>
-                                                        { subject.name }
-                                                    </TableCell>
+                                                <TableCell
+                                                    className   = "w-[300px] truncate"
+                                                    title       = { subject.name }
+                                                >
+                                                    { subject.name }
+                                                </TableCell>
 
-                                                    <TableCell className="w-[100px]">
-                                                        <div className="flex gap-2 items-center">
-                                                            <Calendar className="w-4 h-4" />
+                                                <TableCell
+                                                    className   = "text-center w-[120px] truncate"
+                                                    title       = { subject.costCenterId }
+                                                >
+                                                    { subject.costCenterId }
+                                                </TableCell>
 
-                                                            <Badge variant="outline">
-                                                                { subject.startDate.length }
-                                                            </Badge>
-                                                        </div>
-                                                    </TableCell>
+                                                <TableCell className="w-[120px] text-center">
+                                                    <SpaceSizeType
+                                                        spaceType   = { subject.spaceType }
+                                                        spaceSizeId = { subject.spaceSizeId }
+                                                    />
+                                                </TableCell>
 
-                                                    <TableCell className="text-center w-[50px]">
-                                                        { subject.students }
-                                                    </TableCell>
+                                                <TableCell className=" w-[80px]">
+                                                    <ActiveBadge isActive={ subject.isActive } />
+                                                </TableCell>
 
-                                                    <TableCell
-                                                        className   = "text-end w-[120px] truncate"
-                                                        title       = { subject.costCenterId }
-                                                    >
-                                                        { subject.costCenterId }
-                                                    </TableCell>
-
-                                                    <TableCell className="text-end w-[50px]">
-                                                        <Badge variant="outline">
-                                                            {subject.building ?? '-'}
-                                                        </Badge>
-                                                    </TableCell>
-
-                                                    <TableCell className="w-[120px] text-center">
-                                                        <Badge
+                                                <TableCell className="text-right w-[160px]">
+                                                    <div className="flex gap-2 items-center justify-end">
+                                                        <Button
+                                                            title       = "Ofertas"
+                                                            size        = "sm"
                                                             variant     = "outline"
-                                                            className   = "truncate max-w-full"
-                                                            title       = { subject.spaceType ?? subject.spaceSize ?? '-' }
+                                                            className   = "flex items-center gap-1.5"
+                                                            onClick     = { () => {
+                                                                setEditingSubject( subject );
+                                                                setIsOfferOpen( true );
+                                                            }}
                                                         >
-                                                            { subject.spaceType ?? subject.spaceSize ?? '-' }
-                                                        </Badge>
-                                                    </TableCell>
+                                                            { subject.offersCount }
 
-                                                    <TableCell className="text-end w-[50px]">
-                                                        <Badge variant="secondary">
-                                                            { subject.isEnglish ? 'Sí' : 'No' }
-                                                        </Badge>
-                                                    </TableCell>
+                                                            <Album className="h-4 w-4" />
+                                                        </Button>
 
-                                                    { isAdmin &&
-                                                        <TableCell className="text-right w-[160px]">
-                                                            <div className="flex gap-2 items-center justify-end">
-                                                                <Button
-                                                                    title   = "Ver Secciones"
-                                                                    size    = "icon"
-                                                                    variant = "outline"
-                                                                    onClick = { () => router.push( `/sections/${subject.id}` )}
-                                                                >
-                                                                    <Grid2x2 className="w-4 h-4" />
-                                                                </Button>
-
-                                                                <ActionButton
-                                                                    editItem    = { openEditSubjectForm }
-                                                                    deleteItem  = { () => onOpenDeleteSubject( subject )}
-                                                                    item        = { subject }
-                                                                />
-                                                            </div>
-                                                        </TableCell>
-                                                    }
-                                                </TableRow>
+                                                        <ActionButton
+                                                            editItem    = { openEditSubjectForm }
+                                                            deleteItem  = { () => onOpenDeleteSubject( subject )}
+                                                            item        = { subject }
+                                                        />
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
                                             ))}
 
                                             { filteredSubjects.length === 0 && searchQuery ? (
@@ -444,7 +399,6 @@ export function SubjectsManagement({
                 onSubmit    = { handleFormSubmit }
                 onClose     = { () => setIsFormOpen( false )}
                 isOpen      = { isFormOpen }
-                costCenter  = { costCenter }
             />
 
             <DeleteConfirmDialog
