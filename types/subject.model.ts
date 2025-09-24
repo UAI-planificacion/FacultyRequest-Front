@@ -1,29 +1,25 @@
-import { Building, Size, SpaceType } from "@/types/request-detail.model";
+import { Size, SpaceType } from "@/types/request-detail.model";
 
 interface BaseSubject {
     id              : string;
     name            : string;
-    startDate       : Date[];
-    endDate         : Date[];
-    students        : number;
     costCenterId    : string;
-    isEnglish       : boolean;
-    building        : Building  | null;
-    spaceSize       : Size      | null;
+    spaceSizeId     : Size      | null;
     spaceType       : SpaceType | null;
 }
 
 
 export interface Subject extends BaseSubject {
-    facultyId       : string;
-    isActive        : boolean;
-    createdAt       : Date;
-    updatedAt       : Date;
+    facultyId   : string;
+    isActive    : boolean;
+    createdAt   : Date | string;
+    updatedAt   : Date | string;
+    offersCount : number;
 }
 
 
 export interface CreateSubject extends BaseSubject {
-    facultyId       : string;
+    facultyId: string;
 }
 
 
