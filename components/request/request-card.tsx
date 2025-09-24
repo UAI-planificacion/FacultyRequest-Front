@@ -8,7 +8,6 @@ import {
     CardHeader,
     CardTitle
 }                       from "@/components/ui/card";
-import { Badge }        from "@/components/ui/badge";
 import { Button }       from "@/components/ui/button";
 import { ShowStatus }   from "@/components/shared/status";
 import { ShowDate }     from "@/components/shared/date";
@@ -16,11 +15,9 @@ import { Consecutive }  from "@/components/shared/consecutive";
 
 import { type Request } from "@/types/request";
 import { Role, Staff }  from "@/types/staff.model";
-import { usePeriods }   from "@/hooks/use-periods";
-import LoaderMini       from "@/icons/LoaderMini";
 
 
-export interface RequestCardProps {
+export interface Props {
     request         : Request;
     onViewDetails   : ( request: Request ) => void;
     onEdit          : ( request: Request ) => void;
@@ -28,16 +25,14 @@ export interface RequestCardProps {
     staff           : Staff | undefined;
 }
 
+
 export function RequestCard({
     request,
     onViewDetails,
     onEdit,
     onDelete,
     staff
-}: RequestCardProps ) {
-    const { getPeriodName, isLoadingPeriods, isErrorPeriods } = usePeriods();
-
-
+}: Props ) {
     return (
         <Card className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
@@ -60,7 +55,7 @@ export function RequestCard({
                         <BookOpen className="h-4 w-4" />
 
                         <span className="font-medium max-w-full truncate overflow-hidden whitespace-nowrap">
-                            { request.subject.name }
+                            { request.offer.subject.id } - { request.offer.subject.name }
                         </span>
                     </div>
 
@@ -75,18 +70,9 @@ export function RequestCard({
                     <div className="flex items-center gap-1.5">
                         <CalendarDays className="h-4 w-4" />
 
-                        { isLoadingPeriods
-                            ? <LoaderMini/>
-                            : <span className="max-w-full truncate overflow-hidden whitespace-nowrap">
-                                { getPeriodName( request.periodId ) }
-                            </span>
-                        }
-
-                        { isErrorPeriods && (
-                            <span className="max-w-full truncate overflow-hidden whitespace-nowrap">
-                                Sin Peridodo
-                            </span>
-                        )}
+                        <span className="max-w-full truncate overflow-hidden whitespace-nowrap">
+                            { request.offer.period.id } - { request.offer.period.name }
+                        </span>
                     </div>
 
                     <ShowDate date={request.createdAt} />
