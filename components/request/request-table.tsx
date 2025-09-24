@@ -24,7 +24,6 @@ import { ShowStatus }           from "@/components/shared/status";
 import { ScrollArea }           from "@/components/ui/scroll-area";
 import { ActionButton }         from "@/components/shared/action";
 
-import { usePeriods }   from "@/hooks/use-periods";
 import { type Request } from "@/types/request";
 
 
@@ -46,8 +45,6 @@ export function RequestTable({
     isLoading,
     isError,
 }: RequestTableProps ): JSX.Element {
-    const { getPeriodName, isLoadingPeriods } = usePeriods();
-
     if ( isLoading ) {
         return <RequestCardSkeletonGrid count={6} />;
     }
@@ -93,10 +90,11 @@ export function RequestTable({
                         <TableBody>
                             {requests.map(( request ) => (
                                 <TableRow key={request.id} className="hover:bg-muted/50">
-                                    <TableCell className="font-medium">
-                                        <div className="max-w-[200px] truncate" title={request.title}>
-                                            {request.title}
-                                        </div>
+                                    <TableCell
+                                        className   = "font-medium max-w-[200px] truncate"
+                                        title       = { request.title }
+                                    >
+                                        { request.title }
                                     </TableCell>
 
                                     <TableCell>
@@ -109,7 +107,7 @@ export function RequestTable({
 
                                     <TableCell>
                                         <Badge variant="outline">
-                                            {isLoadingPeriods ? request.periodId : getPeriodName( request.periodId )}
+                                            { request.offer.period.id } - { request.offer.period.name }
                                         </Badge>
                                     </TableCell>
 
@@ -129,10 +127,11 @@ export function RequestTable({
                                         )}
                                     </TableCell>
 
-                                    <TableCell>
-                                        <div className="max-w-[150px] truncate" title={request.subject.name}>
-                                            {request.subject.name}
-                                        </div>
+                                    <TableCell
+                                        className   = "max-w-[150px] truncate"
+                                        title       = {`${request.offer.subject.id} - ${request.offer.subject.name}`}
+                                    >
+                                        { request.offer.subject.name }
                                     </TableCell>
 
                                     <TableCell className="text-right">
