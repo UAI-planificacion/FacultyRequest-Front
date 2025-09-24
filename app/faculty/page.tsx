@@ -4,6 +4,7 @@ import { JSX, useEffect, useState }     from "react";
 import { useRouter, useSearchParams }   from 'next/navigation';
 
 import {
+    Album,
     BookCopy,
     BookOpen,
     Users
@@ -24,16 +25,18 @@ import { useSession }   from "@/hooks/use-session";
 import { KEY_QUERYS }   from "@/consts/key-queries";
 import { fetchApi }     from "@/services/fetch";
 import { Staff }        from "@/types/staff.model";
+import { OfferManagement } from "@/components/offer/offer-management";
 
 
 enum TabValue {
-    SUBJECTS    = "subjects",
     STAFF       = "staff",
-    REQUESTS    = "requests"
+    SUBJECTS    = "subjects",
+    OFFERS      = "offers",
+    REQUESTS    = "requests",
 }
 
 
-export default function RequestsPage(): JSX.Element {
+export default function FacultyPage(): JSX.Element {
     const router                    = useRouter(); 
     const searchParams              = useSearchParams();
     const initialTab                = searchParams.get( 'tab' ) as TabValue || TabValue.SUBJECTS;
@@ -80,17 +83,7 @@ export default function RequestsPage(): JSX.Element {
                 onValueChange   = {( value: string ) => setActiveTab( value as TabValue )}
                 className       = "w-full"
             >
-                <TabsList className="grid grid-cols-3 mb-4 h-12">
-                    <TabsTrigger
-                        value       = { TabValue.REQUESTS }
-                        className   = "h-10 text-md gap-2"
-                        title       = "Solicitudes"
-                    >
-                        <BookCopy className="h-5 w-5" />
-
-                        <span className="hidden sm:block">Solicitudes</span>
-                    </TabsTrigger>
-
+                <TabsList className="grid grid-cols-4 mb-4 h-12">
                     <TabsTrigger
                         value       = { TabValue.STAFF }
                         className   = "h-10 text-md gap-2"
@@ -110,12 +103,36 @@ export default function RequestsPage(): JSX.Element {
 
                         <span className="hidden sm:block">Asignaturas</span>
                     </TabsTrigger>
+
+                    <TabsTrigger
+                        value       = { TabValue.OFFERS }
+                        className   = "h-10 text-md gap-2"
+                        title       = "Ofertas"
+                        // disabled    = {(faculty?.totalSubjects ?? 0 ) === 0 }
+                    >
+                        <Album className="h-5 w-5" />
+
+                        {/* <span className="hidden sm:block">Ofertas ({ faculty?.totalOffers || 0 })</span> */}
+                        <span className="hidden sm:block">Ofertas</span>
+                    </TabsTrigger>
+
+
+                    <TabsTrigger
+                        value       = { TabValue.REQUESTS }
+                        className   = "h-10 text-md gap-2"
+                        title       = "Solicitudes"
+                    >
+                        <BookCopy className="h-5 w-5" />
+
+                        <span className="hidden sm:block">Solicitudes</span>
+                    </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value={ TabValue.REQUESTS }>
-                    <RequestsManagement
-                        facultyId   = {  staff?.facultyId || '' }
-                        enabled     = { activeTab === TabValue.REQUESTS }
+                <TabsContent value={ TabValue.STAFF }>
+                    <StaffManagement 
+                        facultyId   = { staff?.facultyId  || '' }
+                        enabled     = { activeTab === TabValue.STAFF && !!staff?.facultyId }
+                        staff       = { staff || {} as Staff }
                     />
                 </TabsContent>
 
@@ -127,11 +144,17 @@ export default function RequestsPage(): JSX.Element {
                     />
                 </TabsContent>
 
-                <TabsContent value={ TabValue.STAFF }>
-                    <StaffManagement 
-                        facultyId   = { staff?.facultyId  || '' }
-                        enabled     = { activeTab === TabValue.STAFF && !!staff?.facultyId }
-                        staff       = { staff || {} as Staff }
+                <TabsContent value={TabValue.OFFERS}>
+                    <OfferManagement 
+                        facultyId   = { staff?.facultyId || '' }
+                        enabled     = { activeTab === TabValue.OFFERS }
+                    />
+                </TabsContent>
+
+                <TabsContent value={ TabValue.REQUESTS }>
+                    <RequestsManagement
+                        facultyId   = {  staff?.facultyId || '' }
+                        enabled     = { activeTab === TabValue.REQUESTS }
                     />
                 </TabsContent>
             </Tabs>
