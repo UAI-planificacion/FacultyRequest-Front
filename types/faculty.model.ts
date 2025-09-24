@@ -1,20 +1,22 @@
 
-export interface FacultyResponse {
+interface Total {
     totalSubjects   : number;
-    totalPersonnel  : number;
+    totalStaff      : number;
     totalRequests   : number;
-    faculties       : Faculty[];
+    totalOffers     : number;
 }
 
 
-export interface Faculty {
+export interface FacultyResponse extends Total {
+    faculties : Faculty[];
+}
+
+
+export interface Faculty extends Total {
     id              : string;
     name            : string;
     description?    : string;
     isActive        : boolean;
-    totalSubjects   : number;
-    totalPersonnel  : number;
-    totalRequests   : number;
     createdAt       : string;
     updatedAt       : string;
 }
