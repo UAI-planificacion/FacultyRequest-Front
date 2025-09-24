@@ -6,6 +6,7 @@ export const KEY_QUERYS = {
     SUBJECTS        : 'subjects',
     PROFESSORS      : 'professors',
     PERIODS         : 'periods',
+    OFFERS          : 'offers',
 
     GRADES          : 'grades',
 
