@@ -1,4 +1,5 @@
-import { Role } from "@/types/staff.model";
+import { Offer }    from "@/types/offer.model";
+import { Role }     from "@/types/staff.model";
 
 
 export enum Status {
@@ -59,14 +60,13 @@ export interface Request {
     id              : string;
     title           : string;
     status          : Status;
-    periodId        : string;
     isConsecutive   : boolean;
     description     : string | null;
     updatedAt       : Date;
     createdAt       : Date;
     staffCreate     : StaffRequest;
     staffUpdate     : StaffRequest | null;
-    subject         : SubjectRequest;
+    offer           : Offer;
     totalDetails    : number;
     facultyId       : string;
 }
