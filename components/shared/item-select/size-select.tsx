@@ -12,39 +12,79 @@ import { Props }                from "@/components/shared/item-select/select-pro
 import { KEY_QUERYS }   from "@/consts/key-queries";
 import { fetchApi }     from "@/services/fetch";
 import { SizeResponse } from "@/types/request";
+import { useSpace }     from "@/hooks/use-space";
+
+
+interface SizeSelectProps extends Props {
+	buildingFilter?     : string;
+	spaceTypeFilter?    : string;
+}
 
 
 export function SizeSelect({
     defaultValues,
     onSelectionChange,
     label,
-    multiple    = true,
-    placeholder = 'Seleccionar Tamaños',
-    enabled     = true,
-    disabled    = false
-} : Props ): JSX.Element {
+    multiple        = true,
+    placeholder     = 'Seleccionar Tamaños',
+    enabled         = true,
+    disabled        = false,
+    className       = '',
+    buildingFilter,
+    spaceTypeFilter
+} : SizeSelectProps ): JSX.Element {
     const {
         data,
         isLoading,
         isError,
     } = useQuery({
-        queryKey    : [ KEY_QUERYS.SIZE ],
+        queryKey    : [ KEY_QUERYS.SIZES ],
         queryFn     : () => fetchApi<SizeResponse[]>({ url: 'sizes' }),
         enabled
     });
 
+	// Obtener spaces data para filtrar por building y/o spaceType
+	const {
+		spacesData,
+		isLoading   : isLoadingSpaces
+	} = useSpace({ enabled: !!buildingFilter || !!spaceTypeFilter });
+
 
     const memoizedSizes = useMemo(() => {
-        return data?.map( size => ({
+		if ( !data ) return [];
+
+		// Si hay filtro por building y/o spaceType, filtrar sizes disponibles
+		if ( buildingFilter || spaceTypeFilter ) {
+			const availableSizes = new Set(
+				spacesData
+					.filter( space => {
+						const matchesBuilding = !buildingFilter || space.building === buildingFilter;
+						const matchesType = !spaceTypeFilter || space.type === spaceTypeFilter;
+						return matchesBuilding && matchesType;
+					})
+					.map( space => space.size )
+			);
+
+			return data
+				.filter( size => availableSizes.has( size.id ))
+				.map( size => ({
+					id      : size.id,
+					label   : `${size.id} ${size.detail}`,
+					value   : size.id
+				}));
+		}
+
+		// Sin filtro, retornar todos
+        return data.map( size => ({
             id      : size.id,
             label   : `${size.id} ${size.detail}`,
             value   : size.id
-        }) ) ?? [];
-    }, [data]);
+        }));
+    }, [ data, buildingFilter, spaceTypeFilter, spacesData ]);
 
 
     return (
-        <div className="space-y-2">
+        <div className={`space-y-2 ${className}`}>
             { label && <Label htmlFor="size">{ label }</Label> }
 
             { isError ? (
@@ -65,7 +105,7 @@ export function SizeSelect({
                     defaultValues       = { defaultValues }
                     onSelectionChange   = { onSelectionChange }
                     placeholder         = { placeholder }
-                    disabled            = { isLoading || disabled }
+                    disabled            = { isLoading || isLoadingSpaces || disabled }
                     multiple            = { multiple }
                 />
             )}

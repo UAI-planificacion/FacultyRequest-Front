@@ -44,13 +44,15 @@ import { OfferSelect }      from "@/components/offer/offer-select";
 import {
     CreateRequest,
     Request,
-    UpdateRequest
+    UpdateRequest,
+    Status
 }                                   from "@/types/request";
 import { KEY_QUERYS }               from "@/consts/key-queries";
 import { fetchApi, Method }         from "@/services/fetch";
 import { errorToast, successToast } from "@/config/toast/toast.config";
 import { Staff, Role }              from "@/types/staff.model";
 import { cn }                       from "@/lib/utils";
+import { useSession } from "@/hooks/use-session";
 
 
 interface Props {
@@ -58,7 +60,7 @@ interface Props {
     onClose     : () => void;
     request     : Request | undefined;
     facultyId   : string;
-    staff       : Staff | undefined;
+    // staff       : Staff | undefined;
 }
 
 
@@ -86,11 +88,18 @@ export type RequestFormValues = z.infer<typeof formSchema>;
 type Tab = 'form' | 'comments';
 
 
-const defaultRequest = ( data : Request | undefined ) => ({
-    title           : data?.title           || '',
-    description     : data?.description     || '',
-    isConsecutive   : data?.isConsecutive   || false,
-    offerId         : data?.offer.id        || '',
+// const defaultRequest = ( data : Request | undefined ) => ({
+//     title           : data?.title           || '',
+//     description     : data?.description     || '',
+//     isConsecutive   : data?.isConsecutive   || false,
+//     offerId         : data?.offer.id        || '',
+// });
+
+const defaultRequest = ( data : Request | null | undefined, sectionId? : string, facultyId? : string ) => ({
+	// facultyId       : data?.facultyId       || facultyId || '',
+	title           : data?.title           || '',
+	status          : data?.status          || Status.PENDING,
+	sectionId       : data?.section?.id     || sectionId || '',
 });
 
 
@@ -99,9 +108,10 @@ export function RequestForm({
     onClose,
     request,
     facultyId,
-    staff
+    // staff
 }: Props ): JSX.Element {
     const queryClient   = useQueryClient();
+    const { staff }     = useSession();
     const isReadOnly    = staff?.role === Role.VIEWER;
     const [tab, setTab] = useState<Tab>( 'form' );
 
@@ -150,29 +160,33 @@ export function RequestForm({
     });
 
 
-    useEffect(() => {
-        form.reset( defaultRequest( request ));
-        setTab( 'form' );
-    }, [request, isOpen]);
+    // useEffect(() => {
+    //     form.reset( defaultRequest( request ));
+    //     setTab( 'form' );
+    // }, [request, isOpen]);
+    // useEffect(() => {
+	// 	form.reset( defaultRequest( request, propSection?.id, facultyId ));
+	// 	setSelectedSectionId( propSection?.id || request?.section?.id || null );
+	// }, [request, isOpen, propSection, facultyId]);
 
 
     const handleSubmit: SubmitHandler<RequestFormValues> = ( formData ) => {
-        if ( request ) {
-            const updateRequest = {
-                ...formData,
-                id: request!.id,
-                staffUpdateId: staff?.id
-            } as UpdateRequest;
+        // if ( request ) {
+        //     const updateRequest = {
+        //         ...formData,
+        //         id: request!.id,
+        //         staffUpdateId: staff?.id
+        //     } as UpdateRequest;
 
-            updateRequestMutation.mutate( updateRequest );
-        } else {
-            const createRequest = {
-                ...formData,
-                staffCreateId: staff?.id
-            }  as CreateRequest;
+        //     updateRequestMutation.mutate( updateRequest );
+        // } else {
+        //     const createRequest = {
+        //         ...formData,
+        //         staffCreateId: staff?.id
+        //     }  as CreateRequest;
 
-            createRequestMutation.mutate( createRequest );
-        }
+        //     createRequestMutation.mutate( createRequest );
+        // }
     }
 
 

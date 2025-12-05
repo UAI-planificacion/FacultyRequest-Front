@@ -7,7 +7,7 @@ export interface StaffComment {
 export interface Comment {
     id          : string;
     content     : string;
-    staff       : StaffComment | null;
+    staff       : StaffComment;
     adminName   : string | null;
     adminEmail  : string | null;
     createdAt   : Date | string;

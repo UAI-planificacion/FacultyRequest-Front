@@ -1,6 +1,6 @@
 'use client'
 
-import { JSX } from "react";
+import { JSX, useMemo } from "react";
 
 import { MultiSelectCombobox }  from "@/components/shared/Combobox";
 import { Label }                from "@/components/ui/label";
@@ -10,20 +10,41 @@ import { Props }                from "@/components/shared/item-select/select-pro
 import { useSpace } from "@/hooks/use-space";
 
 
+interface SpaceSelectProps extends Props {
+	buildingFilter? : string;
+}
+
+
 export function SpaceSelect({
     defaultValues,
     onSelectionChange,
     label,
-    multiple    = true,
-    placeholder = 'Seleccionar Espacios',
-    enabled     = true,
-    disabled    = false
-} : Props ): JSX.Element {
+    multiple        = true,
+    placeholder     = 'Seleccionar Espacios',
+    enabled         = true,
+    disabled        = false,
+    buildingFilter
+} : SpaceSelectProps ): JSX.Element {
     const {
         spaces,
+		spacesData,
         isLoading,
         isError
     } = useSpace({ enabled });
+
+
+	// Filtrar spaces por building si se proporciona el filtro
+	const filteredSpaces = useMemo(() => {
+		if ( !buildingFilter ) return spaces;
+
+		const availableSpaceIds = new Set(
+			spacesData
+				.filter( space => space.building === buildingFilter )
+				.map( space => space.id )
+		);
+
+		return spaces.filter( space => space.id && availableSpaceIds.has( space.id ));
+	}, [ spaces, spacesData, buildingFilter ]);
 
 
     return (
@@ -44,7 +65,7 @@ export function SpaceSelect({
                 </div>
             ) : (
                 <MultiSelectCombobox
-                    options             = { spaces }
+                    options             = { filteredSpaces }
                     defaultValues       = { defaultValues }
                     onSelectionChange   = { onSelectionChange }
                     placeholder         = { placeholder }

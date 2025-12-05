@@ -13,6 +13,7 @@ export interface FacultyResponse extends Total {
 
 
 export interface Faculty extends Total {
+    [key: string]   : any;
     id              : string;
     name            : string;
     description?    : string;

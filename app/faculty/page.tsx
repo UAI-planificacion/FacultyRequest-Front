@@ -7,9 +7,10 @@ import {
     Album,
     BookCopy,
     BookOpen,
+    CalendarCog,
     Users
 }                   from "lucide-react";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
     Tabs,
@@ -26,44 +27,77 @@ import { KEY_QUERYS }   from "@/consts/key-queries";
 import { fetchApi }     from "@/services/fetch";
 import { Staff }        from "@/types/staff.model";
 import { OfferManagement } from "@/components/offer/offer-management";
+import { Faculty, FacultyResponse } from "@/types/faculty.model";
+import { PlanningChangeManagement } from "@/components/planning-change/planning-change-management";
 
 
 enum TabValue {
     STAFF       = "staff",
     SUBJECTS    = "subjects",
-    OFFERS      = "offers",
     REQUESTS    = "requests",
+    PLANNING_CHANGE = "planning-change"
 }
 
 
+export const updateFacultyTotal = ( 
+    queryClient : ReturnType<typeof useQueryClient>, 
+    facultyId   : string, 
+    increment   : boolean,
+    total       : string,
+    number      : number  = 1
+): void => {
+    queryClient.setQueryData<FacultyResponse | undefined>(
+        [ KEY_QUERYS.FACULTIES ],
+        ( data : FacultyResponse | undefined ) => {
+            if ( !data ) return data;
+
+            const updatedFaculties = data.faculties.map(( faculty: Faculty ) => 
+                faculty.id === facultyId
+                    ? {
+                        ...faculty,
+                        [total]: faculty[total] + ( increment ? number : -1 )
+                    }
+                    : faculty
+            );
+
+            return {
+                ...data,
+                faculties: updatedFaculties
+            };
+        }
+    );
+};
+
+
+
 export default function FacultyPage(): JSX.Element {
-    const router                    = useRouter(); 
+    // const router                    = useRouter(); 
     const searchParams              = useSearchParams();
     const initialTab                = searchParams.get( 'tab' ) as TabValue || TabValue.SUBJECTS;
     const [activeTab, setActiveTab] = useState<TabValue>( initialTab );
-    const { session }               = useSession();
-    const [ email, setEmail ]       = useState( '' );
+    const { staff }               = useSession();
+    // const [ email, setEmail ]       = useState( '' );
 
 
-    useEffect(() => {
-        setEmail( session?.user?.email || '' );
-    }, [session]);
+    // useEffect(() => {
+    //     setEmail( session?.user?.email || '' );
+    // }, [session]);
 
 
-    const { data: staff, isLoading, isError } = useQuery({
-        queryKey    : [ KEY_QUERYS.STAFF ],
-        queryFn     : () => fetchApi<Staff>({ url: `staff/${email}` }),
-        enabled     : !!email
-    });
+    // const { data: staff, isLoading, isError } = useQuery({
+    //     queryKey    : [ KEY_QUERYS.STAFF ],
+    //     queryFn     : () => fetchApi<Staff>({ url: `staff/${email}` }),
+    //     enabled     : !!email
+    // });
 
 
-    useEffect(() => {
-        if ( !staff?.facultyId ) return;
+    // useEffect(() => {
+    //     if ( !staff?.facultyId ) return;
 
-        const currentParams = new URLSearchParams( searchParams.toString() );
-        currentParams.set( 'tab', activeTab );
-        router.replace( `?${currentParams.toString()}`, { scroll: false });
-    }, [ activeTab, staff, router, searchParams ]);
+    //     const currentParams = new URLSearchParams( searchParams.toString() );
+    //     currentParams.set( 'tab', activeTab );
+    //     router.replace( `?${currentParams.toString()}`, { scroll: false });
+    // }, [ activeTab, staff, router, searchParams ]);
 
 
     return (
@@ -105,26 +139,25 @@ export default function FacultyPage(): JSX.Element {
                     </TabsTrigger>
 
                     <TabsTrigger
-                        value       = { TabValue.OFFERS }
-                        className   = "h-10 text-md gap-2"
-                        title       = "Ofertas"
-                        // disabled    = {(faculty?.totalSubjects ?? 0 ) === 0 }
-                    >
-                        <Album className="h-5 w-5" />
-
-                        {/* <span className="hidden sm:block">Ofertas ({ faculty?.totalOffers || 0 })</span> */}
-                        <span className="hidden sm:block">Ofertas</span>
-                    </TabsTrigger>
-
-
-                    <TabsTrigger
                         value       = { TabValue.REQUESTS }
                         className   = "h-10 text-md gap-2"
                         title       = "Solicitudes"
                     >
                         <BookCopy className="h-5 w-5" />
 
+                        {/* <span className="hidden sm:block">Solicitudes ({ faculty?.totalRequests || 0 })</span> */}
                         <span className="hidden sm:block">Solicitudes</span>
+                    </TabsTrigger>
+
+                    <TabsTrigger
+                        value       = { TabValue.PLANNING_CHANGE }
+                        className   = "h-10 text-md gap-2"
+                        title       = "Planificación"
+                    >
+                        <CalendarCog className="h-5 w-5" />
+
+                        {/* <span className="hidden sm:block">Cambio de Plan. ({ faculty?.totalPlanningChanges || 0 })</span> */}
+                        <span className="hidden sm:block">Cambio de Plan</span>
                     </TabsTrigger>
                 </TabsList>
 
@@ -144,17 +177,17 @@ export default function FacultyPage(): JSX.Element {
                     />
                 </TabsContent>
 
-                <TabsContent value={TabValue.OFFERS}>
-                    <OfferManagement 
-                        facultyId   = { staff?.facultyId || '' }
-                        enabled     = { activeTab === TabValue.OFFERS }
-                    />
-                </TabsContent>
-
                 <TabsContent value={ TabValue.REQUESTS }>
                     <RequestsManagement
                         facultyId   = {  staff?.facultyId || '' }
                         enabled     = { activeTab === TabValue.REQUESTS }
+                    />
+                </TabsContent>
+
+                <TabsContent value={TabValue.PLANNING_CHANGE}>
+                    <PlanningChangeManagement
+                        facultyId   = { staff?.facultyId || '' }
+                        enabled     = { activeTab === TabValue.PLANNING_CHANGE }
                     />
                 </TabsContent>
             </Tabs>

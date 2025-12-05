@@ -1,7 +1,5 @@
 import { BookCopy, Book } from 'lucide-react';
 
-import { Login } from '@/components/auth/Login';
-
 
 export default function Home() {
     return (
@@ -15,8 +13,6 @@ export default function Home() {
                     <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                         Solicita y gestiona las solicitudes de tu facultad de manera eficiente.
                     </p>
-
-                    <Login />
 
                     <div className="flex justify-center items-center gap-5">
                         <div className="bg-card p-6 rounded-lg border border-border flex flex-col items-center text-center">

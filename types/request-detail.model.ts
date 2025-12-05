@@ -3,15 +3,18 @@ import { StaffRequest } from "@/types/request";
 
 
 export enum SpaceType {
-    ROOM        = "ROOM",
-    AUDITORIO   = "AUDITORIO",
-    COMMUNIC    = "COMMUNIC",
-    LAB         = "LAB",
-    LABPC       = "LABPC",
-    DIS         = "DIS",
-    GARAGE      = "GARAGE",
-    CORE        = "CORE",
+    ROOM                = "ROOM",
+    AUDITORIO           = "AUDITORIO",
+    LAB                 = "LAB",
+    LABPC               = "LABPC",
+    DIS                 = "DIS",
+    CORE                = "CORE",
+    STUDY_ROOM          = "STUDY_ROOM",
+    MEETING_ROOM        = "MEETING_ROOM",
+    POSTGRADUATE_ROOM   = "POSTGRADUATE_ROOM",
+    MULTIPURPOSE        = "MULTIPURPOSE"
 }
+
 
 
 export enum Building {
@@ -21,6 +24,25 @@ export enum Building {
     D = "D",
     E = "E",
     F = "F",
+}
+
+
+export enum BuildingEnum {
+    PREGRADO_A    = 'PREGRADO_A',
+    PREGRADO_B    = 'PREGRADO_B',
+    POSTGRADO_C   = 'POSTGRADO_C',
+    TALLERES_D    = 'TALLERES_D',
+    TALLERES_E    = 'TALLERES_E',
+    PREGRADO_F    = 'PREGRADO_F',
+    ERRAZURIZ     = 'ERRAZURIZ',
+    VITACURA      = 'VITACURA',
+    VINA_A        = 'VINA_A',
+    VINA_B        = 'VINA_B',
+    VINA_C        = 'VINA_C',
+    VINA_D        = 'VINA_D',
+    VINA_E        = 'VINA_E',
+    VINA_F        = 'VINA_F',
+    Z             = 'Z'
 }
 
 

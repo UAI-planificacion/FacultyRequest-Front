@@ -7,16 +7,22 @@ export const KEY_QUERYS = {
     PROFESSORS      : 'professors',
     PERIODS         : 'periods',
     OFFERS          : 'offers',
+    PLANNING_CHANGE : 'planning-change',
+    REQUEST_SESSION  : 'request-sessions',
+
 
     GRADES          : 'grades',
 
-    SIZE            : 'sizes',
+    SIZES            : 'sizes',
     DAYS            : 'days',
     SPACES          : 'spaces',
     MODULES         : 'modules',
     COMMENTS        : "comments",
-    SECCTIONS       : 'seccions',
+    SECTIONS       : 'sections',
+    SESSIONS        : 'sessions',
+
 
     COST_CENTERS    : 'cost-centers',
     NOTIFICATIONS   : 'notifications',
 }
+

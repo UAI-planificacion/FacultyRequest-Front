@@ -67,7 +67,7 @@ export default function SectionsPage() {
         isLoading,
         isError
     } = useQuery({
-		queryKey    : [ KEY_QUERYS.SECCTIONS, subjectId ],
+		queryKey    : [ KEY_QUERYS.SECTIONS, subjectId ],
 		queryFn     : () => fetchApi<Section[]>({ url, isApi: false }),
         enabled     : !!subjectId
 	});

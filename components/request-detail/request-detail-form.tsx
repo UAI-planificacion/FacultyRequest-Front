@@ -260,7 +260,7 @@ export function RequestDetailForm({
         isLoading   : isLoadingSizes,
         isError     : isErrorSizes,
     } = useQuery({
-        queryKey    : [ KEY_QUERYS.SIZE ],
+        queryKey    : [ KEY_QUERYS.SIZES ],
         queryFn     : () => fetchApi<SizeResponse[]>({ url: `${ENV.ACADEMIC_SECTION}sizes`, isApi: false }),
         enabled     : isOpen
     });

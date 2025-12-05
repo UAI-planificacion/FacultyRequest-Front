@@ -2,53 +2,48 @@
 
 import { JSX } from "react";
 
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 
-import { Button }           from "@/components/ui/button";
-import { useQueryClient }   from "@tanstack/react-query";
-import { Role, Staff }      from "@/types/staff.model";
-import { KEY_QUERYS }       from "@/consts/key-queries";
+import { Button } from "@/components/ui/button";
 
 
 interface Props {
-    editItem    : ( obj: any ) => void;
-    deleteItem  : ( obj: any ) => void;
-    item        : any;
+    editItem            : ( obj: any ) => void;
+    deleteItem          : ( obj: any ) => void;
+    item                : any;
+    isDisabledEdit?      : boolean;
+    isDisabledDelete?    : boolean;
 }
 
 
 export function ActionButton({
     editItem,
     deleteItem,
-    item
+    item,
+    isDisabledEdit = false,
+    isDisabledDelete = false,
 }: Props ): JSX.Element {
-    const queryClient   = useQueryClient();
-    const staff         = queryClient.getQueryData<Staff>([ KEY_QUERYS.STAFF ]);
-
     return (
         <div className="flex justify-end gap-1.5">
             <Button
-                title   = "Editar"
-                variant = "outline"
-                size    = "icon"
-                onClick = {() => editItem( item )}
+                title       = "Editar"
+                variant     = "outline"
+                size        = "icon"
+                disabled    = { isDisabledEdit }
+                onClick     = {() => editItem( item )}
             >
-                { staff?.role === Role.VIEWER
-                    ? <Eye className="h-4 w-4 text-blue-500" />
-                    : <Pencil className="h-4 w-4 text-blue-500" />
-                }
+                <Edit className="h-4 w-4 text-blue-500" />
             </Button>
 
-            { staff?.role !== Role.VIEWER &&
-                <Button
-                    title   = "Eliminar"
-                    variant = "outline"
-                    size    = "icon"
-                    onClick = {() => deleteItem( item )}
-                >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-            }
+            <Button
+                title       = "Eliminar"
+                variant     = "outline"
+                size        = "icon"
+                disabled    = { isDisabledDelete }
+                onClick     = {() => deleteItem( item )}
+            >
+                <Trash2 className="h-4 w-4 text-red-500" />
+            </Button>
         </div>
     );
 }

@@ -97,7 +97,7 @@ export function OfferManagement({
             || offer.spaceType?.toLowerCase().includes( searchQuery.toLowerCase() );
 
         const matchesBuilding = buildingFilter === 'all'
-            || offer.building === buildingFilter;
+        || offer.building === buildingFilter;
 
         const matchesEnglish = englishFilter === 'all'
             || ( englishFilter === 'english' && offer.isEnglish )
@@ -206,17 +206,22 @@ export function OfferManagement({
                             <div className="grid space-y-2">
                                 <Label htmlFor="building">Edificio</Label>
 
-                                <Select value={buildingFilter} onValueChange={( value ) => handleFilterChange( 'building', value )}>
+                                <Select
+                                    value           = { buildingFilter }
+                                    onValueChange   = {( value ) => handleFilterChange( 'building', value )}
+                                >
                                     <SelectTrigger id="building">
                                         <SelectValue placeholder="Filtrar por edificio" />
                                     </SelectTrigger>
 
                                     <SelectContent>
                                         <SelectItem value="all">Todos los edificios</SelectItem>
-                                        <SelectItem value="BUILDING_A">Edificio A</SelectItem>
-                                        <SelectItem value="BUILDING_B">Edificio B</SelectItem>
-                                        <SelectItem value="BUILDING_C">Edificio C</SelectItem>
-                                        <SelectItem value="BUILDING_D">Edificio D</SelectItem>
+                                        <SelectItem value="A">Edificio A</SelectItem>
+                                        <SelectItem value="B">Edificio B</SelectItem>
+                                        <SelectItem value="C">Edificio C</SelectItem>
+                                        <SelectItem value="D">Edificio D</SelectItem>
+                                        <SelectItem value="E">Edificio E</SelectItem>
+                                        <SelectItem value="F">Edificio F</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -224,7 +229,10 @@ export function OfferManagement({
                             <div className="grid space-y-2">
                                 <Label htmlFor="english">Idioma</Label>
 
-                                <Select value={englishFilter} onValueChange={(value) => handleFilterChange( 'english', value )}>
+                                <Select
+                                    value           = { englishFilter }
+                                    onValueChange   = {( value ) => handleFilterChange( 'english', value )}
+                                >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Filtrar por idioma" />
                                     </SelectTrigger>
