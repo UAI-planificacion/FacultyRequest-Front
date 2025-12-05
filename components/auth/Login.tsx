@@ -20,7 +20,7 @@ import { signIn, signOut }  from "@/config/better-auth/auth-client";
 
 
 export function Login(): JSX.Element {
-    const { session, isLoading } = useSession();
+    const { data: session, isLoading } = useSession();
 
     return (
         <>
@@ -42,8 +42,8 @@ export function Login(): JSX.Element {
                                 className="gap-2 bg-black text-white border-zinc-700"
                             >
                                 <Image
-                                    src         = { session?.user?.image }
-                                    alt         = { session?.user?.name }
+                                    src         = { session?.user?.image || '/default-avatar.png' }
+                                    alt         = { session?.user?.name || 'User' }
                                     width       = { 30 }
                                     height      = { 30 }
                                     loading     = "lazy"

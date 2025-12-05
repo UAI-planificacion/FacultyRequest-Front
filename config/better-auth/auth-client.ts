@@ -3,10 +3,11 @@ import { createAuthClient } from "better-auth/client";
 import { ENV } from "@/config/envs/env";
 
 
-const authClient = createAuthClient({
-    baseURL         : ENV.URL,
-    credentials     : 'include',
-    fetchOptions    : {
+export const authClient = createAuthClient({
+    baseURL             : ENV.URL,
+    credentials         : 'include',
+    disableAutoRefresh  : true,
+    fetchOptions        : {
         onError( context ) {
             if ( context.response.status === 401 ) {
                 window.location.href = '/?requireAuth=true';
@@ -15,7 +16,20 @@ const authClient = createAuthClient({
     },
 });
 
-export const signIn = async () => await authClient.signIn.social({ provider: "microsoft", callbackURL: "/requests" });
+
+export const signIn = async () => {
+	try {
+		const result = await authClient.signIn.social({
+			provider    : "microsoft",
+			callbackURL : "/faculty"
+		});
+
+        return result;
+	} catch ( error ) {
+		throw error;
+	}
+};
+
 
 export const signOut = async () => {
     try {
@@ -26,11 +40,14 @@ export const signOut = async () => {
     }
 };
 
+
 export const useSession = authClient.useSession;
+
 
 export const getSession = async () => {
     try {
         const session = await authClient.getSession();
+
         return session;
     } catch ( error ) {
         return null;
