@@ -5,7 +5,6 @@ import { JSX, useState } from 'react';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 
 import { RequestForm }          from '@/components/request/request-form';
-import { RequestDetailForm }    from '@/components/request-detail/request-detail-form';
 
 import { KEY_QUERYS }   from '@/consts/key-queries';
 import { fetchApi }     from '@/services/fetch';
@@ -182,12 +181,12 @@ export function NotificationDialogManager({
 					onClose     = { () => setRequestDialog( prev => ({ ...prev, isOpen: false }))}
 					request     = { requestDialog.request }
 					facultyId   = { requestDialog.request.facultyId }
-                    staff       = { staff }
+                    // staff       = { staff }
 				/>
 			)}
 
 			{/* Request Detail Dialog */}
-			{requestDetailDialog.requestDetail && (
+			{/* {requestDetailDialog.requestDetail && (
 				<RequestDetailForm
 					isOpen              = { requestDetailDialog.isOpen }
 					onClose             = {() => setRequestDetailDialog( prev => ({ ...prev, isOpen: false }))}
@@ -201,7 +200,7 @@ export function NotificationDialogManager({
 					isErrorModules      = { isErrorModules }
                     staff               = { staff }
 				/>
-			)}
+			)} */}
 		</>
 	);
 }
