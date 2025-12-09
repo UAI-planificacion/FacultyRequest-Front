@@ -45,10 +45,10 @@ import { HeadquartersSelect }               from "@/components/shared/item-selec
 import { MultiSelectCombobox }              from "@/components/shared/Combobox";
 import { SessionInfoCard }	                from "@/components/planning-change/session-info-card";
 import { CommentSection }	                from "@/components/comment/comment-section";
-import { RequestDetailModuleDays }          from "@/components/request-detail/request-detail-module-days";
 import { sessionLabels }                    from "@/components/section/section.config";
 import { ChangeStatus }                     from "@/components/shared/change-status";
 import { SessionTypeSelector }              from "@/components/shared/session-type-selector";
+import { SessionModuleDays }                from "@/components/session/session-module-days";
 
 import {
     PlanningChange,
@@ -888,7 +888,7 @@ export function PlanningChangeForm({
 							<Label>Módulos y Días *</Label>
 
 							<div className={ !!session?.planningChangeId && isLoadingPlanningChange ? 'opacity-50 pointer-events-none' : '' }>
-								<RequestDetailModuleDays
+								<SessionModuleDays
 									requestDetailModule	= { requestDetailModule }
 									onModuleToggle		= { handleModuleToggle }
 									enabled				= { true }
