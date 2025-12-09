@@ -179,7 +179,7 @@ export default function FacultyPage(): JSX.Element {
 
                 <TabsContent value={ TabValue.REQUESTS }>
                     <RequestsManagement
-                        facultyId   = {  staff?.facultyId || '' }
+                        facultyId   = { staff?.facultyId || '' }
                         enabled     = { activeTab === TabValue.REQUESTS }
                     />
                 </TabsContent>
