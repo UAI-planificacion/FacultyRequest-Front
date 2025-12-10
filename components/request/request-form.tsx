@@ -1,9 +1,10 @@
 "use client"
 
-import { JSX, useEffect, useState } from "react";
+import { JSX, useEffect, useMemo, useState } from "react";
 
 import {
     useMutation,
+    useQuery,
     useQueryClient
 }                                   from "@tanstack/react-query";
 import { z }                        from "zod";
@@ -11,12 +12,6 @@ import { toast }                    from "sonner";
 import { zodResolver }              from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler }   from "react-hook-form";
 
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-}                           from "@/components/ui/tabs";
 import {
     Dialog,
     DialogContent,
@@ -35,11 +30,10 @@ import {
 }                           from "@/components/ui/form";
 import { Input }            from "@/components/ui/input";
 import { Button }           from "@/components/ui/button";
-import { Textarea }         from "@/components/ui/textarea";
+import { SectionSelect } from "@/components/shared/item-select/section-select";
+import { RequestSectionInfo } from "@/components/request/request-section-info";
 import { ShowStatus }       from "@/components/shared/status";
-import { CommentSection }   from "@/components/comment/comment-section";
-import { Switch }           from "@/components/ui/switch";
-import { OfferSelect }      from "@/components/offer/offer-select";
+import { RequestSessionForm } from "@/components/request/request-session-form";
 
 import {
     CreateRequest,
@@ -47,19 +41,21 @@ import {
     UpdateRequest,
     Status
 }                                   from "@/types/request";
+import { Role }                     from "@/types/staff.model";
+import { OfferSection }             from "@/types/offer-section.model";
+import { Session }                  from "@/types/section.model";
+import { RequestSessionCreate }     from "@/types/request-session.model";
 import { KEY_QUERYS }               from "@/consts/key-queries";
 import { fetchApi, Method }         from "@/services/fetch";
 import { errorToast, successToast } from "@/config/toast/toast.config";
-import { Staff, Role }              from "@/types/staff.model";
-import { cn }                       from "@/lib/utils";
-import { useSession } from "@/hooks/use-session";
-
+import { useSession }               from "@/hooks/use-session";
 
 interface Props {
     isOpen      : boolean;
     onClose     : () => void;
     request     : Request | undefined;
     facultyId   : string;
+    section?    : OfferSection | null;
     // staff       : Staff | undefined;
 }
 
@@ -70,33 +66,25 @@ const formSchema = z.object({
         invalid_type_error: "El título debe ser un texto"
     }).min( 1, { message: "El título no puede estar vacío" })
     .max( 100, { message: "El título no puede tener más de 100 caracteres" }),
-    isConsecutive: z.boolean(),
-    description: z.string()
-        .max( 500, { message: "La descripción no puede tener más de 500 caracteres" })
-        .nullable()
-        .transform( val => val === "" ? null : val ),
-    offerId: z.string({
-        required_error: "Debe seleccionar una oferta",
-        invalid_type_error: "Oferta no válida"
-    }).min(1, { message: "Debe seleccionar una oferta" })
+    sectionId: z.string({
+		required_error: "Debe seleccionar una sección",
+		invalid_type_error: "La sección debe ser un texto"
+	}).min(1, { message: "Debe seleccionar una sección" }),
 });
 
 
 export type RequestFormValues = z.infer<typeof formSchema>;
 
+interface SessionDayModule {
+	session     : Session;
+	dayModuleId : number;
+	dayId       : number;
+	moduleId    : number;
+}
 
-type Tab = 'form' | 'comments';
-
-
-// const defaultRequest = ( data : Request | undefined ) => ({
-//     title           : data?.title           || '',
-//     description     : data?.description     || '',
-//     isConsecutive   : data?.isConsecutive   || false,
-//     offerId         : data?.offer.id        || '',
-// });
 
 const defaultRequest = ( data : Request | null | undefined, sectionId? : string, facultyId? : string ) => ({
-	// facultyId       : data?.facultyId       || facultyId || '',
+	facultyId       : data?.facultyId       || facultyId || '',
 	title           : data?.title           || '',
 	status          : data?.status          || Status.PENDING,
 	sectionId       : data?.section?.id     || sectionId || '',
@@ -108,12 +96,74 @@ export function RequestForm({
     onClose,
     request,
     facultyId,
+    section
     // staff
 }: Props ): JSX.Element {
+	const [selectedSectionId, setSelectedSectionId] = useState<string | null>( section?.id || request?.section?.id || null );
+	const [currentSession, setCurrentSession] = useState<Session | null>( null );
+
+
     const queryClient   = useQueryClient();
-    const { staff }     = useSession();
+    const { staff, isLoading: isLoadingStaff }     = useSession();
     const isReadOnly    = staff?.role === Role.VIEWER;
-    const [tab, setTab] = useState<Tab>( 'form' );
+
+      // Obtener la sección seleccionada
+	const { data : selectedSection } = useQuery({
+		queryKey    : [ KEY_QUERYS.SECTIONS, 'not-planning', selectedSectionId ],
+		queryFn     : () => fetchApi<OfferSection>({ url: `sections/${selectedSectionId}` }),
+		enabled     : !!selectedSectionId && !section
+	});
+
+
+	const sectionN = section || selectedSection;
+
+
+
+    const availableSessions = useMemo(() => {
+		if ( !sectionN ) return [];
+
+		const sessions: Session[] = [];
+
+		if ( sectionN.lecture > 0 )          sessions.push( Session.C );
+		if ( sectionN.tutoringSession > 0 )  sessions.push( Session.A );
+		if ( sectionN.workshop > 0 )         sessions.push( Session.T );
+		if ( sectionN.laboratory > 0 )       sessions.push( Session.L );
+
+		return sessions;
+	}, [ sectionN ]);
+
+
+    const [sessionDayModules, setSessionDayModules] = useState<Record<Session, SessionDayModule[]>>({
+		[Session.C] : [],
+		[Session.A] : [],
+		[Session.T] : [],
+		[Session.L] : [],
+	});
+
+
+    const [sessionConfigs, setSessionConfigs] = useState<Record<Session, Partial<RequestSessionCreate>>>({
+		[Session.C] : { isEnglish : false, isConsecutive : false, inAfternoon : false },
+		[Session.A] : { isEnglish : false, isConsecutive : false, inAfternoon : false },
+		[Session.T] : { isEnglish : false, isConsecutive : false, inAfternoon : false },
+		[Session.L] : { isEnglish : false, isConsecutive : false, inAfternoon : false },
+	});
+
+
+    const [sessionBuildings, setSessionBuildings] = useState<Record<Session, string | null>>({
+		[Session.C] : null,
+		[Session.A] : null,
+		[Session.T] : null,
+		[Session.L] : null,
+	});
+
+
+    // Estado para el modo de filtro seleccionado (space, type-size)
+	const [sessionFilterMode, setSessionFilterMode] = useState<Record<Session, 'space' | 'type-size'>>({
+		[Session.C] : 'type-size',
+		[Session.A] : 'type-size',
+		[Session.T] : 'type-size',
+		[Session.L] : 'type-size',
+	});
 
 
     const createRequestApi = async ( request: CreateRequest ): Promise<Request> =>
@@ -135,7 +185,7 @@ export function RequestForm({
     const createRequestMutation = useMutation<Request, Error, CreateRequest>({
         mutationFn: createRequestApi,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.REQUESTS ]});
+            queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.REQUESTS ]});availableSessions
             onClose();
             toast( 'Solicitud creada exitosamente', successToast );
         },
@@ -160,33 +210,42 @@ export function RequestForm({
     });
 
 
-    // useEffect(() => {
-    //     form.reset( defaultRequest( request ));
-    //     setTab( 'form' );
-    // }, [request, isOpen]);
-    // useEffect(() => {
-	// 	form.reset( defaultRequest( request, propSection?.id, facultyId ));
-	// 	setSelectedSectionId( propSection?.id || request?.section?.id || null );
-	// }, [request, isOpen, propSection, facultyId]);
+    useEffect(() => {
+        form.reset( defaultRequest( request ));
+        setSelectedSectionId( section?.id || request?.section?.id || null );
+    }, [request, isOpen]);
 
 
     const handleSubmit: SubmitHandler<RequestFormValues> = ( formData ) => {
-        // if ( request ) {
-        //     const updateRequest = {
-        //         ...formData,
-        //         id: request!.id,
-        //         staffUpdateId: staff?.id
-        //     } as UpdateRequest;
+        if ( isLoadingStaff ) {
+			toast( 'Cargando información del usuario...', { description: 'Por favor espere' });
+			return;
+		}
 
-        //     updateRequestMutation.mutate( updateRequest );
-        // } else {
-        //     const createRequest = {
-        //         ...formData,
-        //         staffCreateId: staff?.id
-        //     }  as CreateRequest;
+		if ( !staff ) {
+			toast( 'Por favor, inicie sesión para crear una solicitud', errorToast );
+			return;
+		}
 
-        //     createRequestMutation.mutate( createRequest );
-        // }
+        if ( request ) {
+            const updateRequest = {
+                ...formData,
+                id: request.id,
+                staffUpdateId: staff?.id
+            } as UpdateRequest;
+
+                console.log('🚀 ~ file: request-form.tsx:224 ~ updateRequest:', updateRequest)
+
+
+            updateRequestMutation.mutate( updateRequest );
+        } else {
+            const createRequest = {
+                ...formData,
+                staffCreateId: staff?.id
+            }  as CreateRequest;
+
+            createRequestMutation.mutate( createRequest );
+        }
     }
 
 
@@ -212,150 +271,93 @@ export function RequestForm({
                     </div>
                 </DialogHeader>
 
-                <Tabs defaultValue={tab} onValueChange={( value ) => setTab( value as Tab )} className="w-full">
-                    { request && (
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="form">
-                                Información
-                            </TabsTrigger>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit( handleSubmit )} className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4">
+                            {/* Title */}
+                            <FormField
+                                control = { form.control }
+                                name    = "title"
+                                render  = {({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Título</FormLabel>
 
-                            <TabsTrigger value="comments">
-                                Comentarios 
-                            </TabsTrigger>
-                        </TabsList>
-                    )}
+                                        <FormControl>
+                                            <Input 
+                                                placeholder = "Ingrese el título de la solicitud"
+                                                readOnly    = { isReadOnly }
+                                                {...field} 
+                                            />
+                                        </FormControl>
 
-                    <TabsContent value="form" className={ cn( request ? "space-y-4 mt-4" : '' )}>
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit( handleSubmit )} className="space-y-4">
-                                <div className="grid grid-cols-1 gap-4">
-                                    {/* Title */}
-                                    <FormField
-                                        control = { form.control }
-                                        name    = "title"
-                                        render  = {({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Título</FormLabel>
-
-                                                <FormControl>
-                                                    <Input 
-                                                        placeholder = "Ingrese el título de la solicitud"
-                                                        readOnly    = { isReadOnly }
-                                                        {...field} 
-                                                    />
-                                                </FormControl>
-
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                    <FormField
-                                        control = { form.control }
-                                        name    = "offerId"
-                                        render  = {({ field }) => {
-                                            return (
-                                                <FormItem>
-                                                    <FormLabel className="text-base">Oferta</FormLabel>
-
-                                                    <FormControl>
-                                                        <OfferSelect
-                                                            facultyId           = { facultyId }
-                                                            value               = { field.value }
-                                                            placeholder         = "Seleccionar una oferta"
-                                                            searchPlaceholder   = "Buscar por asignatura o período"
-                                                            onSelectionChange   = { ( value ) => field.onChange( value === undefined ? null : value )}
-                                                        />
-                                                    </FormControl>
-
-                                                    <FormMessage />
-                                                </FormItem>
-                                            );
-                                        }}
-                                    />
-
-                                    {/* Is Consecutive */}
-                                    <FormField
-                                        control = { form.control }
-                                        name    = "isConsecutive"
-                                        render  = {({ field }) => (
-                                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                                <div className="space-y-0.5">
-                                                    <FormLabel className="text-base">Es consecutivo</FormLabel>
-
-                                                    <FormDescription>
-                                                        Marque si la solicitud es para horarios consecutivos
-                                                    </FormDescription>
-                                                </div>
-
-                                                <FormControl>
-                                                    <Switch
-                                                        checked         = { field.value }
-                                                        onCheckedChange = { field.onChange }
-                                                        disabled        = { isReadOnly }
-                                                    />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                    {/* Description */}
-                                    <FormField
-                                        control = { form.control }
-                                        name    = "description"
-                                        render  = {({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Descripción</FormLabel>
-
-                                                <FormControl>
-                                                    <Textarea
-                                                        placeholder = "Agregue una descripción (opcional)"
-                                                        className   = "min-h-[100px] max-h-[200px]"
-                                                        readOnly    = { isReadOnly }
-                                                        {...field}
-                                                        value       = { field.value || '' }
-                                                    />
-                                                </FormControl>
-
-                                                <FormDescription className="text-xs flex justify-end">
-                                                    { field.value?.length || 0 } / 500
-                                                </FormDescription>
-
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-
-                                <div className="flex justify-between space-x-4 pt-4">
-                                    <Button
-                                        type    = "button"
-                                        variant = "outline"
-                                        onClick = { onClose }
-                                    >
-                                        { isReadOnly ? 'Cerrar' : 'Cancelar' }
-                                    </Button>
-
-                                    { !isReadOnly && (
-                                        <Button type="submit">
-                                            { request ? 'Guardar cambios' : 'Crear solicitud' }
-                                        </Button>
-                                    )}
-                                </div>
-                            </form>
-                        </Form>
-                    </TabsContent>
-
-                    { request && (
-                        <TabsContent value="comments" className="mt-4">
-                            <CommentSection
-                                requestId   = { request.id }
-                                enabled     = { tab === 'comments' }
-                                size        = { 'h-[378px]' }
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
                             />
-                        </TabsContent>
-                    )}
-                </Tabs>
+
+                            {/* Section Select */}
+                            { !request?.section
+                                ? <FormField
+                                    control = { form.control }
+                                    name    = "sectionId"
+                                    render  = {({ field }) => (
+                                        <FormItem>
+                                            <SectionSelect
+                                                label               = "Sección"
+                                                multiple            = { false }
+                                                placeholder         = "Seleccionar sección"
+                                                defaultValues       = { field.value }
+                                                disabled            = { !!section || !!request }
+                                                onSelectionChange   = {( value ) => {
+                                                    const sectionId = typeof value === 'string' ? value : undefined;
+                                                    field.onChange( sectionId );
+                                                    setSelectedSectionId( sectionId || null );
+                                                }}
+                                            />
+
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                : <RequestSectionInfo section={ request.section } />
+                            }
+
+                            {/* Request Sessions - Solo para creación */}
+                            { !request && sectionN && availableSessions.length > 0 && (
+                                <RequestSessionForm
+                                    availableSessions           = { availableSessions }
+                                    sessionDayModules           = { sessionDayModules }
+                                    sessionConfigs              = { sessionConfigs }
+                                    sessionBuildings            = { sessionBuildings }
+                                    sessionFilterMode           = { sessionFilterMode }
+                                    currentSession              = { currentSession }
+                                    onSessionDayModulesChange   = { setSessionDayModules }
+                                    onSessionConfigsChange      = { setSessionConfigs }
+                                    onSessionBuildingsChange    = { setSessionBuildings }
+                                    onSessionFilterModeChange   = { setSessionFilterMode }
+                                    onCurrentSessionChange      = { setCurrentSession }
+                                />
+                            )}
+                        </div>
+
+                        <div className="flex justify-between space-x-4 pt-4">
+                            <Button
+                                type    = "button"
+                                variant = "outline"
+                                onClick = { onClose }
+                            >
+                                { isReadOnly ? 'Cerrar' : 'Cancelar' }
+                            </Button>
+
+                            { !isReadOnly && (
+                                <Button type="submit">
+                                    { request ? 'Guardar cambios' : 'Crear solicitud' }
+                                </Button>
+                            )}
+                        </div>
+                    </form>
+                </Form>
             </DialogContent>
         </Dialog>
     );
