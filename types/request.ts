@@ -128,7 +128,6 @@ export interface CreateRequest {
 export interface UpdateRequest {
     id              : string;
     title?          : string;
-    status?         : Status;
     staffUpdateId?  : string;
     description?    : string | null;
 }
