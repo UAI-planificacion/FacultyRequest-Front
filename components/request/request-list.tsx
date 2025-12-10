@@ -10,7 +10,6 @@ import { Card, CardContent }    from "@/components/ui/card";
 import { RequestCard }          from "@/components/request/request-card";
 
 import { type Request }     from "@/types/request";
-import { Staff }            from "@/types/staff.model";
 
 
 interface RequestListProps {
@@ -20,7 +19,6 @@ interface RequestListProps {
     onDelete        : ( request: Request ) => void;
     isLoading       : boolean;
     isError         : boolean;
-    staff?          : Staff;
 }
 
 
@@ -31,7 +29,6 @@ export function RequestList({
     onDelete,
     isLoading,
     isError,
-    staff
 }: RequestListProps ): JSX.Element {
     if ( isLoading ) {
         return <RequestCardSkeletonGrid count={6} />;
@@ -60,7 +57,6 @@ export function RequestList({
                     onViewDetails   = { () => onViewDetails( request )}
                     onEdit          = { () => onEdit( request )}
                     onDelete        = { () => onDelete( request )}
-                    staff           = { staff }
                 />
             ))}
         </div>
