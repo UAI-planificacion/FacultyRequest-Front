@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 import { RequestMain }          from "@/components/request/request-main";
-import { RequestDetailView }    from "@/components/request-detail/request-detail";
+import { RequestSessionView }   from "@/components/request-session/request-session-view";
 
 import { KEY_QUERYS }   from "@/consts/key-queries";
 import { type Request } from "@/types/request";
@@ -88,7 +88,7 @@ export function RequestsManagement({
 
     return (
         selectedRequest ? (
-            <RequestDetailView
+            <RequestSessionView
                 request = { selectedRequest }
                 onBack  = { handleBack }
             />
