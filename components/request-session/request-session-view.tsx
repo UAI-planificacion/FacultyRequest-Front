@@ -12,7 +12,6 @@ import {
 import { toast }    from "sonner";
 
 import { Button }					from "@/components/ui/button";
-import { RequestInfoCard }			from "@/components/request-detail/request-info-card";
 import { RequestSessionEditForm }	from "@/components/request-session/request-session-edit-form";
 import { RequestSessionList }		from "@/components/request-session/request-session-list";
 import { RequestSessionErrorCard }	from "@/components/request-session/request-session-card-skeleton";
@@ -20,7 +19,6 @@ import { RequestSessionTable }		from "@/components/request-session/request-sessi
 import { ViewMode }					from "@/components/shared/view-mode";
 import { SessionDayModuleSelector }	from "@/components/session/session-day-module-selector";
 import { Card, CardContent }		from "@/components/ui/card";
-import { Label }					from "@/components/ui/label";
 import { ScrollArea }               from "@/components/ui/scroll-area";
 
 import {
@@ -272,10 +270,10 @@ export function RequestSessionView({
 	return (
 		<div className="space-y-4">
 			{/* Request Info */}
-			<RequestInfoCard
+			{/* <RequestInfoCard
 				request	= { request }
 				onBack	= { onBack }
-			/>
+			/> */}
 
 			{/* Request Sessions */}
 			<div className="space-y-4">
