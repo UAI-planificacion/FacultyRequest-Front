@@ -10,31 +10,39 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue
-}                               from "@/components/ui/select";
-import { Card, CardContent }    from "@/components/ui/card";
-import { Button }               from "@/components/ui/button";
-import { Input }                from "@/components/ui/input";
-import { Label }                from "@/components/ui/label";
+}                   from "@/components/ui/select";
+import {
+    Card,
+    CardContent
+}                   from "@/components/ui/card";
+import { Button }   from "@/components/ui/button";
+import { Input }    from "@/components/ui/input";
+import { Label }    from "@/components/ui/label";
+import { ViewMode } from "@/components/shared/view-mode";
 
 import { Status }       from "@/types/request";
 import { Role, Staff }  from "@/types/staff.model";
 import { cn }           from "@/lib/utils";
-import { ViewMode }     from "@/components/shared/view-mode";
+import { useSession } from "@/hooks/use-session";
 
 
 export interface RequestFilter {
     title                   : string;
     setTitle                : ( title: string ) => void;
-    setOpen                 : ( ) => void;
+    // setOpen                 : ( ) => void;
+    onNewRequest            : () => void;
+
     statusFilter            : Status | "ALL";
     setStatusFilter         : ( statusFilter: Status | "ALL" ) => void;
     consecutiveFilter       : "ALL" | "TRUE" | "FALSE";
     setConsecutiveFilter    : ( consecutiveFilter: "ALL" | "TRUE" | "FALSE" ) => void;
-    sortBy                  : "status" | "staffCreate" | "staffUpdate" | "subjectId" | "createdAt";
-    setSortBy               : ( sortBy: "status" | "staffCreate" | "staffUpdate" | "subjectId" | "createdAt" ) => void;
+    // sortBy                  : "status" | "staffCreate" | "staffUpdate" | "subjectId" | "createdAt";
+    // setSortBy               : ( sortBy: "status" | "staffCreate" | "staffUpdate" | "subjectId" | "createdAt" ) => void;
+    sortBy                  : "title" | "consecutive" | "updatedAt";
+    setSortBy               : ( sortBy: "title" | "consecutive" | "updatedAt" ) => void;
     sortOrder               : "asc" | "desc";
     setSortOrder            : ( sortOrder: "asc" | "desc" ) => void;
-    staff                   : Staff | undefined;
+    // staff                   : Staff | undefined;
     viewMode                : ViewMode,
     setViewMode             : ( viewMode: ViewMode ) => void;
 }
@@ -43,7 +51,8 @@ export interface RequestFilter {
 export function RequestFilter({
     title,
     setTitle,
-    setOpen,
+    // setOpen,
+    onNewRequest,
     statusFilter,
     setStatusFilter,
     consecutiveFilter,
@@ -52,10 +61,12 @@ export function RequestFilter({
     setSortBy,
     sortOrder,
     setSortOrder,
-    staff,
+    // staff,
     viewMode,
     setViewMode,
 }: RequestFilter ): JSX.Element {
+    const { staff } = useSession();
+
     return (
         <Card>
             <CardContent>
@@ -157,7 +168,7 @@ export function RequestFilter({
 
                         {staff?.role !== Role.VIEWER &&
                             <Button
-                                onClick     = { setOpen }
+                                onClick     = { onNewRequest }
                                 className   = "mt-5"
                             >
                                 <Plus className="h-4 w-4 mr-2" />
