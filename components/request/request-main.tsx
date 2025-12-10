@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect, JSX } from "react";
+import { useState, useMemo, useEffect, JSX }    from "react";
 
 import {
     useMutation,
@@ -12,26 +12,27 @@ import { DeleteConfirmDialog }  from "@/components/dialog/DeleteConfirmDialog";
 import { RequestFilter }        from "@/components/request/request-filter";
 import { RequestList }          from "@/components/request/request-list";
 import { RequestTable }         from "@/components/request/request-table";
-import { RequestForm }          from "@/components/request/request-form";
 import { DataPagination }       from "@/components/ui/data-pagination";
+import { RequestForm }          from "@/components/request/request-form";
 
 import { type Request, Status }     from "@/types/request";
-import { Staff }                    from "@/types/staff.model";
 import { Method, fetchApi }         from "@/services/fetch";
 import { errorToast, successToast } from "@/config/toast/toast.config";
 import { KEY_QUERYS }               from "@/consts/key-queries";
 import { useViewMode }              from "@/hooks/use-view-mode";
+import { updateFacultyTotal } from "@/app/faculty/page";
 
 
 interface RequestMainProps {
     requests        : Request[];
     onViewDetails   : ( request: Request ) => void;
-    facultyId       : string;
+    facultyId?      : string;
     isLoading       : boolean;
     isError         : boolean;
 }
 
-type SortBy             = "status" | "staffCreate" | "staffUpdate" | "subjectId" | "createdAt";
+
+type SortBy             = "title" | "consecutive" | "updatedAt";
 type SortOrder          = "asc" | "desc";
 type ConsecutiveFilter  = "ALL" | "TRUE" | "FALSE";
 
@@ -45,17 +46,16 @@ export function RequestMain({
 }: RequestMainProps ): JSX.Element {
     const queryClient                                   = useQueryClient();
     const [isFormOpen, setIsFormOpen]                   = useState( false );
-    const [editingRequest, setEditingRequest]           = useState<Request | undefined>( undefined );
+    const [editingRequest, setEditingRequest]           = useState<Request | null>( null );
     const [title, setTitle]                             = useState( "" );
     const [statusFilter, setStatusFilter]               = useState<Status | "ALL">( "ALL" );
     const [consecutiveFilter, setConsecutiveFilter]     = useState<ConsecutiveFilter>( "ALL" );
-    const [sortBy, setSortBy]                           = useState<SortBy>( "createdAt" );
+    const [sortBy, setSortBy]                           = useState<SortBy>( "updatedAt" );
     const [sortOrder, setSortOrder]                     = useState<SortOrder>( "desc" );
     const [isDeleteDialogOpen, setIsDeleteDialogOpen]   = useState( false );
     const [deletingRequest, setDeletingRequest]         = useState<Request | null>( null );
     const [currentPage, setCurrentPage]                 = useState( 1 );
     const [itemsPerPage, setItemsPerPage]               = useState( 15 );
-    const staff                                         = queryClient.getQueryData<Staff>([ KEY_QUERYS.STAFF ]);
     const { viewMode, onViewChange }                    = useViewMode({
         queryName: 'viewRequest'
     });
@@ -68,7 +68,13 @@ export function RequestMain({
     const deleteRequestMutation = useMutation<Request, Error, string>({
         mutationFn: deleteRequestApi,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [KEY_QUERYS.REQUESTS, facultyId] });
+            // Invalidar queries: si hay facultyId específico, invalidar esa; si no, invalidar todas
+            if ( facultyId ) {
+                queryClient.invalidateQueries({ queryKey: [KEY_QUERYS.REQUESTS, facultyId] });
+                updateFacultyTotal( queryClient, facultyId, false, 'totalRequests' );
+            } else {
+                queryClient.invalidateQueries({ queryKey: [KEY_QUERYS.REQUESTS] });
+            }
             setIsDeleteDialogOpen( false );
             setDeletingRequest( null );
             toast( 'Solicitud eliminada exitosamente', successToast );
@@ -79,27 +85,26 @@ export function RequestMain({
 
     const filteredAndSortedRequests = useMemo(() => {
         const filtered = requests.filter( request => {
-            const matchesId = title === "" || request.title.toLowerCase().includes( title.toLowerCase() );
+            const matchesTitle = title === "" || request.title.toLowerCase().includes( title.toLowerCase() );
             const matchesStatus = statusFilter === "ALL" || request.status === statusFilter;
-            const matchesConsecutive =
-                consecutiveFilter === "ALL" ||
-                ( consecutiveFilter === "TRUE" && request.isConsecutive ) ||
-                ( consecutiveFilter === "FALSE" && !request.isConsecutive );
+            // const matchesConsecutive =
+            //     consecutiveFilter === "ALL" ||
+            //     ( consecutiveFilter === "TRUE" && request.isConsecutive ) ||
+            //     ( consecutiveFilter === "FALSE" && !request.isConsecutive );
 
-            return matchesId && matchesStatus && matchesConsecutive;
+            // return matchesTitle && matchesStatus && matchesConsecutive;
+            return matchesTitle && matchesStatus;
         });
 
         return filtered.sort(( a, b ) => {
-            const [aValue, bValue] = {
-                status      : [a.status, b.status],
-                staffCreate : [a.staffCreate.name, b.staffCreate.name],
-                staffUpdate : [a.staffUpdate?.name || "", b.staffUpdate?.name || ""],
-                subjectId   : [a.offer.subject.name, b.offer.subject.name],
-                createdAt   : [a.createdAt, b.createdAt],
-            }[sortBy];
+            // const [aValue, bValue] = {
+            //     title       : [a.title, b.title],
+            //     // consecutive : [a.isConsecutive, b.isConsecutive],
+            //     updatedAt   : [a.updatedAt, b.updatedAt],
+            // }[sortBy];
 
-            if ( aValue < bValue ) return sortOrder === "asc" ? -1 : 1;
-            if ( aValue > bValue ) return sortOrder === "asc" ? 1 : -1;
+            // if ( aValue < bValue ) return sortOrder === "asc" ? -1 : 1;
+            // if ( aValue > bValue ) return sortOrder === "asc" ? 1 : -1;
 
             return 0;
         })
@@ -113,9 +118,7 @@ export function RequestMain({
     }, [filteredAndSortedRequests, currentPage, itemsPerPage]);
 
 
-    const totalPages    = Math.ceil( filteredAndSortedRequests.length / itemsPerPage );
-    const startIndex    = ( currentPage - 1 ) * itemsPerPage;
-    const endIndex      = startIndex + itemsPerPage;
+    const totalPages = Math.ceil( filteredAndSortedRequests.length / itemsPerPage );
 
 
     function handleEdit( request: Request ): void {
@@ -125,14 +128,14 @@ export function RequestMain({
 
 
     function handleNewRequest(): void {
-        setEditingRequest( undefined );
+        setEditingRequest( null );
         setIsFormOpen( true );
     }
 
 
     function handleFormSuccess(): void {
         setIsFormOpen( false );
-        setEditingRequest( undefined );
+        setEditingRequest( null );
     }
 
 
@@ -160,12 +163,6 @@ export function RequestMain({
     }
 
 
-    function openFormRequest(): void {
-        setEditingRequest( undefined );
-        setIsFormOpen( true );
-    }
-
-
     useEffect(() => {
         setCurrentPage( 1 );
     }, [title, statusFilter, consecutiveFilter, sortBy, sortOrder]);
@@ -176,8 +173,6 @@ export function RequestMain({
             {/* Filters */}
             <RequestFilter
                 title                   = { title }
-                setOpen                 = { openFormRequest }
-
                 setTitle                = { setTitle }
                 statusFilter            = { statusFilter }
                 setStatusFilter         = { setStatusFilter }
@@ -187,7 +182,7 @@ export function RequestMain({
                 setSortBy               = { setSortBy }
                 sortOrder               = { sortOrder }
                 setSortOrder            = { setSortOrder }
-                staff                   = { staff }
+                onNewRequest            = { handleNewRequest }
                 viewMode                = { viewMode }
                 setViewMode             = { onViewChange }
             />
@@ -201,7 +196,6 @@ export function RequestMain({
                     onDelete            = { handleDelete }
                     isLoading           = { isLoading }
                     isError             = { isError }
-                    staff               = { staff }
                 />
                 : <RequestTable
                     requests            = { paginatedRequests }
@@ -229,9 +223,9 @@ export function RequestMain({
             <RequestForm
                 isOpen      = { isFormOpen }
                 onClose     = { () => setIsFormOpen( false )}
-                request     = { editingRequest }
-                facultyId   = { facultyId }
-                staff       = { staff }
+                // onSuccess   = { handleFormSuccess }
+                request     = { editingRequest || undefined }
+                facultyId   = { facultyId || '' }
             />
 
             {/* Delete Confirmation Dialog */}
