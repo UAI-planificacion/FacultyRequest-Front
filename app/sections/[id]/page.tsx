@@ -87,7 +87,7 @@ export default function SectionsPage() {
 
 		const matchesSearch = searchQuery === ''
             || getStringValue( section.code ).includes( searchQuery.toLowerCase() )
-            || getStringValue( section.professorName ).includes( searchQuery.toLowerCase() )
+            // || getStringValue( section.professorName ).includes( searchQuery.toLowerCase() )
             || getStringValue( section.room ).includes( searchQuery.toLowerCase() )
             || getStringValue( section.session ).includes( searchQuery.toLowerCase() );
 
@@ -292,22 +292,25 @@ export default function SectionsPage() {
                                                             </TableCell>
 
                                                             <TableCell className="w-28">
-                                                                { days[section.day - 1] }
+                                                                {/* { days[section.day - 1] } */}
                                                             </TableCell>
 
                                                             <TableCell className="w-24">
-                                                                M{ section.moduleId }
+                                                                {/* M{ section.moduleId } */}
+                                                                M
                                                             </TableCell>
 
                                                             <TableCell className="whitespace-nowrap w-32">
-                                                                { section.period }
+                                                                {/* { section.period } */}
+                                                                p
                                                             </TableCell>
 
                                                             <TableCell
                                                                 className   = "truncate w-40"
-                                                                title       = { section.professorName }
+                                                                // title       = { section.professorName }
                                                             >
-                                                                { section.professorName }
+                                                                {/* { section.professorName } */}
+                                                                Name
                                                             </TableCell>
 
                                                             <TableCell className="w-24">
@@ -330,7 +333,7 @@ export default function SectionsPage() {
 
                                                             <TableCell
                                                                 className   = "truncate w-32"
-                                                                title       = { section.plannedBuilding }
+                                                                title       = { section.plannedBuilding || '' }
                                                             >
                                                                 { section.plannedBuilding }
                                                             </TableCell>
