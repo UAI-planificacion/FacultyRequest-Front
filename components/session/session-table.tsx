@@ -219,7 +219,7 @@ export function SessionTable({
                                                 >
                                                     <CalendarClock className="w-4 h-4" />
                                                 </Button>
-
+{/* 
                                                 <ActionButton
                                                     editItem            = {() => {
                                                         setSelectedSesionEdit( session )
@@ -232,7 +232,7 @@ export function SessionTable({
                                                     item                = { session }
                                                     isDisabledEdit      = { section.isClosed }
                                                     isDisabledDelete    = { section.isClosed }
-                                                />
+                                                /> */}
                                             </div>
 										</TableCell>
 									</TableRow>
