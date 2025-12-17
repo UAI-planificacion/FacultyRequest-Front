@@ -166,7 +166,7 @@ export function RequestFilter({
                             onViewChange    = { setViewMode }
                         />
 
-                        {staff?.role !== Role.VIEWER &&
+                        { staff?.role !== Role.VIEWER &&
                             <Button
                                 onClick     = { onNewRequest }
                                 className   = "mt-5"
