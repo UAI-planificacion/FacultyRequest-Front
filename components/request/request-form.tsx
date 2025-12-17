@@ -99,12 +99,17 @@ export function RequestForm({
     section
     // staff
 }: Props ): JSX.Element {
-	const [selectedSectionId, setSelectedSectionId] = useState<string | null>( section?.id || request?.section?.id || null );
-	const [currentSession, setCurrentSession] = useState<Session | null>( null );
-
-
     const queryClient   = useQueryClient();
-    const { staff, isLoading: isLoadingStaff }     = useSession();
+
+    const [selectedSectionId, setSelectedSectionId] = useState<string | null>( section?.id || request?.section?.id || null );
+	const [currentSession, setCurrentSession]       = useState<Session | null>( null );
+
+
+    const {
+        staff,
+        isLoading: isLoadingStaff
+    }                   = useSession();
+
     const isReadOnly    = staff?.role === Role.VIEWER;
 
       // Obtener la sección seleccionada
@@ -114,10 +119,7 @@ export function RequestForm({
 		enabled     : !!selectedSectionId && !section
 	});
 
-
 	const sectionN = section || selectedSection;
-
-
 
     const availableSessions = useMemo(() => {
 		if ( !sectionN ) return [];
@@ -234,8 +236,7 @@ export function RequestForm({
                 staffUpdateId: staff?.id
             } as UpdateRequest;
 
-                console.log('🚀 ~ file: request-form.tsx:224 ~ updateRequest:', updateRequest)
-
+            console.log('🚀 ~ file: request-form.tsx:224 ~ updateRequest:', updateRequest)
 
             updateRequestMutation.mutate( updateRequest );
         } else {
@@ -251,7 +252,7 @@ export function RequestForm({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="max-w-[800px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader className="space-y-3">
                     <div className="flex justify-between items-center mr-5">
                         <div className="space-y-1">
@@ -267,12 +268,12 @@ export function RequestForm({
                             </DialogDescription>
                         </div>
 
-                        { request && <ShowStatus status={request.status} /> }
+                        { request && <ShowStatus status={ request.status } /> }
                     </div>
                 </DialogHeader>
 
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit( handleSubmit )} className="space-y-4">
+                <Form { ...form }>
+                    <form onSubmit={ form.handleSubmit( handleSubmit )} className="space-y-4">
                         <div className="grid grid-cols-1 gap-4">
                             {/* Title */}
                             <FormField
@@ -286,7 +287,7 @@ export function RequestForm({
                                             <Input 
                                                 placeholder = "Ingrese el título de la solicitud"
                                                 readOnly    = { isReadOnly }
-                                                {...field} 
+                                                { ...field }
                                             />
                                         </FormControl>
 
