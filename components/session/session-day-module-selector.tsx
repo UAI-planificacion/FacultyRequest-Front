@@ -383,25 +383,32 @@ export function SessionDayModuleSelector({
 			    {/* Botones de selección de sesión (solo si enabled y showSessionButtons) */}
                 { enabled && showSessionButtons && onCurrentSessionChange && availableSessions.length > 0 && (
                     <div className="flex items-center gap-2">
-                        <ToggleGroup
-                            type            = "single"
-                            value           = { currentSession || undefined }
-                            variant         = "outline"
-                            onValueChange   = {( value ) => {
-                                if ( value ) onCurrentSessionChange( value as Session );
-                            }}
-                        >
+                        <div className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
                             { availableSessions.map( session => {
-                                const count = getSessionCount( session );
-                                const label = sessionButtonLabel ? sessionButtonLabel( session, count ) : `${ sessionLabels[session] } (${ count })`;
+                                const count         = getSessionCount( session );
+                                const label         = sessionButtonLabel ? sessionButtonLabel( session, count ) : `${ sessionLabels[session] } (${ count })`;
                                 const isAllSelected = isAllSelectedForSession( session );
+                                const isActive      = currentSession === session;
 
                                 return (
-                                    <ToggleGroupItem
-                                        key         = { session }
-                                        value       = { session }
-                                        aria-label  = { sessionLabels[session] }
-                                        className   = "gap-2"
+                                    <div
+                                        key             = { session }
+                                        role            = "button"
+                                        tabIndex        = { 0 }
+                                        aria-label      = { sessionLabels[session] }
+                                        aria-pressed    = { isActive }
+                                        className       = {`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 gap-2 ${
+                                            isActive 
+                                                ? 'bg-background text-foreground shadow-sm' 
+                                                : 'hover:bg-muted hover:text-foreground'
+                                        }`}
+                                        onClick     = {() => onCurrentSessionChange( session )}
+                                        onKeyDown   = {( e ) => {
+                                            if ( e.key === 'Enter' || e.key === ' ' ) {
+                                                e.preventDefault();
+                                                onCurrentSessionChange( session );
+                                            }
+                                        }}
                                     >
                                         { label }
 
@@ -416,10 +423,10 @@ export function SessionDayModuleSelector({
                                                 onClick         = {( e ) => e.stopPropagation()}
                                             />
                                         )}
-                                    </ToggleGroupItem>
+                                    </div>
                                 );
                             })}
-                        </ToggleGroup>
+                        </div>
                     </div>
                 )}
 
@@ -495,7 +502,7 @@ export function SessionDayModuleSelector({
                         {modulesWithDays.map(( module ) => (
                             <TableRow key={module.id}>
                                 <TableCell
-                                    className   = "sticky left-0 bg-background z-10 w-32  p-3 border-r shadow-md text-xs truncate"
+                                    className   = "sticky left-0 bg-background z-10 w-32 min-w-32 p-3 border-r shadow-md text-xs truncate"
                                     title       = { `${ module.name } ${ module.difference ?? '' } ${ module.startHour }-${ module.endHour }` }
                                 >
                                     { module.name } { module.difference ?? '' } { module.startHour }-{ module.endHour }
