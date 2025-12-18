@@ -5,14 +5,10 @@ import { useRouter } from 'next/navigation';
 
 
 import {
-    Album,
+    BookCopy,
     CalendarClock,
     ChevronDown,
     ChevronRight,
-    Edit,
-    MoreVertical,
-    Plus,
-    Trash2
 }                   from "lucide-react"
 import {
     useMutation,
@@ -29,14 +25,14 @@ import {
 	TableRow
 }                               from "@/components/ui/table"
 
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger
-}                               from "@/components/ui/dropdown-menu"
+// import {
+// 	DropdownMenu,
+// 	DropdownMenuContent,
+// 	DropdownMenuItem,
+// 	DropdownMenuTrigger
+// }                               from "@/components/ui/dropdown-menu"
 import { ActiveBadge }          from "@/components/shared/active"
-import { ActionButton }         from "@/components/shared/action"
+// import { ActionButton }         from "@/components/shared/action"
 // import { ChangeStatusSection }  from "@/components/section/change-status"
 import { DeleteConfirmDialog }  from "@/components/dialog/DeleteConfirmDialog"
 import { SessionShort }         from "@/components/session/session-short"
@@ -44,15 +40,17 @@ import { SessionForm }          from "@/components/session/session-form"
 import { SessionTable }         from "@/components/session/session-table"
 // import { SectionForm }          from "@/components/section/section-form"
 import { PlanningChangeForm }   from "@/components/planning-change/planning-change-form"
+import { RequestForm }          from "@/components/request/request-form"
 import { Skeleton }             from "@/components/ui/skeleton";
 import { Button }               from "@/components/ui/button"
-import { Checkbox }             from "@/components/ui/checkbox"
+// import { Checkbox }             from "@/components/ui/checkbox"
 
 import { OfferSection }             from "@/types/offer-section.model"
 import { fetchApi, Method }         from "@/services/fetch"
 import { KEY_QUERYS }               from "@/consts/key-queries"
 import { errorToast, successToast } from "@/config/toast/toast.config"
 import { tempoFormat }              from "@/lib/utils"
+import { useSession }               from "@/hooks/use-session"
 
 
 interface Props {
@@ -82,6 +80,7 @@ export function SectionTable({
 	const [ isOpenDelete, setIsOpenDelete ]             = useState<boolean>( false );
 	const [ isOpenSessionForm, setIsOpenSessionForm ]   = useState<boolean>( false );
 	const [ isOpenSectionForm, setIsOpenSectionForm ]   = useState<boolean>( false );
+	const [ isOpenRequestForm, setIsOpenRequestForm ]   = useState<boolean>( false );
 	const [ selectedSection, setSelectedSection ]       = useState<OfferSection | null>( null );
 
 	/**
@@ -103,6 +102,9 @@ export function SectionTable({
 	}, [ selectedSections, selectedSessions, sections, onSelectedSectionsChange, onSelectedSessionsChange ]);
 
 	const [ isOpenPlanningChange, setIsOpenPlanningChange ] = useState<boolean>( false );
+
+	// Get staff session for facultyId
+	const { staff } = useSession();
 
 	/**
 	 * Toggle section expansion
@@ -263,19 +265,19 @@ export function SectionTable({
 	return (
 		<>
 			<Table className="min-w-full">
-				<TableHeader>
+				<TableHeader className="dark:hover:bg-black rounded-full">
 					<TableRow>
-						<TableHead className="w-0"></TableHead>
-						<TableHead className="w-10"></TableHead>
-						<TableHead>SSEC</TableHead>
-						<TableHead>Período</TableHead>
-						<TableHead>Sesiones</TableHead>
-						<TableHead>Cupos</TableHead>
-						<TableHead>Registrados</TableHead>
-						<TableHead>Fecha Inicio</TableHead>
-						<TableHead>Fecha Fin</TableHead>
-						<TableHead>Estado</TableHead>
-						<TableHead className="text-right">Acciones</TableHead>
+						<TableHead className="w-0 font-semibold"></TableHead>
+						{/* <TableHead className="w-10 font-semibold"></TableHead> */}
+						<TableHead className="font-semibold">SSEC</TableHead>
+						<TableHead className="font-semibold">Período</TableHead>
+						<TableHead className="font-semibold">Sesiones</TableHead>
+						<TableHead className="font-semibold">Cupos</TableHead>
+						<TableHead className="font-semibold">Registrados</TableHead>
+						<TableHead className="font-semibold">Fecha Inicio</TableHead>
+						<TableHead className="font-semibold">Fecha Fin</TableHead>
+						<TableHead className="font-semibold">Estado</TableHead>
+						<TableHead className="text-right font-semibold">Acciones</TableHead>
 					</TableRow>
 				</TableHeader>
 
@@ -289,9 +291,9 @@ export function SectionTable({
 										<Skeleton className="h-8 w-8" />
 									</TableCell>
                                     {/* Check */}
-									<TableCell>
+									{/* <TableCell>
 										<Skeleton className="h-4 w-4" />
-									</TableCell>
+									</TableCell> */}
                                     {/* SSEC */}
 									<TableCell>
 										<Skeleton className="h-4 w-16" />
@@ -376,7 +378,7 @@ export function SectionTable({
 										</Button>
 									</TableCell>
 
-									<TableCell>
+									{/* <TableCell>
 										<Checkbox
 											checked         = { 
 												isSectionFullySelected( section ) 
@@ -390,7 +392,7 @@ export function SectionTable({
 											// disabled        = { section.isClosed || section.sessionsCount === 0 }
 											disabled        = { section.isClosed }
 										/>
-									</TableCell>
+									</TableCell> */}
 
 									<TableCell className="font-medium" title={ `${section.subject.id}-${section.subject.name}` }>
                                         { section.subject.id }-{ section.code }
@@ -445,7 +447,30 @@ export function SectionTable({
 
                                             <Button
                                                 disabled    = { section.isClosed || section.sessionsCount === 0 }
-                                                onClick     = { () => router.push( `planning-change?sectionId=${ section.id }` )}
+                                                onClick     = { () => router.push( `faculty?tab=requests&sectionId=${ section.id }` )}
+                                                variant     = "outline"
+                                                size        = "icon"
+                                                title       = "Ver Solicitud"
+                                            >
+                                                <BookCopy className="h-4 w-4" />
+                                            </Button>
+
+                                            <Button
+                                                disabled    = { section.isClosed || section.sessionsCount === 0 }
+                                                onClick     = { () => {
+                                                    setIsOpenRequestForm( true );
+                                                    setSelectedSection( section );
+                                                }}
+                                                variant     = "outline"
+                                                size        = "icon"
+                                                title       = "Crear Solicitud"
+                                            >
+                                                <BookCopy className="h-4 w-4 text-blue-500" />
+                                            </Button>
+
+                                            <Button
+                                                disabled    = { section.isClosed || section.sessionsCount === 0 }
+                                                onClick     = { () => router.push( `faculty?tab=planning-change&sectionId=${ section.id }` )}
                                                 variant     = "outline"
                                                 size        = "icon"
                                                 title       = "Cambios de Planificación"
@@ -627,6 +652,15 @@ export function SectionTable({
 					setIsOpenPlanningChange( false );
 					queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.PLANNING_CHANGE ] });
 				}}
+			/>
+
+			{/* Request Form */}
+			<RequestForm
+				isOpen		= { isOpenRequestForm }
+				onClose		= { () => setIsOpenRequestForm( false )}
+				request		= { undefined }
+				facultyId	= { staff?.facultyId || '' }
+				section		= { selectedSection }
 			/>
 		</>
 	);
