@@ -337,10 +337,10 @@ export function SectionMain({
 
     return (
         <>
-            <div className="w-full mt-4">
+            <div className="w-full">
                 {/* Table - Siempre ocupa todo el ancho */}
                 <Card className="w-full">
-                    <CardContent className="mt-5 overflow-x-auto overflow-y-auto h-[calc(100vh-300px)] w-full">
+                    <CardContent className="mt-2 overflow-x-auto overflow-y-auto h-[calc(100vh-320px)] w-full">
                         <SectionTable
                             sections                    = { filteredAndPaginatedSections.sections }
                             isLoading                   = { isLoadingSections }
