@@ -1,34 +1,37 @@
 "use client"
 
-import { JSX, useEffect, useState }     from "react";
-import { useRouter, useSearchParams }   from 'next/navigation';
+import { JSX, useState }     from "react";
+import { useSearchParams }   from 'next/navigation';
 
 import {
-    Album,
     BookCopy,
     BookOpen,
     CalendarCog,
     Users
 }                   from "lucide-react";
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    // useQuery,
+    useQueryClient
+}                   from '@tanstack/react-query';
 
 import {
     Tabs,
     TabsContent,
     TabsList,
     TabsTrigger
-}                               from "@/components/ui/tabs";
-import { RequestsManagement }   from "@/components/request/request";
-import { SubjectsManagement }   from "@/components/subject/subjects-management";
-import { StaffManagement }      from "@/components/staff/staff-management";
+}                                   from "@/components/ui/tabs";
+import { RequestsManagement }       from "@/components/request/request";
+import { SubjectsManagement }       from "@/components/subject/subjects-management";
+import { StaffManagement }          from "@/components/staff/staff-management";
+import { PageLayout }               from "@/components/layout";
+import { PlanningChangeManagement } from "@/components/planning-change/planning-change-management";
+// import { OfferManagement } from "@/components/offer/offer-management";
 
 import { useSession }   from "@/hooks/use-session";
 import { KEY_QUERYS }   from "@/consts/key-queries";
-import { fetchApi }     from "@/services/fetch";
+// import { fetchApi }     from "@/services/fetch";
 import { Staff }        from "@/types/staff.model";
-import { OfferManagement } from "@/components/offer/offer-management";
 import { Faculty, FacultyResponse } from "@/types/faculty.model";
-import { PlanningChangeManagement } from "@/components/planning-change/planning-change-management";
 
 
 enum TabValue {
@@ -101,8 +104,11 @@ export default function FacultyPage(): JSX.Element {
 
 
     return (
-        <main className="min-h-[calc(100vh-75px)] container mx-auto py-6 space-y-4 px-4">
-            <div className="grid">
+        <PageLayout
+            title={ `Facultad ${staff?.facultyName }` }
+        >
+            {/* <main className="min-h-[calc(100vh-75px)] container mx-auto py-6 space-y-4 px-4"> */}
+            {/* <div className="grid">
                 <h1 className="text-2xl font-bold">
                     Facultad {staff?.facultyName }
                 </h1>
@@ -110,24 +116,13 @@ export default function FacultyPage(): JSX.Element {
                 <span className="text-[11px] text-muted-foreground">
                     { staff?.facultyId }
                 </span>
-            </div>
-
+            </div> */}
             <Tabs
                 value           = { activeTab }
                 onValueChange   = {( value: string ) => setActiveTab( value as TabValue )}
                 className       = "w-full"
             >
                 <TabsList className="grid grid-cols-4 mb-4 h-12">
-                    <TabsTrigger
-                        value       = { TabValue.STAFF }
-                        className   = "h-10 text-md gap-2"
-                        title       = "Personal"
-                    >
-                        <Users className="h-5 w-5" />
-
-                        <span className="hidden sm:block">Personal</span>
-                    </TabsTrigger>
-
                     <TabsTrigger
                         value       = { TabValue.SUBJECTS }
                         className   = "h-10 text-md gap-2"
@@ -159,15 +154,17 @@ export default function FacultyPage(): JSX.Element {
                         {/* <span className="hidden sm:block">Cambio de Plan. ({ faculty?.totalPlanningChanges || 0 })</span> */}
                         <span className="hidden sm:block">Cambio de Plan</span>
                     </TabsTrigger>
-                </TabsList>
 
-                <TabsContent value={ TabValue.STAFF }>
-                    <StaffManagement 
-                        facultyId   = { staff?.facultyId  || '' }
-                        enabled     = { activeTab === TabValue.STAFF && !!staff?.facultyId }
-                        staff       = { staff || {} as Staff }
-                    />
-                </TabsContent>
+                    <TabsTrigger
+                        value       = { TabValue.STAFF }
+                        className   = "h-10 text-md gap-2"
+                        title       = "Personal"
+                    >
+                        <Users className="h-5 w-5" />
+
+                        <span className="hidden sm:block">Personal</span>
+                    </TabsTrigger>
+                </TabsList>
 
                 <TabsContent value={ TabValue.SUBJECTS }>
                     <SubjectsManagement 
@@ -190,7 +187,15 @@ export default function FacultyPage(): JSX.Element {
                         enabled     = { activeTab === TabValue.PLANNING_CHANGE }
                     />
                 </TabsContent>
+
+                <TabsContent value={ TabValue.STAFF }>
+                    <StaffManagement 
+                        facultyId   = { staff?.facultyId  || '' }
+                        enabled     = { activeTab === TabValue.STAFF && !!staff?.facultyId }
+                        staff       = { staff || {} as Staff }
+                    />
+                </TabsContent>
             </Tabs>
-        </main>
+        </PageLayout>
     );
 }
