@@ -1,13 +1,17 @@
 'use client'
 
-import { useEffect, useState } from "react";
-import Image            from "next/image"
+import { useEffect, useState }  from "react";
+import Image                    from "next/image"
+import { useRouter }            from "next/navigation";
+
+import { Box, Building } from "lucide-react";
 
 import { Theme }                        from "@/components/header/Theme";
 import { Login }                        from "@/components/auth/Login";
 import { AlertMessage }                 from "@/components/dialog/Alert";
 import { NotificationDialogManager }    from "@/components/header/NotificationDialogManager";
 import { Notifications }                from "@/components/header/Notifications";
+import { Button }                       from "@/components/ui/button";
 
 import { useSSE } from "@/hooks/use-sse";
 
@@ -15,6 +19,7 @@ import { useSSE } from "@/hooks/use-sse";
 export default function Header() {
     useSSE();
 
+    const router = useRouter();
     const [showAuthMessage, setShowAuthMessage] = useState( false );
 
     useEffect(() => {
@@ -38,12 +43,12 @@ export default function Header() {
                             <span className="sr-only">Universidad Adolfo Ibáñez</span>
 
                             <Image
-                                className="p-0"
+                                className   = "p-0"
                                 title       = "UAI"
                                 src         = "https://mailing20s.s3.amazonaws.com/templtates/logosinescudo.png"
                                 alt         = "logo uai"
-                                width       = {137}
-                                height      = {50}
+                                width       = { 137 }
+                                height      = { 50 }
                             />
                         </a>
 
@@ -63,11 +68,29 @@ export default function Header() {
                         </NotificationDialogManager>
 
                         <Theme />
+
+                        <Button
+                            variant     = "outline"
+                            onClick     = {() => router.push( '/faculty' )}
+                            className   = "gap-0 lg:gap-1.5"
+                        >
+                            <Building className="w-5 h-5" />
+                            <span className="hidden lg:flex">Mi facultad</span>
+                        </Button>
+
+                        <Button
+                            variant     = "outline"
+                            onClick     = {() => router.push( '/sections' )}
+                            className   = "gap-0 lg:gap-1.5"
+                        >
+                            <Box className="w-5 h-5" />
+                            <span className="hidden lg:flex">Secciones</span>
+                        </Button>
                     </div>
                 </div>
             </header>
 
-            {showAuthMessage && (
+            { showAuthMessage && (
                 <AlertMessage
                     title="Debes iniciar sesión para acceder a esta página."
                     onClose={() => setShowAuthMessage(false)}
