@@ -26,7 +26,7 @@ export function PageLayout({
 
 
 	return (
-		<div className="container mx-auto flex flex-col h-[calc(100vh-125px)]">
+		<main className="container mx-auto flex flex-col h-[calc(100vh-125px)] mt-9">
 			{/* Header */}
 			<header className="flex-shrink-0 flex justify-between items-center gap-4 mb-4">
 				<div className="flex items-center gap-4">
@@ -56,6 +56,6 @@ export function PageLayout({
 			<div className="flex-1 overflow-hidden space-y-4">
 				{ children }
 			</div>
-		</div>
+		</main>
 	);
 }
