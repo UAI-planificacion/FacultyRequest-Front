@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, JSX }	from "react";
+import { useSearchParams }						from "next/navigation";
 
 import {
 	useMutation,
@@ -35,12 +36,19 @@ export function PlanningChangeManagement({
     facultyId,
     enabled
 }: Props ): JSX.Element {
+	const searchParams											= useSearchParams();
 	const queryClient											= useQueryClient();
 	const [isFormOpen, setIsFormOpen]				            = useState( false );
 	const [editingPlanningChange, setEditingPlanningChange]     = useState<PlanningChange | null>( null );
 	const [title, setTitle]							            = useState( "" );
 	const [statusFilter, setStatusFilter]			            = useState<Status[]>( [] );
-	const [sectionFilter, setSectionFilter]			            = useState<string[]>( [] );
+	
+	// Initialize sectionFilter from URL query param if present
+	const sectionIdFromUrl = searchParams.get( 'sectionId' );
+	const [sectionFilter, setSectionFilter]			            = useState<string[]>( 
+		sectionIdFromUrl ? [ sectionIdFromUrl ] : [] 
+	);
+	
 	const [viewMode, setViewMode]					            = useState<ViewMode>( 'table' );
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen]	        = useState( false );
 	const [deletingPlanningChange, setDeletingPlanningChange]	= useState<PlanningChange | null>( null );
@@ -136,6 +144,14 @@ export function PlanningChangeManagement({
 		setItemsPerPage( newItemsPerPage );
 		setCurrentPage( 1 );
 	}
+
+
+	useEffect(() => {
+		const sectionIdParam = searchParams.get( 'sectionId' );
+		if ( sectionIdParam ) {
+			setSectionFilter([ sectionIdParam ]);
+		}
+	}, [ searchParams ]);
 
 
 	useEffect(() => {
