@@ -252,7 +252,7 @@ export function RequestForm({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-[800px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader className="space-y-3">
                     <div className="flex justify-between items-center mr-5">
                         <div className="space-y-1">
