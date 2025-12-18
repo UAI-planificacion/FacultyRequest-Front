@@ -109,7 +109,7 @@ export function SessionTable({
 						<Table>
 							<TableHeader>
 								<TableRow className="">
-									<TableHead className="w-10">Seleccionar</TableHead>
+									{/* <TableHead className="w-10">Seleccionar</TableHead> */}
 
 									<TableHead className="pl-12">Sesión</TableHead>
 
@@ -132,9 +132,9 @@ export function SessionTable({
 								// Skeleton loading rows
 								Array.from({ length: 3 }).map(( _, index ) => (
 									<TableRow key={ index } className="border-l-4 border-transparent">
-										<TableCell className="w-10">
+										{/* <TableCell className="w-10">
 											<Skeleton className="h-5 w-5 rounded" />
-										</TableCell>
+										</TableCell> */}
 
 										<TableCell className="pl-12">
 											<Skeleton className="h-6 w-24 rounded-full" />
@@ -172,7 +172,7 @@ export function SessionTable({
 								// Actual session data
 								sectionSessions?.map(( session ) => (
 									<TableRow key={session.id} className="border-l-4 border-transparent">
-										<TableCell className="w-10">
+										{/* <TableCell className="w-10">
 											<Checkbox
 												checked         = { selectedSessions.has( session.id ) }
 												onCheckedChange = {() => handleSessionSelection( session.id, section.id )}
@@ -180,7 +180,7 @@ export function SessionTable({
 												className       = "w-5 h-5"
 												disabled        = { section.isClosed }
 											/>
-										</TableCell>
+										</TableCell> */}
 
 										<TableCell className="pl-12">
 											<SessionName session={ session.name } />
