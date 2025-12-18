@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, JSX }    from "react";
+import { useSearchParams }                      from "next/navigation";
 
 import {
     useMutation,
@@ -20,7 +21,7 @@ import { Method, fetchApi }         from "@/services/fetch";
 import { errorToast, successToast } from "@/config/toast/toast.config";
 import { KEY_QUERYS }               from "@/consts/key-queries";
 import { useViewMode }              from "@/hooks/use-view-mode";
-import { updateFacultyTotal } from "@/app/faculty/page";
+import { updateFacultyTotal }       from "@/app/faculty/page";
 
 
 interface RequestMainProps {
@@ -32,9 +33,7 @@ interface RequestMainProps {
 }
 
 
-type SortBy             = "title" | "consecutive" | "updatedAt";
-type SortOrder          = "asc" | "desc";
-type ConsecutiveFilter  = "ALL" | "TRUE" | "FALSE";
+
 
 
 export function RequestMain({
@@ -45,13 +44,18 @@ export function RequestMain({
     isError
 }: RequestMainProps ): JSX.Element {
     const queryClient                                   = useQueryClient();
+    const searchParams                                  = useSearchParams();
     const [isFormOpen, setIsFormOpen]                   = useState( false );
     const [editingRequest, setEditingRequest]           = useState<Request | null>( null );
     const [title, setTitle]                             = useState( "" );
-    const [statusFilter, setStatusFilter]               = useState<Status | "ALL">( "ALL" );
-    const [consecutiveFilter, setConsecutiveFilter]     = useState<ConsecutiveFilter>( "ALL" );
-    const [sortBy, setSortBy]                           = useState<SortBy>( "updatedAt" );
-    const [sortOrder, setSortOrder]                     = useState<SortOrder>( "desc" );
+    const [statusFilter, setStatusFilter]               = useState<Status[]>( [] );
+    
+    // Initialize sectionFilter from URL query param if present
+    const sectionIdFromUrl = searchParams.get( 'sectionId' );
+    const [sectionFilter, setSectionFilter]             = useState<string[]>( 
+        sectionIdFromUrl ? [ sectionIdFromUrl ] : [] 
+    );
+    
     const [isDeleteDialogOpen, setIsDeleteDialogOpen]   = useState( false );
     const [deletingRequest, setDeletingRequest]         = useState<Request | null>( null );
     const [currentPage, setCurrentPage]                 = useState( 1 );
@@ -85,30 +89,15 @@ export function RequestMain({
 
     const filteredAndSortedRequests = useMemo(() => {
         const filtered = requests.filter( request => {
-            const matchesTitle = title === "" || request.title.toLowerCase().includes( title.toLowerCase() );
-            const matchesStatus = statusFilter === "ALL" || request.status === statusFilter;
-            // const matchesConsecutive =
-            //     consecutiveFilter === "ALL" ||
-            //     ( consecutiveFilter === "TRUE" && request.isConsecutive ) ||
-            //     ( consecutiveFilter === "FALSE" && !request.isConsecutive );
+            const matchesTitle      = title === "" || request.title.toLowerCase().includes( title.toLowerCase() );
+            const matchesStatus     = statusFilter.length === 0 || statusFilter.includes( request.status );
+            const matchesSection    = sectionFilter.length === 0 || ( request.section?.id && sectionFilter.includes( request.section.id ));
 
-            // return matchesTitle && matchesStatus && matchesConsecutive;
-            return matchesTitle && matchesStatus;
+            return matchesTitle && matchesStatus && matchesSection;
         });
 
-        return filtered.sort(( a, b ) => {
-            // const [aValue, bValue] = {
-            //     title       : [a.title, b.title],
-            //     // consecutive : [a.isConsecutive, b.isConsecutive],
-            //     updatedAt   : [a.updatedAt, b.updatedAt],
-            // }[sortBy];
-
-            // if ( aValue < bValue ) return sortOrder === "asc" ? -1 : 1;
-            // if ( aValue > bValue ) return sortOrder === "asc" ? 1 : -1;
-
-            return 0;
-        })
-    }, [requests, title, statusFilter, consecutiveFilter, sortBy, sortOrder]);
+        return filtered;
+    }, [requests, title, statusFilter, sectionFilter]);
 
 
     const paginatedRequests = useMemo(() => {
@@ -164,8 +153,16 @@ export function RequestMain({
 
 
     useEffect(() => {
+        const sectionIdParam = searchParams.get( 'sectionId' );
+        if ( sectionIdParam ) {
+            setSectionFilter([ sectionIdParam ]);
+        }
+    }, [ searchParams ]);
+
+
+    useEffect(() => {
         setCurrentPage( 1 );
-    }, [title, statusFilter, consecutiveFilter, sortBy, sortOrder]);
+    }, [title, statusFilter, sectionFilter]);
 
 
     return (
@@ -176,12 +173,8 @@ export function RequestMain({
                 setTitle                = { setTitle }
                 statusFilter            = { statusFilter }
                 setStatusFilter         = { setStatusFilter }
-                consecutiveFilter       = { consecutiveFilter }
-                setConsecutiveFilter    = { setConsecutiveFilter }
-                sortBy                  = { sortBy }
-                setSortBy               = { setSortBy }
-                sortOrder               = { sortOrder }
-                setSortOrder            = { setSortOrder }
+                sectionFilter           = { sectionFilter }
+                setSectionFilter        = { setSectionFilter }
                 onNewRequest            = { handleNewRequest }
                 viewMode                = { viewMode }
                 setViewMode             = { onViewChange }
