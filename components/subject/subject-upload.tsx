@@ -23,15 +23,27 @@ import { Badge }                    from "@/components/ui/badge";
 import { Alert, AlertDescription }  from "@/components/ui/alert";
 
 import { errorToast, successToast } from "@/config/toast/toast.config";
-import { Subject }                  from "@/types/subject.model";
 import { Method }                   from "@/services/fetch";
 import { ENV }                      from "@/config/envs/env";
 import { KEY_QUERYS }               from "@/consts/key-queries";
 
 
+type UploadService = 'subject' | 'offer';
+
+
+interface ServiceConfig {
+	url             : string;
+	queryKey        : string[];
+	templateFile    : string;
+	successMessage  : ( count: number ) => string;
+}
+
+
 interface SubjectUploadProps {
 	onUpload?	: ( file: File ) => void;
+	onSuccess?	: ( data: any[] ) => void;
 	isUploading	: boolean;
+	service?	: UploadService;
 }
 
 
@@ -43,7 +55,9 @@ interface UploadError {
 
 export function SubjectUpload({
     onUpload,
+    onSuccess,
     isUploading,
+    service = 'subject',
 }: SubjectUploadProps ): JSX.Element {
     const params                            = useParams();
     const { facultyId  }                    = params;
@@ -51,6 +65,25 @@ export function SubjectUpload({
 	const [selectedFile, setSelectedFile]   = useState<File | null>( null );
 	const [uploadError, setUploadError]     = useState<UploadError | null>( null );
 
+	/**
+	 * Service configuration
+	 */
+	const serviceConfig: Record<UploadService, ServiceConfig> = {
+		subject: {
+			url             : `${ENV.REQUEST_BACK_URL}${KEY_QUERYS.SUBJECTS}/bulk-upload/${facultyId}`,
+			queryKey        : [KEY_QUERYS.SUBJECTS, facultyId as string],
+			templateFile    : '/plantilla_asignatura.xlsx',
+			successMessage  : ( count: number ) => `Carga completada: ${count} asignaturas creadas exitosamente`,
+		},
+		offer: {
+			url             : `${ENV.REQUEST_BACK_URL}${KEY_QUERYS.SECTIONS}/massive-upload-offers`,
+			queryKey        : [KEY_QUERYS.SECTIONS],
+			templateFile    : '/plantilla_oferta.xlsx',
+			successMessage  : ( count: number ) => `Carga completada: ${count} ofertas creadas exitosamente`,
+		},
+	};
+
+	const config = serviceConfig[service];
 
 	/**
 	 * Validates the uploaded file
@@ -82,7 +115,6 @@ export function SubjectUpload({
 		return null;
 	}, []);
 
-
 	/**
 	 * Handles file drop or selection
 	 */
@@ -110,15 +142,14 @@ export function SubjectUpload({
 		toast( 'Archivo seleccionado correctamente', successToast );
 	}, [validateFile]);
 
-
 	/**
 	 * API function to upload Excel file
 	 */
-	const uploadExcelFile = async ( file: File ): Promise<Subject[]> => {
+	const uploadExcelFile = async ( file: File ): Promise<any[]> => {
 		const formData = new FormData();
-		formData.append('file', file);
+		formData.append( 'file', file );
 
-		const response = await fetch(`${ENV.REQUEST_BACK_URL}subjects/bulk-upload/${facultyId}`, {
+		const response = await fetch( config.url, {
 			method  : Method.POST,
 			body    : formData,
 		});
@@ -128,28 +159,32 @@ export function SubjectUpload({
 			throw new Error(errorBody.message || `API error: ${response.status} ${response.statusText}`);
 		}
 
-		return await response.json() as Subject[];
+		return await response.json() as any[];
 	};
-
 
 	/**
 	 * Mutation for bulk upload
 	 */
-	const bulkUploadMutation = useMutation<Subject[], Error, File>({
+	const bulkUploadMutation = useMutation<any[], Error, File>({
 		mutationFn	: uploadExcelFile,
-		onSuccess	: ( newSubjects ) => {
-			// Update the cache with new subjects
-			queryClient.setQueryData<Subject[]>(
-				[KEY_QUERYS.SUBJECTS, facultyId],
-				( oldData: any ) => {
-					if ( !oldData ) return newSubjects;
-					return [...oldData, ...newSubjects];
-				}
-			);
+		onSuccess	: ( newItems ) => {
+			// Update the cache only for subject service
+			if ( service === 'subject' ) {
+				queryClient.setQueryData<any[]>(
+					config.queryKey,
+					( oldData: any ) => {
+						if ( !oldData ) return newItems;
+						return [...oldData, ...newItems];
+					}
+				);
+			} else {
+				// For other services, just invalidate the query
+				queryClient.invalidateQueries({ queryKey: config.queryKey });
+			}
 
 			// Show success message
 			toast(
-				`Carga completada: ${newSubjects.length} asignaturas creadas exitosamente`,
+				config.successMessage( newItems.length ),
 				successToast
 			);
 
@@ -159,12 +194,14 @@ export function SubjectUpload({
 
 			// Call external onUpload if provided
 			if ( onUpload ) onUpload( selectedFile! );
+
+			// Call onSuccess to close dialog
+			if ( onSuccess ) onSuccess( newItems );
 		},
 		onError	: ( error ) => {
 			toast( `Error al cargar archivo: ${error.message}`, errorToast );
 		},
 	});
-
 
 	/**
 	 * Handles file upload
@@ -177,7 +214,6 @@ export function SubjectUpload({
 
 		bulkUploadMutation.mutate( selectedFile );
 	};
-
 
 	/**
 	 * Removes selected file
@@ -266,9 +302,10 @@ export function SubjectUpload({
 								</div>
 
 								<div className="flex-1">
-									<p className="font-medium text-sm">{selectedFile.name}</p>
+									<p className="font-medium text-sm">{ selectedFile.name }</p>
+
 									<p className="text-xs text-muted-foreground">
-										{(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+										{( selectedFile.size / 1024 / 1024 ).toFixed( 2 )} MB
 									</p>
 								</div>
 
@@ -284,22 +321,21 @@ export function SubjectUpload({
 								<X className="h-4 w-4" />
 							</Button>
 						</div>
-				</CardContent>
-			</Card>
+                    </CardContent>
+                </Card>
 			)}
 
 			{/* Upload Button */}
-			{selectedFile && (
-				<div className="flex justify-end">
-					<Button
-						onClick     = { handleUpload }
-						disabled    = { isUploading }
-						className   = "min-w-32"
-					>
-						{ isUploading ? 'Subiendo...' : 'Subir Archivo' }
-					</Button>
-				</div>
-			)}
+			{ selectedFile &&
+                <Button
+                    onClick     = { handleUpload }
+                    disabled    = { isUploading }
+                    className   = "w-full gap-2"
+                >
+                    <Upload className="h-4 w-4" />
+                    { isUploading ? 'Subiendo...' : 'Subir Archivo' }
+                </Button>
+			}
 
 			{/* Instructions */}
 			<Card>
@@ -318,9 +354,9 @@ export function SubjectUpload({
             <Card>
 				<CardContent className="p-4 w-full">
 					<a
-                        href="/plantilla.xlsx"
                         download
-                        className="border-4 hover:border-primary/50 rounded-lg cursor-pointer transition-colors border-dashed px-4 py-2 w-full grid justify-center content-center gap-1"
+                        href        = { config.templateFile }
+                        className   = "border-4 hover:border-primary/50 rounded-lg cursor-pointer transition-colors border-dashed px-4 py-2 w-full grid justify-center content-center gap-1"
                     >
                         <span className="flex justify-center">
                             <HardDriveDownload className="h-9 w-9 text-muted-foreground" />
