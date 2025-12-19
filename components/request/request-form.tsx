@@ -1,16 +1,16 @@
 "use client"
 
-import { JSX, useEffect, useMemo, useState } from "react";
+import { JSX, useCallback, useEffect, useMemo, useState } from "react";
 
 import {
     useMutation,
     useQuery,
     useQueryClient
-}                                   from "@tanstack/react-query";
-import { z }                        from "zod";
-import { toast }                    from "sonner";
-import { zodResolver }              from "@hookform/resolvers/zod";
-import { useForm, SubmitHandler }   from "react-hook-form";
+}                       from "@tanstack/react-query";
+import { z }            from "zod";
+import { toast }        from "sonner";
+import { zodResolver }  from "@hookform/resolvers/zod";
+import { useForm }      from "react-hook-form";
 
 import {
     Dialog,
@@ -18,22 +18,21 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle
-}                           from "@/components/ui/dialog";
+}                               from "@/components/ui/dialog";
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
     FormMessage
-}                           from "@/components/ui/form";
-import { Input }            from "@/components/ui/input";
-import { Button }           from "@/components/ui/button";
-import { SectionSelect } from "@/components/shared/item-select/section-select";
-import { RequestSectionInfo } from "@/components/request/request-section-info";
-import { ShowStatus }       from "@/components/shared/status";
-import { RequestSessionForm } from "@/components/request/request-session-form";
+}                               from "@/components/ui/form";
+import { Input }                from "@/components/ui/input";
+import { Button }               from "@/components/ui/button";
+import { SectionSelect }        from "@/components/shared/item-select/section-select";
+import { RequestSectionInfo }   from "@/components/request/request-section-info";
+import { ShowStatus }           from "@/components/shared/status";
+import { RequestSessionForm }   from "@/components/request/request-session-form";
 
 import {
     CreateRequest,
@@ -49,14 +48,20 @@ import { KEY_QUERYS }               from "@/consts/key-queries";
 import { fetchApi, Method }         from "@/services/fetch";
 import { errorToast, successToast } from "@/config/toast/toast.config";
 import { useSession }               from "@/hooks/use-session";
+import { updateFacultyTotal }       from "@/app/faculty/page";
+
 
 interface Props {
     isOpen      : boolean;
     onClose     : () => void;
     request     : Request | undefined;
-    facultyId   : string;
     section?    : OfferSection | null;
-    // staff       : Staff | undefined;
+}
+
+
+interface CreateRequestWithSessions extends CreateRequest {
+	facultyId?      : string;
+	requestSessions : RequestSessionCreate[];
 }
 
 
@@ -84,10 +89,10 @@ interface SessionDayModule {
 
 
 const defaultRequest = ( data : Request | null | undefined, sectionId? : string, facultyId? : string ) => ({
-	facultyId       : data?.facultyId       || facultyId || '',
-	title           : data?.title           || '',
-	status          : data?.status          || Status.PENDING,
-	sectionId       : data?.section?.id     || sectionId || '',
+	facultyId   : data?.facultyId   || facultyId || '',
+	title       : data?.title       || '',
+	status      : data?.status      || Status.PENDING,
+	sectionId   : data?.section?.id || sectionId || '',
 });
 
 
@@ -95,7 +100,7 @@ export function RequestForm({
     isOpen,
     onClose,
     request,
-    facultyId,
+    // facultyId,
     section
     // staff
 }: Props ): JSX.Element {
@@ -108,7 +113,7 @@ export function RequestForm({
     const {
         staff,
         isLoading: isLoadingStaff
-    }                   = useSession();
+    } = useSession();
 
     const isReadOnly    = staff?.role === Role.VIEWER;
 
@@ -158,7 +163,6 @@ export function RequestForm({
 		[Session.L] : null,
 	});
 
-
     // Estado para el modo de filtro seleccionado (space, type-size)
 	const [sessionFilterMode, setSessionFilterMode] = useState<Record<Session, 'space' | 'type-size'>>({
 		[Session.C] : 'type-size',
@@ -168,12 +172,41 @@ export function RequestForm({
 	});
 
 
-    const createRequestApi = async ( request: CreateRequest ): Promise<Request> =>
-        fetchApi<Request>({
-            url     : 'requests',
-            method  : Method.POST,
-            body    : request
-        });
+    const handleClose = useCallback(() => {
+		setSessionDayModules({
+			[Session.C] : [],
+			[Session.A] : [],
+			[Session.T] : [],
+			[Session.L] : [],
+		});
+
+        setCurrentSession( null );
+
+        setSessionConfigs({
+			[Session.C] : { isEnglish : false, isConsecutive : false, inAfternoon : false },
+			[Session.A] : { isEnglish : false, isConsecutive : false, inAfternoon : false },
+			[Session.T] : { isEnglish : false, isConsecutive : false, inAfternoon : false },
+			[Session.L] : { isEnglish : false, isConsecutive : false, inAfternoon : false },
+		});
+
+        setSessionBuildings({
+			[Session.C] : null,
+			[Session.A] : null,
+			[Session.T] : null,
+			[Session.L] : null,
+		});
+
+        setSessionFilterMode({
+			[Session.C] : 'type-size',
+			[Session.A] : 'type-size',
+			[Session.T] : 'type-size',
+			[Session.L] : 'type-size',
+		});
+
+        setSelectedSectionId( null );
+
+        onClose();
+	}, [ onClose ]);
 
 
     const updateRequestApi = async ( updatedRequest: UpdateRequest ): Promise<Request> =>
@@ -184,42 +217,61 @@ export function RequestForm({
         });
 
 
-    const createRequestMutation = useMutation<Request, Error, CreateRequest>({
-        mutationFn: createRequestApi,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.REQUESTS ]});availableSessions
-            onClose();
-            toast( 'Solicitud creada exitosamente', successToast );
-        },
-        onError: ( mutationError ) => toast( `Error al crear solicitud: ${ mutationError.message }`, errorToast )
-    });
+    const createRequestWithSessionsApi = async ( payload: CreateRequestWithSessions ): Promise<Request> =>
+		fetchApi<Request>({
+			url     : 'requests',
+			method  : Method.POST,
+			body    : payload
+		});
 
+    const createRequestMutation = useMutation<Request, Error, CreateRequestWithSessions>({
+		mutationFn  : createRequestWithSessionsApi,
+		onSuccess   : ( _, variables ) => {
+			queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.REQUESTS ]});
+			queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.SECTIONS ]});
+			queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.SECTIONS, 'not-planning' ]});
 
-    const updateRequestMutation = useMutation<Request, Error, UpdateRequest>({
-        mutationFn: updateRequestApi,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.REQUESTS ]});
-            onClose();
-            toast( 'Solicitud actualizada exitosamente', successToast );
-        },
-        onError: ( mutationError ) => toast( `Error al actualizar la solicitud: ${ mutationError.message }`, errorToast )
-    });
+            updateFacultyTotal( queryClient, staff?.facultyId!, true, 'totalRequests' );
+			handleClose();
+			toast( 'Solicitud creada exitosamente', successToast );
+		},
+		onError: ( mutationError ) => toast( `Error al crear solicitud: ${mutationError.message}`, errorToast )
+	});
+
+	// Mutation para actualizar request
+	const updateRequestMutation = useMutation<Request, Error, UpdateRequest>({
+		mutationFn  : updateRequestApi,
+		onSuccess   : () => {
+			queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.REQUESTS ]});
+			handleClose();
+			toast( 'Solicitud actualizada exitosamente', successToast );
+		},
+		onError     : ( mutationError ) => toast( `Error al actualizar la solicitud: ${mutationError.message}`, errorToast )
+	});
 
 
     const form = useForm<RequestFormValues>({
         resolver        : zodResolver( formSchema ),
-        defaultValues   : defaultRequest( request )
+        defaultValues   : defaultRequest( request, section?.id )
     });
+
+    const sessionLabels: Record<Session, string> = {
+        [Session.C] : 'Cátedra',
+        [Session.A] : 'Ayudantía',
+        [Session.T] : 'Taller',
+        [Session.L] : 'Laboratorio',
+    };
 
 
     useEffect(() => {
-        form.reset( defaultRequest( request ));
-        setSelectedSectionId( section?.id || request?.section?.id || null );
-    }, [request, isOpen]);
+        const sectionId = section?.id || request?.section?.id || null;
+        form.reset( defaultRequest( request, sectionId || undefined ));
+        setSelectedSectionId( sectionId );
+    }, [request, section, isOpen, form]);
 
-
-    const handleSubmit: SubmitHandler<RequestFormValues> = ( formData ) => {
-        if ( isLoadingStaff ) {
+    function handleSubmit( data: RequestFormValues ): void {
+		// Esperar a que termine de cargar antes de validar
+		if ( isLoadingStaff ) {
 			toast( 'Cargando información del usuario...', { description: 'Por favor espere' });
 			return;
 		}
@@ -229,25 +281,91 @@ export function RequestForm({
 			return;
 		}
 
-        if ( request ) {
-            const updateRequest = {
-                ...formData,
-                id: request.id,
-                staffUpdateId: staff?.id
-            } as UpdateRequest;
+		if ( request ) {
+			// Actualizar request existente
+			updateRequestMutation.mutate({
+				...data,
+				id              : request.id,
+				staffUpdateId   : staff.id,
+			});
+		} else {
+			// Validar que todas las sesiones tengan al menos un dayModule
+			const invalidSessions = availableSessions.filter( session =>
+				sessionDayModules[session].length === 0
+			);
 
-            console.log('🚀 ~ file: request-form.tsx:224 ~ updateRequest:', updateRequest)
+			if ( invalidSessions.length > 0 ) {
+				toast(
+					`Debe seleccionar al menos un horario para: ${invalidSessions.map( s => sessionLabels[s] ).join( ', ' )}`,
+					errorToast
+				);
 
-            updateRequestMutation.mutate( updateRequest );
-        } else {
-            const createRequest = {
-                ...formData,
-                staffCreateId: staff?.id
-            }  as CreateRequest;
+				return;
+			}
 
-            createRequestMutation.mutate( createRequest );
-        }
-    }
+			// Validar que todas las sesiones tengan edificio seleccionado
+			const sessionsWithoutBuilding = availableSessions.filter( session => {
+				const building = sessionConfigs[session]?.building;
+				return !building || building.trim() === '';
+			});
+
+			if ( sessionsWithoutBuilding.length > 0 ) {
+				toast(
+					`Debe seleccionar un edificio para: ${sessionsWithoutBuilding.map( s => sessionLabels[s] ).join( ', ' )}`,
+					errorToast
+				);
+
+				return;
+			}
+
+			// Validar que todas las sesiones tengan al menos un filtro de espacio seleccionado
+			const sessionsWithoutSpaceFilter = availableSessions.filter( session => {
+				const config            = sessionConfigs[session];
+				const hasSpaceId        = config?.spaceId       !== null && config?.spaceId     !== undefined;
+				const hasSpaceType      = config?.spaceType     !== null && config?.spaceType   !== undefined;
+				const hasSpaceSizeId    = config?.spaceSizeId   !== null && config?.spaceSizeId !== undefined;
+
+				return !hasSpaceId && !hasSpaceType && !hasSpaceSizeId;
+			});
+
+			if ( sessionsWithoutSpaceFilter.length > 0 ) {
+				toast(
+					`Debe seleccionar al menos un filtro de espacio (Espacio específico, Tipo o Tamaño) para: ${sessionsWithoutSpaceFilter.map( s => sessionLabels[s] ).join( ', ' )}`,
+					errorToast
+				);
+
+				return;
+			}
+
+			const requestSessions: RequestSessionCreate[] = availableSessions.map( session => {
+				const dayModuleIds  = sessionDayModules[session].map( dm => dm.dayModuleId );
+				const config        = sessionConfigs[session];
+
+				return {
+					session         : session,
+					description     : config.description    || null,
+					isEnglish       : config.isEnglish      || false,
+					isConsecutive   : config.isConsecutive  || false,
+					inAfternoon     : config.inAfternoon    || false,
+					spaceSizeId     : config.spaceSizeId    || null,
+					spaceType       : config.spaceType      || null,
+					professorId     : config.professorId    || null,
+					building        : config.building       || '',
+					spaceId         : config.spaceId        || null,
+					dayModulesId    : dayModuleIds,
+				};
+			});
+
+			const request = {
+				...data,
+				staffCreateId   : staff.id,
+				requestSessions
+			}
+			console.log('🚀 ~ file: request-form.tsx:395 ~ dataS:', request)
+
+			createRequestMutation.mutate( request );
+		}
+	}
 
 
     return (
@@ -304,6 +422,7 @@ export function RequestForm({
                                     render  = {({ field }) => (
                                         <FormItem>
                                             <SectionSelect
+                                                key                 = { `section-select-${section?.id || 'new'}-${isOpen}` }
                                                 label               = "Sección"
                                                 multiple            = { false }
                                                 placeholder         = "Seleccionar sección"
