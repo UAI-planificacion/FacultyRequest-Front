@@ -8,7 +8,7 @@ import { ScrollArea } from "../ui/scroll-area";
 export function SubjectRowSkeleton() {
     return (
         <TableRow>
-            {/* Código */}
+            {/* Sigla */}
             <TableCell className="w-[120px]">
                 <div className="h-4 w-16 bg-gray-300 rounded animate-pulse" />
             </TableCell>
@@ -18,24 +18,24 @@ export function SubjectRowSkeleton() {
                 <div className="h-4 w-40 bg-gray-300 rounded animate-pulse" />
             </TableCell>
 
-            {/* Fecha Inicio */}
-            <TableCell className="w-[140px]">
-                <div className="h-4 w-24 bg-gray-300 rounded animate-pulse" />
+            {/* Centro de Costo */}
+            <TableCell className="w-[150px]">
+                <div className="h-4 w-20 bg-gray-300 rounded animate-pulse" />
             </TableCell>
 
-            {/* Fecha Fin */}
-            <TableCell className="w-[140px]">
-                <div className="h-4 w-24 bg-gray-300 rounded animate-pulse" />
-            </TableCell>
-
-            {/* Alumnos */}
+            {/* Tamaño Espacio */}
             <TableCell className="text-right w-[100px]">
                 <div className="h-4 w-8 bg-gray-300 rounded animate-pulse ml-auto" />
             </TableCell>
 
-            {/* Centro de Costo */}
-            <TableCell className="w-[150px]">
-                <div className="h-4 w-20 bg-gray-300 rounded animate-pulse" />
+            {/* Tipo Espacio */}
+            <TableCell className="text-right w-[100px]">
+                <div className="h-4 w-8 bg-gray-300 rounded animate-pulse ml-auto" />
+            </TableCell>
+
+            {/* Estado */}
+            <TableCell className="text-right w-[100px]">
+                <div className="h-4 w-8 bg-gray-300 rounded animate-pulse ml-auto" />
             </TableCell>
 
             {/* Acciones */}
