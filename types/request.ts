@@ -1,5 +1,5 @@
-import { Role }         from "@/types/staff.model";
-import { Size, SpaceType }    from "@/types/request-detail.model";
+import { Role }             from "@/types/staff.model";
+import { Size, SpaceType }  from "@/types/request-detail.model";
 
 
 export enum Status {
