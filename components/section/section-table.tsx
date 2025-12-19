@@ -11,10 +11,10 @@ import {
     ChevronRight,
 }                   from "lucide-react"
 import {
-    useMutation,
+    // useMutation,
     useQueryClient
 }                   from "@tanstack/react-query"
-import { toast }    from "sonner"
+// import { toast }    from "sonner"
 
 import {
 	Table,
@@ -34,7 +34,7 @@ import {
 import { ActiveBadge }          from "@/components/shared/active"
 // import { ActionButton }         from "@/components/shared/action"
 // import { ChangeStatusSection }  from "@/components/section/change-status"
-import { DeleteConfirmDialog }  from "@/components/dialog/DeleteConfirmDialog"
+// import { DeleteConfirmDialog }  from "@/components/dialog/DeleteConfirmDialog"
 import { SessionShort }         from "@/components/session/session-short"
 import { SessionForm }          from "@/components/session/session-form"
 import { SessionTable }         from "@/components/session/session-table"
@@ -46,11 +46,11 @@ import { Button }               from "@/components/ui/button"
 // import { Checkbox }             from "@/components/ui/checkbox"
 
 import { OfferSection }             from "@/types/offer-section.model"
-import { fetchApi, Method }         from "@/services/fetch"
+// import { fetchApi, Method }         from "@/services/fetch"
 import { KEY_QUERYS }               from "@/consts/key-queries"
-import { errorToast, successToast } from "@/config/toast/toast.config"
-import { tempoFormat }              from "@/lib/utils"
-import { useSession }               from "@/hooks/use-session"
+// import { errorToast, successToast } from "@/config/toast/toast.config"
+import { cn, tempoFormat }              from "@/lib/utils"
+// import { useSession }               from "@/hooks/use-session"
 
 
 interface Props {
@@ -77,34 +77,34 @@ export function SectionTable({
     const router        = useRouter();
 
 	const [ expandedSections, setExpandedSections ]     = useState<Set<string>>( new Set() );
-	const [ isOpenDelete, setIsOpenDelete ]             = useState<boolean>( false );
+	// const [ isOpenDelete, setIsOpenDelete ]             = useState<boolean>( false );
 	const [ isOpenSessionForm, setIsOpenSessionForm ]   = useState<boolean>( false );
-	const [ isOpenSectionForm, setIsOpenSectionForm ]   = useState<boolean>( false );
+	// const [ isOpenSectionForm, setIsOpenSectionForm ]   = useState<boolean>( false );
 	const [ isOpenRequestForm, setIsOpenRequestForm ]   = useState<boolean>( false );
 	const [ selectedSection, setSelectedSection ]       = useState<OfferSection | null>( null );
+	const [ isOpenPlanningChange, setIsOpenPlanningChange ] = useState<boolean>( false );
 
 	/**
 	 * Deseleccionar una sección específica
 	 */
-	const handleDeselectSection = useCallback(( sectionId: string ): void => {
-		const newSelectedSections = new Set( selectedSections );
-		newSelectedSections.delete( sectionId );
-		onSelectedSectionsChange( newSelectedSections );
+	// const handleDeselectSection = useCallback(( sectionId: string ): void => {
+	// 	const newSelectedSections = new Set( selectedSections );
+	// 	newSelectedSections.delete( sectionId );
+	// 	onSelectedSectionsChange( newSelectedSections );
 
-		// También deseleccionar todas las sesiones de esa sección
-		const section = sections.find( s => s.id === sectionId );
-		if ( section ) {
-			const sessionIds = section.sessions.ids || [];
-			const newSelectedSessions = new Set( selectedSessions );
-			sessionIds.forEach( sessionId => newSelectedSessions.delete( sessionId ));
-			onSelectedSessionsChange( newSelectedSessions );
-		}
-	}, [ selectedSections, selectedSessions, sections, onSelectedSectionsChange, onSelectedSessionsChange ]);
+	// 	// También deseleccionar todas las sesiones de esa sección
+	// 	const section = sections.find( s => s.id === sectionId );
+	// 	if ( section ) {
+	// 		const sessionIds = section.sessions.ids || [];
+	// 		const newSelectedSessions = new Set( selectedSessions );
+	// 		sessionIds.forEach( sessionId => newSelectedSessions.delete( sessionId ));
+	// 		onSelectedSessionsChange( newSelectedSessions );
+	// 	}
+	// }, [ selectedSections, selectedSessions, sections, onSelectedSectionsChange, onSelectedSessionsChange ]);
 
-	const [ isOpenPlanningChange, setIsOpenPlanningChange ] = useState<boolean>( false );
 
 	// Get staff session for facultyId
-	const { staff } = useSession();
+	// const { staff } = useSession();
 
 	/**
 	 * Toggle section expansion
@@ -126,64 +126,64 @@ export function SectionTable({
 	/**
 	 * Check if section is fully selected
 	 */
-	const isSectionFullySelected = useCallback(( section: OfferSection ): boolean => {
-		const sessionIds = section.sessions.ids || [];
+	// const isSectionFullySelected = useCallback(( section: OfferSection ): boolean => {
+	// 	const sessionIds = section.sessions.ids || [];
 
-		// Si no tiene sesiones, verificar si la sección está seleccionada
-		if ( sessionIds.length === 0 ) {
-			return selectedSections.has( section.id );
-		}
+	// 	// Si no tiene sesiones, verificar si la sección está seleccionada
+	// 	if ( sessionIds.length === 0 ) {
+	// 		return selectedSections.has( section.id );
+	// 	}
 
-		return sessionIds.every( id => selectedSessions.has( id ));
-	}, [ selectedSessions, selectedSections ]);
+	// 	return sessionIds.every( id => selectedSessions.has( id ));
+	// }, [ selectedSessions, selectedSections ]);
 
 	/**
 	 * Handle section selection (parent)
 	 */
-	const handleSectionSelection = useCallback(( sectionId: string, checked: boolean | 'indeterminate' ): void => {
-		const section = sections.find( s => s.id === sectionId );
+	// const handleSectionSelection = useCallback(( sectionId: string, checked: boolean | 'indeterminate' ): void => {
+	// 	const section = sections.find( s => s.id === sectionId );
 
-		if ( !section ) {
-			return;
-		}
+	// 	if ( !section ) {
+	// 		return;
+	// 	}
 
-		const sessionIds            = section.sessions.ids || [];
-		const newSelectedSessions   = new Set( selectedSessions );
-		const newSelectedSections   = new Set( selectedSections );
-		const shouldSelect          = checked === true || checked === 'indeterminate';
+	// 	const sessionIds            = section.sessions.ids || [];
+	// 	const newSelectedSessions   = new Set( selectedSessions );
+	// 	const newSelectedSections   = new Set( selectedSections );
+	// 	const shouldSelect          = checked === true || checked === 'indeterminate';
 
-		sessionIds.forEach( ( sessionId ) => {
-			if ( shouldSelect ) {
-				newSelectedSessions.add( sessionId );
-			} else {
-				newSelectedSessions.delete( sessionId );
-			}
-		});
+	// 	sessionIds.forEach( ( sessionId ) => {
+	// 		if ( shouldSelect ) {
+	// 			newSelectedSessions.add( sessionId );
+	// 		} else {
+	// 			newSelectedSessions.delete( sessionId );
+	// 		}
+	// 	});
 
-		// Agregar/remover sectionId de selectedSections
-		if ( shouldSelect ) {
-			newSelectedSections.add( sectionId );
-		} else {
-			newSelectedSections.delete( sectionId );
-		}
+	// 	// Agregar/remover sectionId de selectedSections
+	// 	if ( shouldSelect ) {
+	// 		newSelectedSections.add( sectionId );
+	// 	} else {
+	// 		newSelectedSections.delete( sectionId );
+	// 	}
 
-		onSelectedSessionsChange( newSelectedSessions );
-		onSelectedSectionsChange( newSelectedSections );
-	}, [ sections, selectedSessions, selectedSections, onSelectedSessionsChange, onSelectedSectionsChange ]);
+	// 	onSelectedSessionsChange( newSelectedSessions );
+	// 	onSelectedSectionsChange( newSelectedSections );
+	// }, [ sections, selectedSessions, selectedSections, onSelectedSessionsChange, onSelectedSectionsChange ]);
 
 	/**
 	 * Check if section is partially selected
 	 */
-	const isSectionPartiallySelected = useCallback(( section: OfferSection ): boolean => {
-		const sessionIds = section.sessions.ids || [];
+	// const isSectionPartiallySelected = useCallback(( section: OfferSection ): boolean => {
+	// 	const sessionIds = section.sessions.ids || [];
 
-		// Si no tiene sesiones, no puede estar parcialmente seleccionada
-		if ( sessionIds.length === 0 ) return false;
+	// 	// Si no tiene sesiones, no puede estar parcialmente seleccionada
+	// 	if ( sessionIds.length === 0 ) return false;
 
-		const selectedSessionIds = sessionIds.filter( id => selectedSessions.has( id ));
+	// 	const selectedSessionIds = sessionIds.filter( id => selectedSessions.has( id ));
 
-		return selectedSessionIds.length > 0 && selectedSessionIds.length < sessionIds.length;
-	}, [ selectedSessions ]);
+	// 	return selectedSessionIds.length > 0 && selectedSessionIds.length < sessionIds.length;
+	// }, [ selectedSessions ]);
 
 	/**
 	 * Handle session selection (child)
@@ -204,50 +204,50 @@ export function SectionTable({
 	/**
 	 * Handle edit section
 	 */
-	const handleEditSection = useCallback(( section: OfferSection ): void => {
-		setSelectedSection( section );
-		setIsOpenSectionForm( true );
-	}, []);
+	// const handleEditSection = useCallback(( section: OfferSection ): void => {
+	// 	setSelectedSection( section );
+	// 	setIsOpenSectionForm( true );
+	// }, []);
 
-	/**
-	 * Handle delete section
-	 */
-	const handleDeleteSection = useCallback(( section: OfferSection ): void => {
-		setSelectedSection( section );
-		setIsOpenDelete( true );
-	}, []);
+	// /**
+	//  * Handle delete section
+	//  */
+	// const handleDeleteSection = useCallback(( section: OfferSection ): void => {
+	// 	setSelectedSection( section );
+	// 	setIsOpenDelete( true );
+	// }, []);
 
 	/**
 	 * API call to delete section
 	 */
-	const deleteSectionApi = async ( sectionId: string ): Promise<void> =>
-		fetchApi<void>({
-			url     : `Sections/${sectionId}`,
-			method  : Method.DELETE
-		});
+	// const deleteSectionApi = async ( sectionId: string ): Promise<void> =>
+	// 	fetchApi<void>({
+	// 		url     : `Sections/${sectionId}`,
+	// 		method  : Method.DELETE
+	// 	});
 
-	/**
-	 * Mutation to delete section
-	 */
-	const deleteSectionMutation = useMutation<void, Error, string>({
-		mutationFn: deleteSectionApi,
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [KEY_QUERYS.SECTIONS] });
-			setIsOpenDelete( false );
-			setSelectedSection( null );
-			toast( 'Sección eliminada exitosamente', successToast );
-		},
-		onError: ( mutationError ) => toast( `Error al eliminar sección: ${mutationError.message}`, errorToast )
-	});
+	// /**
+	//  * Mutation to delete section
+	//  */
+	// const deleteSectionMutation = useMutation<void, Error, string>({
+	// 	mutationFn: deleteSectionApi,
+	// 	onSuccess: () => {
+	// 		queryClient.invalidateQueries({ queryKey: [KEY_QUERYS.SECTIONS] });
+	// 		setIsOpenDelete( false );
+	// 		setSelectedSection( null );
+	// 		toast( 'Sección eliminada exitosamente', successToast );
+	// 	},
+	// 	onError: ( mutationError ) => toast( `Error al eliminar sección: ${mutationError.message}`, errorToast )
+	// });
 
 	/**
 	 * Confirm delete section
 	 */
-	const handleConfirmDeleteSection = useCallback((): void => {
-		if ( selectedSection ) {
-			deleteSectionMutation.mutate( selectedSection.id );
-		}
-	}, [ selectedSection, deleteSectionMutation ]);
+	// const handleConfirmDeleteSection = useCallback((): void => {
+	// 	if ( selectedSection ) {
+	// 		deleteSectionMutation.mutate( selectedSection.id );
+	// 	}
+	// }, [ selectedSection, deleteSectionMutation ]);
 
 	/**
 	 * Get session counts for SessionShort component
@@ -446,17 +446,17 @@ export function SectionTable({
 											/> */}
 
                                             <Button
-                                                disabled    = { section.isClosed || section.sessionsCount === 0 }
+                                                disabled    = { section.isClosed }
                                                 onClick     = { () => router.push( `faculty?tab=requests&sectionId=${ section.id }` )}
                                                 variant     = "outline"
                                                 size        = "icon"
                                                 title       = "Ver Solicitud"
                                             >
-                                                <BookCopy className="h-4 w-4" />
+                                                <BookCopy className={cn("h-4 w-4", section.haveRequest && "text-amber-500")} />
                                             </Button>
 
                                             <Button
-                                                disabled    = { section.isClosed || section.sessionsCount === 0 }
+                                                disabled    = { section.isClosed || section.haveRequest || section.sessionsCount > 0 }
                                                 onClick     = { () => {
                                                     setIsOpenRequestForm( true );
                                                     setSelectedSection( section );
@@ -633,13 +633,13 @@ export function SectionTable({
             />
 
 			{/* Delete Confirmation Dialog */}
-			<DeleteConfirmDialog
+			{/* <DeleteConfirmDialog
 				isOpen      = { isOpenDelete }
 				onClose     = { () => setIsOpenDelete( false )}
 				onConfirm   = { handleConfirmDeleteSection }
 				name        = { `SSEC ${selectedSection?.subject.id}-${selectedSection?.code}` }
 				type        = { "la Sección" }
-			/>
+			/> */}
 
 			{/* Planning Change Form */}
 			<PlanningChangeForm
@@ -659,7 +659,7 @@ export function SectionTable({
 				isOpen		= { isOpenRequestForm }
 				onClose		= { () => setIsOpenRequestForm( false )}
 				request		= { undefined }
-				facultyId	= { staff?.facultyId || '' }
+				// facultyId	= { staff?.facultyId || '' }
 				section		= { selectedSection }
 			/>
 		</>
