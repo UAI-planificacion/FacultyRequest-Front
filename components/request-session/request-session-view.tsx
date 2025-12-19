@@ -20,6 +20,7 @@ import { ViewMode }					from "@/components/shared/view-mode";
 import { SessionDayModuleSelector }	from "@/components/session/session-day-module-selector";
 import { Card, CardContent }		from "@/components/ui/card";
 import { ScrollArea }               from "@/components/ui/scroll-area";
+import { RequestInfoCard }          from "@/components/request/request-info-card";
 
 import {
 	errorToast,
@@ -49,8 +50,8 @@ interface SessionDayModule {
 
 
 interface RequestSessionDayModuleUpdate {
-	requestSessionId	: string;
-	dayModulesId	: number[];
+	requestSessionId    : string;
+	dayModulesId		: number[];
 }
 
 
@@ -76,11 +77,8 @@ export function RequestSessionView({
 	});
 
 	// Load dayModules to convert IDs
-	const {
-		data		: dayModules = [],
-		isLoading	: isLoadingDayModules,
-	} = useQuery({
-		queryKey	: [ KEY_QUERYS.MODULES, 'dayModules' ],
+	const { data: dayModules = [] } = useQuery({
+		queryKey    : [ KEY_QUERYS.MODULES, 'dayModules' ],
 		queryFn		: () => fetchApi<DayModule[]>({ url: 'modules/dayModule' }),
 	});
 
@@ -127,7 +125,7 @@ export function RequestSessionView({
 	}, [ data ]);
 
 	// Handle toggle of day module
-	const handleToggleDayModule = useCallback(( session: Session, dayId: number, moduleId: number, dayModuleId: number ) => {
+	const handleToggleDayModule = useCallback(( session: Session, _: number, __: number, dayModuleId: number ) => {
 		if ( !data ) return;
 
 		// Find the request session with this session type
@@ -270,10 +268,10 @@ export function RequestSessionView({
 	return (
 		<div className="space-y-4">
 			{/* Request Info */}
-			{/* <RequestInfoCard
+			<RequestInfoCard
 				request	= { request }
 				onBack	= { onBack }
-			/> */}
+			/>
 
 			{/* Request Sessions */}
 			<div className="space-y-4">
@@ -286,7 +284,7 @@ export function RequestSessionView({
 					/>
 				</div>
 
-                <ScrollArea className="h-[calc(100vh-580px)]"> 
+                <ScrollArea className="h-[calc(100vh-680px)]"> 
                     {isError ? (
                         <RequestSessionErrorCard />
                     ) : (
@@ -346,14 +344,14 @@ export function RequestSessionView({
                                 </div>
 
                                 <SessionDayModuleSelector
-                                selectedSessions        = { selectedSessionDayModules }
-                                onToggleDayModule       = { handleToggleDayModule }
-                                currentSession          = { currentSessionForModules }
-                                availableSessions       = { availableSessions }
-                                enabled                 = { isEditingModules }
-                                multiple                = { true }
-                                onCurrentSessionChange  = { setCurrentSessionForModules }
-                            />    
+                                    selectedSessions        = { selectedSessionDayModules }
+                                    onToggleDayModule       = { handleToggleDayModule }
+                                    currentSession          = { currentSessionForModules }
+                                    availableSessions       = { availableSessions }
+                                    enabled                 = { isEditingModules }
+                                    multiple                = { true }
+                                    onCurrentSessionChange  = { setCurrentSessionForModules }
+                                />    
                             </CardContent>
                         </Card>
                     )}
