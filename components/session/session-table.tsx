@@ -260,7 +260,13 @@ export function SessionTable({
                 session             = { selectedSessionEdit }
 				onSuccess	        = { () => {
 					setIsOpenPlanningChange( false );
+					const sectionId     = selectedSectionEdit?.id || section.id;
+					const sessionId     = selectedSessionEdit?.id;
 					queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.PLANNING_CHANGE ] });
+					queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.SESSIONS, sectionId ] });
+					if ( sessionId ) {
+						queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.SECTIONS, 'session', sessionId ] });
+					}
 				}}
 				onCancel		= { () => setIsOpenPlanningChange( false )}
 			/>
