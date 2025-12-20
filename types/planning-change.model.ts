@@ -115,6 +115,7 @@ export interface PlanningChange {
     staffCreate     : StaffPlanningChange;
     staffUpdate     : StaffPlanningChange   | null;
     dayModulesId    : number[];
+    sessionDayModules?: { dayModuleId: number }[];
 }
 
 
