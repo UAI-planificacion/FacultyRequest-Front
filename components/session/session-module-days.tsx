@@ -20,15 +20,16 @@ import { fetchApi }     from "@/services/fetch";
 
 
 interface RequestDetailModule {
-    id?         : string;
-    day         : string;
-    moduleId    : string;
+    id?          : string;
+    day          : string;
+    moduleId     : string;
+    dayModuleId? : number;
 }
 
 
 interface Props {
     requestDetailModule : RequestDetailModule[];
-    onModuleToggle      : ( day: string, moduleId: string, isChecked: boolean ) => void;
+    onModuleToggle      : ( day: string, moduleId: string, isChecked: boolean, dayModuleId?: number ) => void;
     enabled             : boolean;
     multiple            ?: boolean;
     onDayModuleSelect   ?: ( dayModuleId: number | null ) => void;
@@ -52,15 +53,18 @@ export function SessionModuleDays({
 		enabled,
 	});
 
-
 	const {
 		data        : dayModules = [],
 		isLoading   : isLoadingDayModules,
+		isError     : isErrorDayModules,
 	} = useQuery({
 		queryKey    : [KEY_QUERYS.MODULES, 'dayModule'],
 		queryFn     : () => fetchApi<DayModule[]>({ url: 'modules/dayModule' }),
-		enabled     : enabled && !multiple,
+		// enabled     : enabled && !multiple,
+		enabled     : enabled,
 	});
+
+	console.log('🚀 ~ file: session-module-days.tsx:61 ~ dayModules:', dayModules );
 
 
     const availableDays = useMemo(() => {
@@ -113,26 +117,26 @@ export function SessionModuleDays({
             [key]: (prev[key] || 0) + 1
         }));
 
-        // Si es modo single, buscar el dayModuleId
+        // Buscar el dayModuleId correspondiente
+        const dayId     = parseInt( day );
+        const modId     = parseInt( moduleId );
+        const dayModule = dayModules.find( dm => dm.dayId === dayId && dm.moduleId === modId );
+        const dayModuleId = dayModule?.id;
+
+        // Si es modo single, pasar el dayModuleId al callback
         if ( !multiple && onDayModuleSelect ) {
-            if ( checked ) {
-                const dayId = parseInt( day );
-                const modId = parseInt( moduleId );
-                
-                const dayModule = dayModules.find( dm => dm.dayId === dayId && dm.moduleId === modId );
-                if ( dayModule ) {
-                    onDayModuleSelect( dayModule.id );
-                }
+            if ( checked && dayModuleId ) {
+                onDayModuleSelect( dayModuleId );
             } else {
                 onDayModuleSelect( null );
             }
         }
 
-        onModuleToggle( day, moduleId, checked );
+        onModuleToggle( day, moduleId, checked, dayModuleId );
     }, [ onModuleToggle, multiple, onDayModuleSelect, dayModules ]);
 
 
-    if ( isLoadingModules ) {
+    if ( isLoadingModules || isLoadingDayModules ) {
         return (
             <div className="w-full p-8 text-center text-muted-foreground">
                 Cargando módulos...
@@ -141,7 +145,7 @@ export function SessionModuleDays({
     }
 
 
-    if ( isErrorModules ) {
+    if ( isErrorModules || isErrorDayModules ) {
         return (
             <div className="w-full p-8 text-center text-red-500">
                 Error al cargar los módulos
