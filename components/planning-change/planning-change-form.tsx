@@ -211,7 +211,6 @@ export function PlanningChangeForm({
 	const queryClient   = useQueryClient();
 
 	const [ tab, setTab ]                                   = useState<Tab>( defaultTab );
-	const [ requestDetailModule, setRequestDetailModule ]   = useState<Array<{ id?: string; day: string; moduleId: string }>>([]);
 	const [ selectedSessionId, setSelectedSessionId ]       = useState<string | null>( null );
 	const [ filterMode, setFilterMode ]                     = useState<FilterMode>( 'space' );
 	const [ isEditMode, setIsEditMode ]                     = useState<boolean>( !!planningChange );
@@ -320,13 +319,6 @@ export function PlanningChangeForm({
 			const determinedFilterMode: FilterMode = currentPlanningChange.spaceId ? 'space' : 'type-size';
 			setFilterMode( determinedFilterMode );
 
-			// Convert dayModulesId to requestDetailModule format
-			const modules = currentPlanningChange.dayModulesId.map( id => ({
-				day			: id.toString(),
-				moduleId	: id.toString()
-			}));
-
-			setRequestDetailModule( modules );
 			setSelectedSessionId( null );
             setTab( 'form' );
 
@@ -349,7 +341,6 @@ export function PlanningChangeForm({
 			});
 		} else {
 			setIsEditMode( false );
-			setRequestDetailModule([]);
 			setSelectedSessionId( null );
 			setFilterMode( 'space' );
 			form.reset({
@@ -399,7 +390,7 @@ export function PlanningChangeForm({
 			form.setValue( 'spaceType', null );
 			form.setValue( 'spaceSizeId', null );
 			form.setValue( 'isEnglish', false );
-			setRequestDetailModule([]);
+			form.setValue( 'dayModulesId', [] );
 			setFilterMode( 'space' );
 			return;
 		}
@@ -421,13 +412,8 @@ export function PlanningChangeForm({
 		// Setear filterMode a 'space' porque tenemos spaceId
 		setFilterMode( 'space' );
 
-		// Auto-marcar el módulo y día en la tabla usando los datos de la sesión
-		const newModule = {
-			day			: selectedSession.dayId.toString(),
-			moduleId	: selectedSession.module.id.toString(),
-		};
-
-		setRequestDetailModule([ newModule ]);
+		// Auto-marcar el módulo y día en la tabla usando el dayModuleId de la sesión
+		form.setValue( 'dayModulesId', [ selectedSession.dayModuleId ] );
 	}, [ selectedSessionId, selectedSession, isEditMode, form ]);
 
 	// Create mutation
@@ -548,21 +534,9 @@ export function PlanningChangeForm({
 
 
 
-	const handleModuleToggle = useCallback(( day: string, moduleId: string, isChecked: boolean ) => {
-		setRequestDetailModule( prev => {
-			if ( isChecked ) {
-				return [...prev, { day, moduleId }];
-			} else {
-				return prev.filter( item => !( item.day === day && item.moduleId === moduleId ));
-			}
-		});
-	}, []);
-
-	// Update dayModulesId when requestDetailModule changes
-	useEffect(() => {
-		const dayModuleIds = requestDetailModule.map( item => parseInt( item.moduleId ));
+	const handleDayModuleIdsChange = useCallback(( dayModuleIds: number[] ) => {
 		form.setValue( 'dayModulesId', dayModuleIds );
-	}, [ requestDetailModule, form ]);
+	}, [ form ]);
 
 
 	return (
@@ -621,7 +595,7 @@ export function PlanningChangeForm({
 						/>
 
                         {/* Status (solo en modo edición) */}
-                        { isEditMode && (
+                        {/* { isEditMode && (
                             <FormField
                                 control	= { form.control }
                                 name	= "status"
@@ -643,7 +617,7 @@ export function PlanningChangeForm({
                                     </FormItem>
                                 )}
                             />
-                        )}
+                        )} */}
 
 						{/* Selección de Sesión (solo en modo creación) */}
 						{( !isEditMode && !session ) && (
@@ -889,11 +863,11 @@ export function PlanningChangeForm({
 
 							<div className={ !!session?.planningChangeId && isLoadingPlanningChange ? 'opacity-50 pointer-events-none' : '' }>
 								<SessionModuleDays
-									requestDetailModule	= { requestDetailModule }
-									onModuleToggle		= { handleModuleToggle }
-									enabled				= { true }
-									multiple			= { true }
-								/>
+					dayModuleIds		= { form.watch( 'dayModulesId' ) }
+					onDayModuleIdsChange= { handleDayModuleIdsChange }
+					enabled				= { true }
+					multiple			= { true }
+				/>
 							</div>
 
 							{ form.formState.errors.dayModulesId && (
@@ -929,11 +903,11 @@ export function PlanningChangeForm({
 
 					{ isEditMode && (
 						<TabsContent value="comments" className="mt-4">
-							{/* <CommentSection
+							<CommentSection
 								planningChangeId	= { planningChange?.id || fetchedPlanningChange?.id }
 								enabled				= { tab === 'comments' }
 								size				= { 'h-[450px]' }
-							/> */}
+							/>
 						</TabsContent>
 					)}
 				</Tabs>
