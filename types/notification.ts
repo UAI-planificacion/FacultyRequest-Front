@@ -1,4 +1,5 @@
 import { EnumAction, Type } from './emit-event';
+import { Comment }          from './comment.model';
 
 export interface Notification {
 	id          : string;
@@ -8,6 +9,7 @@ export interface Notification {
 	type        : Type;
 	entityId    : string;
 	requestId?  : string;
+	comment?    : Comment;
 	timestamp   : Date;
 	read        : boolean;
 }
