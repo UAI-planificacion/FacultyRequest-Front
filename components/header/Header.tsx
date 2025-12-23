@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState }  from "react";
-import Image                    from "next/image"
-import { useRouter }            from "next/navigation";
+import { useEffect, useState }      from "react";
+import Image                        from "next/image"
+import { usePathname, useRouter }   from "next/navigation";
 
 import { Box, Building } from "lucide-react";
 
@@ -11,16 +11,24 @@ import { Login }                        from "@/components/auth/Login";
 import { AlertMessage }                 from "@/components/dialog/Alert";
 import { NotificationDialogManager }    from "@/components/header/NotificationDialogManager";
 import { Notifications }                from "@/components/header/Notifications";
-import { Button }                       from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger }  from "@/components/ui/tabs";
 
 import { useSSE } from "@/hooks/use-sse";
 
 
+type HeaderPath = 'faculty' | 'sections';
+
+
 export default function Header() {
+    const router    = useRouter();
+    const pathname  = usePathname().split('/').pop() as HeaderPath;
+
+    const [activeTab, setActiveTab]             = useState<'faculty' | 'sections'>( pathname );
+    const [showAuthMessage, setShowAuthMessage] = useState( false );
+
+
     useSSE();
 
-    const router = useRouter();
-    const [showAuthMessage, setShowAuthMessage] = useState( false );
 
     useEffect(() => {
         const urlParams = new URLSearchParams( window.location.search );
@@ -71,23 +79,30 @@ export default function Header() {
 
                         <Theme />
 
-                        <Button
-                            variant     = "outline"
-                            onClick     = {() => router.push( '/faculty' )}
-                            className   = "gap-0 lg:gap-1.5"
+                        <Tabs
+                            value           = { activeTab }
+                            onValueChange   = {( value: string ) => {router.push( value ); setActiveTab( value as HeaderPath );}}
                         >
-                            <Building className="w-5 h-5" />
-                            <span className="hidden lg:flex">Mi facultad</span>
-                        </Button>
+                            <TabsList>
+                                <TabsTrigger
+                                    value   = { 'faculty' }
+                                    title   = "Mi facultad"
+                                    className="gap-0 lg:gap-1.5"
+                                >
+                                    <Building className="w-5 h-5" />
+                                    <span className="hidden lg:flex">Mi facultad</span>
+                                </TabsTrigger>
 
-                        <Button
-                            variant     = "outline"
-                            onClick     = {() => router.push( '/sections' )}
-                            className   = "gap-0 lg:gap-1.5"
-                        >
-                            <Box className="w-5 h-5" />
-                            <span className="hidden lg:flex">Secciones</span>
-                        </Button>
+                                <TabsTrigger
+                                    value   = { 'sections' }
+                                    title   = "Secciones"
+                                    className="gap-0 lg:gap-1.5"
+                                >
+                                    <Box className="w-5 h-5" />
+                                    <span className="hidden lg:flex">Secciones</span>
+                                </TabsTrigger>
+                            </TabsList>
+                        </Tabs>
                     </div>
                 </div>
             </header>
