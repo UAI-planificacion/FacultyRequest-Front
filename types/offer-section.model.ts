@@ -129,14 +129,6 @@ export interface RequestSession {
 }
 
 
-// export interface SectionSession {
-//     id          : string;
-//     spaceId     : string;
-//     dayId       : number;
-//     moduleId    : number;
-//     professorId : string;
-// }
-
 export interface SectionSession {
     ids             : string[];
     spaceIds        : string[];
