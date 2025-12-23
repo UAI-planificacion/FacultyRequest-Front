@@ -16,6 +16,7 @@ import { ScrollArea }   from '@/components/ui/scroll-area';
 import { Notification }     from '@/types/notification';
 import { EnumAction, Type } from '@/types/emit-event';
 import { useNotifications } from '@/hooks/use-notifications';
+import { Comment }          from '@/types/comment.model';
 
 
 interface NotificationItemProps {
@@ -23,7 +24,6 @@ interface NotificationItemProps {
 	onNotificationClick : ( notification: Notification ) => void;
 	onMarkAsRead        : ( notificationId: string ) => void;
 }
-
 
 /**
  * Component for individual notification item
@@ -50,8 +50,12 @@ function NotificationItem({
 		switch ( type ) {
 			case Type.REQUEST:
 				return 'Solicitud';
-			case Type.DETAIL:
-				return 'Detalle';
+			case Type.REQUEST_SESSION:
+				return 'Detalle de Solicitud';
+			case Type.PLANNING_CHANGE:
+				return 'Cambio de Planificación';
+			case Type.COMMENT:
+				return 'Comentario';
 			default:
 				return 'Elemento';
 		}
@@ -77,19 +81,19 @@ function NotificationItem({
 			<div className="flex justify-between items-start">
 				<div className="flex-1">
 					<p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-						{getTypeText( notification.type )} {getActionText( notification.action )}
+						{ getTypeText( notification.type )} { getActionText( notification.action )}
 					</p>
 
 					<p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
-						{notification.message}
+						{ notification.message }
 					</p>
 
 					<p className="text-xs text-zinc-500 dark:text-zinc-500 mt-1">
-						{new Date( notification.timestamp ).toLocaleString()}
+						{ new Date( notification.timestamp ).toLocaleString() }
 					</p>
 				</div>
 
-				{!notification.read && (
+				{ !notification.read && (
 					<div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1"></div>
 				)}
 			</div>
@@ -99,8 +103,10 @@ function NotificationItem({
 
 
 interface NotificationsProps {
-	onRequestClick      : ( requestId: string ) => void;
-	onRequestDetailClick: ( requestId: string, detailId: string ) => void;
+	onRequestClick          : ( requestId: string ) => void;
+	onRequestSessionClick   : ( requestId: string, sessionId: string ) => void;
+	onPlanningChangeClick   : ( planningChangeId: string ) => void;
+	onCommentClick          : ( comment: Comment ) => void;
 }
 
 
@@ -109,7 +115,9 @@ interface NotificationsProps {
  */
 export function Notifications({ 
 	onRequestClick, 
-	onRequestDetailClick 
+	onRequestSessionClick,
+	onPlanningChangeClick,
+	onCommentClick
 }: NotificationsProps ): JSX.Element {
 	const [isOpen, setIsOpen] = useState( false );
 	const { 
@@ -122,13 +130,15 @@ export function Notifications({
 	const handleNotificationClick = ( notification: Notification ): void => {
 		console.log( 'Notification clicked:', notification );
 		setIsOpen( false );
-		
+
 		if ( notification.type === Type.REQUEST ) {
-			console.log( 'Calling onRequestClick with entityId:', notification.entityId );
 			onRequestClick( notification.entityId );
-		} else if ( notification.type === Type.DETAIL && notification.requestId ) {
-			console.log( 'Calling onRequestDetailClick with requestId:', notification.requestId, 'entityId:', notification.entityId );
-			onRequestDetailClick( notification.requestId, notification.entityId );
+		} else if ( notification.type === Type.REQUEST_SESSION ) {
+			onRequestSessionClick( notification.requestId || '', notification.entityId );
+		} else if ( notification.type === Type.PLANNING_CHANGE ) {
+			onPlanningChangeClick( notification.entityId );
+		} else if ( notification.type === Type.COMMENT && notification.comment ) {
+			onCommentClick( notification.comment );
 		}
 	};
 
@@ -148,18 +158,18 @@ export function Notifications({
 		<Popover open={isOpen} onOpenChange={setIsOpen}>
 			<PopoverTrigger asChild>
 				<Button
-					variant="outline"
-					size="icon"
-					className="relative"
+					variant     = "outline"
+					size        = "icon"
+					className   = "relative bg-black text-white border-zinc-700"
 				>
 					<Bell className="h-5 w-5" />
 
-					{notificationState.unreadCount > 0 && (
+					{ notificationState.unreadCount > 0 && (
 						<Badge
 							variant="destructive"
 							className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
 						>
-							{notificationState.unreadCount > 99 ? '99+' : notificationState.unreadCount}
+							{ notificationState.unreadCount > 99 ? '99+' : notificationState.unreadCount }
 						</Badge>
 					)}
 				</Button>
@@ -169,13 +179,13 @@ export function Notifications({
 				<div className="p-4 border-b">
 					<div className="flex justify-between items-center">
 						<h3 className="font-semibold">Notificaciones</h3>
-						
-						{notificationState.unreadCount > 0 && (
+
+						{ notificationState.unreadCount > 0 && (
 							<Button
-								variant="ghost"
-								size="sm"
-								onClick={handleMarkAllAsRead}
-								className="text-xs"
+								variant     = "ghost"
+								size        = "sm"
+								onClick     = { handleMarkAllAsRead }
+								className   = "text-xs"
 							>
 								Marcar todas como leídas
 							</Button>
@@ -191,22 +201,22 @@ export function Notifications({
 					) : (
 						notificationState.notifications.map( notification => (
 							<NotificationItem
-								key={notification.id}
-								notification={notification}
-								onNotificationClick={handleNotificationClick}
-								onMarkAsRead={handleMarkAsRead}
+								key                 = { notification.id }
+								notification        = { notification }
+								onNotificationClick = { handleNotificationClick }
+								onMarkAsRead        = { handleMarkAsRead }
 							/>
 						))
 					)}
 				</ScrollArea>
 
-				{notificationState.notifications.length > 0 && (
+				{ notificationState.notifications.length > 0 && (
 					<div className="p-2 border-t">
 						<Button
-							variant="ghost"
-							size="sm"
-							onClick={handleClearAll}
-							className="w-full text-xs"
+							variant     = "ghost"
+							size        = "sm"
+							onClick     = { handleClearAll }
+							className   = "w-full text-xs"
 						>
 							Limpiar todas
 						</Button>
