@@ -207,13 +207,14 @@ export function PlanningChangeForm({
 	const {
         staff,
         isLoading: isLoadingStaff
-    }                   = useSession();
-	const queryClient   = useQueryClient();
+    } = useSession();
 
-	const [ tab, setTab ]                                   = useState<Tab>( defaultTab );
-	const [ selectedSessionId, setSelectedSessionId ]       = useState<string | null>( null );
-	const [ filterMode, setFilterMode ]                     = useState<FilterMode>( 'space' );
-	const [ isEditMode, setIsEditMode ]                     = useState<boolean>( !!planningChange );
+    const queryClient = useQueryClient();
+
+	const [ tab, setTab ]                               = useState<Tab>( defaultTab );
+	const [ selectedSessionId, setSelectedSessionId ]   = useState<string | null>( null );
+	const [ filterMode, setFilterMode ]                 = useState<FilterMode>( 'space' );
+	const [ isEditMode, setIsEditMode ]                 = useState<boolean>( !!planningChange );
 
 	// Fetch sessions from section
 	const {
@@ -445,8 +446,9 @@ export function PlanningChangeForm({
 			});
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.PLANNING_CHANGE ] });
-			queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.SECTIONS ] });
+			queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.PLANNING_CHANGE ]});
+			// queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.SECTIONS ] });
+			queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.SESSIONS, section?.id ]});
 
 			updateFacultyTotal( queryClient, staff!.facultyId!, true, 'totalPlanningChanges' );
 
@@ -492,7 +494,10 @@ export function PlanningChangeForm({
 			});
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.PLANNING_CHANGE ] });
+			queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.PLANNING_CHANGE ]});
+			// queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.SECTIONS ] });
+			queryClient.invalidateQueries({ queryKey: [ KEY_QUERYS.SESSIONS, section?.id ]});
+
 			toast( 'Cambio de planificación actualizado exitosamente', successToast );
 			onSuccess();
 		},
@@ -573,309 +578,308 @@ export function PlanningChangeForm({
 					<TabsContent value="form" className={ cn( "space-y-4", isEditMode ? 'mt-4' : '' ) }>
 						<Form {...form}>
 							<form onSubmit={ form.handleSubmit( onSubmit ) } className="space-y-4">
-						{/* Título */}
-						<FormField
-							control	= { form.control }
-							name	= "title"
-							render	= {({ field }) => (
-								<FormItem>
-									<FormLabel>Título *</FormLabel>
+                                {/* Título */}
+                                <FormField
+                                    control	= { form.control }
+                                    name	= "title"
+                                    render	= {({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Título *</FormLabel>
 
-									<FormControl>
-										<Input
-											placeholder	= "Título del cambio de planificación"
-											disabled	= { !!session?.planningChangeId && isLoadingPlanningChange }
-											{...field}
-										/>
-									</FormControl>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder	= "Título del cambio de planificación"
+                                                    disabled	= { !!session?.planningChangeId && isLoadingPlanningChange }
+                                                    {...field}
+                                                />
+                                            </FormControl>
 
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                        {/* Status (solo en modo edición) */}
-                        {/* { isEditMode && (
-                            <FormField
-                                control	= { form.control }
-                                name	= "status"
-                                render	= {({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Estado</FormLabel>
+                                {/* Status (solo en modo edición) */}
+                                {/* { isEditMode && (
+                                    <FormField
+                                        control	= { form.control }
+                                        name	= "status"
+                                        render	= {({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Estado</FormLabel>
 
-                                        <FormControl>
-                                            <ChangeStatus
-												multiple		= { false }
-                                                value           = { field.value || Status.PENDING }
-                                                onValueChange   = { field.onChange }
-                                                defaultValue    = { field.value }
-                                                className		= { !!session?.planningChangeId && isLoadingPlanningChange ? 'opacity-50 pointer-events-none' : '' }
-                                            />
-                                        </FormControl>
+                                                <FormControl>
+                                                    <ChangeStatus
+                                                        multiple		= { false }
+                                                        value           = { field.value || Status.PENDING }
+                                                        onValueChange   = { field.onChange }
+                                                        defaultValue    = { field.value }
+                                                        className		= { !!session?.planningChangeId && isLoadingPlanningChange ? 'opacity-50 pointer-events-none' : '' }
+                                                    />
+                                                </FormControl>
 
-                                        <FormMessage />
-                                    </FormItem>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )} */}
+
+                                {/* Selección de Sesión (solo en modo creación) */}
+                                {( !isEditMode && !session ) && (
+                                    <FormField
+                                        control	= { form.control }
+                                        name	= "sessionId"
+                                        render	= {({ field }) => (
+                                            <FormItem>
+                                                <Label>Sesión (opcional - seleccionar solo para modificar)</Label>
+
+                                                <MultiSelectCombobox
+                                                    options				= { sectionSessionOptions }
+                                                    defaultValues		= { field.value || undefined }
+                                                    onSelectionChange	= {( value ) => {
+                                                        const sessionId = typeof value === 'string' ? value : undefined;
+                                                        field.onChange( sessionId || null );
+                                                        setSelectedSessionId( sessionId || null );
+                                                    }}
+                                                    placeholder			= "Seleccionar sesión existente (dejar vacío para crear nueva)"
+                                                    disabled			= { isLoadingSessions }
+                                                    isLoading			= { isLoadingSessions }
+                                                    multiple			= { false }
+                                                    required			= { false }
+                                                />
+
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
                                 )}
-                            />
-                        )} */}
 
-						{/* Selección de Sesión (solo en modo creación) */}
-						{( !isEditMode && !session ) && (
-							<FormField
-								control	= { form.control }
-								name	= "sessionId"
-								render	= {({ field }) => (
-									<FormItem>
-										<Label>Sesión (opcional - seleccionar solo para modificar)</Label>
+                                {/* Mostrar información de la sesión seleccionada */}
+                                { selectedSessionId && (
+                                    <SessionInfoCard 
+                                        sessionData	= { selectedSession }
+                                        isLoading	= { isLoadingSessions || isLoadingFetchedSession }
+                                    />
+                                )}
 
-										<MultiSelectCombobox
-											options				= { sectionSessionOptions }
-											defaultValues		= { field.value || undefined }
-											onSelectionChange	= {( value ) => {
-												const sessionId = typeof value === 'string' ? value : undefined;
-												field.onChange( sessionId || null );
-												setSelectedSessionId( sessionId || null );
-											}}
-											placeholder			= "Seleccionar sesión existente (dejar vacío para crear nueva)"
-											disabled			= { isLoadingSessions }
-											isLoading			= { isLoadingSessions }
-											multiple			= { false }
-											required			= { false }
-										/>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {/* Tipo de Sesión */}
+                                    <FormField
+                                        control	= { form.control }
+                                        name	= "sessionName"
+                                        render	= {({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Tipo de Sesión</FormLabel>
 
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						)}
+                                                <FormControl>
+                                                    <SessionTypeSelector
+                                                        multiple		= { false }
+                                                        value			= { field.value }
+                                                        onValueChange	= { field.onChange }
+                                                        defaultValue	= { field.value }
+                                                        allowDeselect	= { true }
+                                                        className		= { !!session?.planningChangeId && isLoadingPlanningChange ? 'opacity-50 pointer-events-none' : 'w-full' }
+                                                    />
+                                                </FormControl>
 
-						{/* Mostrar información de la sesión seleccionada */}
-						{ selectedSessionId && (
-                            <SessionInfoCard 
-                                sessionData	= { selectedSession }
-                                isLoading	= { isLoadingSessions || isLoadingFetchedSession }
-                            />
-						)}
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    {/* Profesor */}
+                                    <FormField
+                                        control	= { form.control }
+                                        name	= "professorId"
+                                        render	= {({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Profesor</FormLabel>
 
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {/* Tipo de Sesión */}
-							<FormField
-								control	= { form.control }
-								name	= "sessionName"
-								render	= {({ field }) => (
-									<FormItem>
-										<FormLabel>Tipo de Sesión</FormLabel>
+                                                <FormControl>
+                                                    <ProfessorSelect
+                                                        multiple			= { false }
+                                                        placeholder			= "Seleccionar profesor"
+                                                        defaultValues		= { field.value || undefined }
+                                                        disabled			= { !!session?.planningChangeId && isLoadingPlanningChange }
+                                                        onSelectionChange	= {( value ) => {
+                                                            const professorId = typeof value === 'string' ? value : null;
+                                                            field.onChange( professorId );
+                                                        }}
+                                                    />
+                                                </FormControl>
 
-										<FormControl>
-											<SessionTypeSelector
-												multiple		= { false }
-												value			= { field.value }
-												onValueChange	= { field.onChange }
-												defaultValue	= { field.value }
-												allowDeselect	= { true }
-												className		= { !!session?.planningChangeId && isLoadingPlanningChange ? 'opacity-50 pointer-events-none' : 'w-full' }
-											/>
-										</FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
 
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							{/* Profesor */}
-							<FormField
-								control	= { form.control }
-								name	= "professorId"
-								render	= {({ field }) => (
-									<FormItem>
-										<FormLabel>Profesor</FormLabel>
+                                    {/* Edificio */}
+                                    <FormField
+                                        control	= { form.control }
+                                        name	= "building"
+                                        render	= {({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Edificio</FormLabel>
 
-										<FormControl>
-											<ProfessorSelect
-												multiple			= { false }
-												placeholder			= "Seleccionar profesor"
-												defaultValues		= { field.value || undefined }
-												disabled			= { !!session?.planningChangeId && isLoadingPlanningChange }
-												onSelectionChange	= {( value ) => {
-													const professorId = typeof value === 'string' ? value : null;
-													field.onChange( professorId );
-												}}
-											/>
-										</FormControl>
+                                                <FormControl>
+                                                    <HeadquartersSelect
+                                                        multiple			= { false }
+                                                        placeholder			= "Seleccionar edificio"
+                                                        defaultValues		= { field.value || undefined }
+                                                        disabled			= { !!session?.planningChangeId && isLoadingPlanningChange }
+                                                        onSelectionChange	= {( value ) => {
+                                                            const buildingId = typeof value === 'string' ? value : null;
+                                                            field.onChange( buildingId );
+                                                            handleBuildingChange( buildingId );
+                                                        }}
+                                                    />
+                                                </FormControl>
 
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
 
-							{/* Edificio */}
-							<FormField
-								control	= { form.control }
-								name	= "building"
-								render	= {({ field }) => (
-									<FormItem>
-										<FormLabel>Edificio</FormLabel>
+                                {/* Selector de filtros de espacio */}
+                                { form.watch( 'building' ) && (
+                                    <div className="space-y-2">
+                                        <div className={ !!session?.planningChangeId && isLoadingPlanningChange ? 'opacity-50 pointer-events-none' : '' }>
+                                            <SpaceFilterSelector
+                                                buildingId			= { form.watch( 'building' ) }
+                                                filterMode			= { filterMode }
+                                                spaceId				= { form.watch( 'spaceId' ) }
+                                                spaceType			= { form.watch( 'spaceType' ) }
+                                                spaceSizeId			= { form.watch( 'spaceSizeId' ) }
+                                                onFilterModeChange	= {( mode ) => setFilterMode( mode )}
+                                                onSpaceIdChange		= {( spaceId ) => form.setValue( 'spaceId', typeof spaceId === 'string' ? spaceId : null )}
+                                                onSpaceTypeChange	= {( spaceType ) => form.setValue( 'spaceType', spaceType )}
+                                                onSpaceSizeIdChange	= {( spaceSizeId ) => form.setValue( 'spaceSizeId', spaceSizeId )}
+                                            />
+                                        </div>
 
-										<FormControl>
-											<HeadquartersSelect
-												multiple			= { false }
-												placeholder			= "Seleccionar edificio"
-												defaultValues		= { field.value || undefined }
-												disabled			= { !!session?.planningChangeId && isLoadingPlanningChange }
-												onSelectionChange	= {( value ) => {
-													const buildingId = typeof value === 'string' ? value : null;
-													field.onChange( buildingId );
-													handleBuildingChange( buildingId );
-												}}
-											/>
-										</FormControl>
+                                        {/* Mostrar errores de espacios */}
+                                        { ( form.formState.errors.spaceId || form.formState.errors.spaceType ) && (
+                                            <p className="text-sm font-medium text-destructive">
+                                                { String( form.formState.errors.spaceId?.message || form.formState.errors.spaceType?.message || '' ) }
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
 
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
+                                {/* Switches */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    <FormField
+                                        control	= { form.control }
+                                        name	= "isEnglish"
+                                        render	= {({ field }) => (
+                                            <FormItem>
+                                                <div className="flex items-center justify-between rounded-lg border p-3">
+                                                    <Label htmlFor="isEnglish" className="cursor-pointer">
+                                                        En inglés
+                                                    </Label>
 
-						{/* Selector de filtros de espacio */}
-						{ form.watch( 'building' ) && (
-							<div className="space-y-2">
-								<div className={ !!session?.planningChangeId && isLoadingPlanningChange ? 'opacity-50 pointer-events-none' : '' }>
+                                                    <FormControl>
+                                                        <Switch
+                                                            id				= "isEnglish"
+                                                            checked			= { field.value || false }
+                                                            onCheckedChange	= { field.onChange }
+                                                            disabled		= { !!session?.planningChangeId && isLoadingPlanningChange }
+                                                        />
+                                                    </FormControl>
+                                                </div>
+                                            </FormItem>
+                                        )}
+                                    />
 
-								<SpaceFilterSelector
-									buildingId			= { form.watch( 'building' ) }
-									filterMode			= { filterMode }
-									spaceId				= { form.watch( 'spaceId' ) }
-									spaceType			= { form.watch( 'spaceType' ) }
-									spaceSizeId			= { form.watch( 'spaceSizeId' ) }
-									onFilterModeChange	= {( mode ) => setFilterMode( mode )}
-									onSpaceIdChange		= {( spaceId ) => form.setValue( 'spaceId', typeof spaceId === 'string' ? spaceId : null )}
-									onSpaceTypeChange	= {( spaceType ) => form.setValue( 'spaceType', spaceType )}
-									onSpaceSizeIdChange	= {( spaceSizeId ) => form.setValue( 'spaceSizeId', spaceSizeId )}
-								/>
-							</div>
-								
-								{/* Mostrar errores de espacios */}
-								{ ( form.formState.errors.spaceId || form.formState.errors.spaceType ) && (
-									<p className="text-sm font-medium text-destructive">
-										{ String( form.formState.errors.spaceId?.message || form.formState.errors.spaceType?.message || '' ) }
-									</p>
-								)}
-							</div>
-						)}
+                                    <FormField
+                                        control	= { form.control }
+                                        name	= "isConsecutive"
+                                        render	= {({ field }) => (
+                                            <FormItem>
+                                                <div className="flex items-center justify-between rounded-lg border p-3">
+                                                    <Label htmlFor="isConsecutive" className="cursor-pointer">
+                                                        Consecutivo
+                                                    </Label>
 
-						{/* Switches */}
-						<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-							<FormField
-								control	= { form.control }
-								name	= "isEnglish"
-								render	= {({ field }) => (
-									<FormItem>
-										<div className="flex items-center justify-between rounded-lg border p-3">
-											<Label htmlFor="isEnglish" className="cursor-pointer">
-												En inglés
-											</Label>
+                                                    <FormControl>
+                                                        <Switch
+                                                            id				= "isConsecutive"
+                                                            checked			= { field.value || false }
+                                                            onCheckedChange	= { field.onChange }
+                                                            disabled		= { !!session?.planningChangeId && isLoadingPlanningChange }
+                                                        />
+                                                    </FormControl>
+                                                </div>
+                                            </FormItem>
+                                        )}
+                                    />
 
-											<FormControl>
-												<Switch
-													id				= "isEnglish"
-													checked			= { field.value || false }
-													onCheckedChange	= { field.onChange }
-													disabled		= { !!session?.planningChangeId && isLoadingPlanningChange }
-												/>
-											</FormControl>
-										</div>
-									</FormItem>
-								)}
-							/>
+                                    <FormField
+                                        control	= { form.control }
+                                        name	= "inAfternoon"
+                                        render	= {({ field }) => (
+                                            <FormItem>
+                                                <div className="flex items-center justify-between rounded-lg border p-3">
+                                                    <Label htmlFor="inAfternoon" className="cursor-pointer">
+                                                        En la tarde
+                                                    </Label>
 
-							<FormField
-								control	= { form.control }
-								name	= "isConsecutive"
-								render	= {({ field }) => (
-									<FormItem>
-										<div className="flex items-center justify-between rounded-lg border p-3">
-											<Label htmlFor="isConsecutive" className="cursor-pointer">
-												Consecutivo
-											</Label>
+                                                    <FormControl>
+                                                        <Switch
+                                                            id				= "inAfternoon"
+                                                            checked			= { field.value || false }
+                                                            onCheckedChange	= { field.onChange }
+                                                            disabled		= { !!session?.planningChangeId && isLoadingPlanningChange }
+                                                        />
+                                                    </FormControl>
+                                                </div>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
 
-											<FormControl>
-												<Switch
-													id				= "isConsecutive"
-													checked			= { field.value || false }
-													onCheckedChange	= { field.onChange }
-													disabled		= { !!session?.planningChangeId && isLoadingPlanningChange }
-												/>
-											</FormControl>
-										</div>
-									</FormItem>
-								)}
-							/>
+                                {/* Descripción */}
+                                <FormField
+                                    control	= { form.control }
+                                    name	= "description"
+                                    render	= {({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Descripción</FormLabel>
 
-							<FormField
-								control	= { form.control }
-								name	= "inAfternoon"
-								render	= {({ field }) => (
-									<FormItem>
-										<div className="flex items-center justify-between rounded-lg border p-3">
-											<Label htmlFor="inAfternoon" className="cursor-pointer">
-												En la tarde
-											</Label>
+                                            <FormControl>
+                                                <Textarea
+                                                    placeholder	= "Descripción opcional del cambio"
+                                                    value		= { field.value || '' }
+                                                    onChange	= { field.onChange }
+                                                    disabled	= { !!session?.planningChangeId && isLoadingPlanningChange }
+                                                    className   = "max-h-36"
+                                                />
+                                            </FormControl>
 
-											<FormControl>
-												<Switch
-													id				= "inAfternoon"
-													checked			= { field.value || false }
-													onCheckedChange	= { field.onChange }
-													disabled		= { !!session?.planningChangeId && isLoadingPlanningChange }
-												/>
-											</FormControl>
-										</div>
-									</FormItem>
-								)}
-							/>
-						</div>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-						{/* Descripción */}
-						<FormField
-							control	= { form.control }
-							name	= "description"
-							render	= {({ field }) => (
-								<FormItem>
-									<FormLabel>Descripción</FormLabel>
+                                {/* Módulos y Días */}
+                                <div className="space-y-2">
+                                    <Label>Módulos y Días *</Label>
 
-									<FormControl>
-										<Textarea
-											placeholder	= "Descripción opcional del cambio"
-											value		= { field.value || '' }
-											onChange	= { field.onChange }
-											disabled	= { !!session?.planningChangeId && isLoadingPlanningChange }
-                                            className   = "max-h-36"
-										/>
-									</FormControl>
+                                    <div className={ !!session?.planningChangeId && isLoadingPlanningChange ? 'opacity-50 pointer-events-none' : '' }>
+                                        <SessionModuleDays
+                                            dayModuleIds		= { form.watch( 'dayModulesId' ) }
+                                            onDayModuleIdsChange= { handleDayModuleIdsChange }
+                                            enabled				= { true }
+                                            multiple			= { true }
+                                        />
+                                    </div>
 
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						{/* Módulos y Días */}
-						<div className="space-y-2">
-							<Label>Módulos y Días *</Label>
-
-							<div className={ !!session?.planningChangeId && isLoadingPlanningChange ? 'opacity-50 pointer-events-none' : '' }>
-								<SessionModuleDays
-					dayModuleIds		= { form.watch( 'dayModulesId' ) }
-					onDayModuleIdsChange= { handleDayModuleIdsChange }
-					enabled				= { true }
-					multiple			= { true }
-				/>
-							</div>
-
-							{ form.formState.errors.dayModulesId && (
-								<p className="text-sm font-medium text-destructive">
-									{ String( form.formState.errors.dayModulesId.message || '' ) }
-								</p>
-							)}
-						</div>
+                                    { form.formState.errors.dayModulesId && (
+                                        <p className="text-sm font-medium text-destructive">
+                                            { String( form.formState.errors.dayModulesId.message || '' ) }
+                                        </p>
+                                    )}
+                                </div>
 
 								<DialogFooter className="flex justify-between border-t pt-4">
 									<Button
