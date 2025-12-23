@@ -405,11 +405,11 @@ export function RequestSessionEditForm({
 					</TabsContent>
 
 					<TabsContent value="comments" className="mt-4">
-						{/* <CommentSection
+						<CommentSection
 							requestSessionId	= { requestSession?.id }
 							enabled				= { tab === 'comments' }
 							size				= { 'h-[450px]' }
-						/> */}
+						/>
 					</TabsContent>
 				</Tabs>
 			</DialogContent>
