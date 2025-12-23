@@ -1,17 +1,21 @@
+import { Role } from "@/types/staff.model";
+
+
 export interface StaffComment {
     name    : string;
     email   : string;
+    role    : Role;
 }
 
 
 export interface Comment {
-    id          : string;
-    content     : string;
-    staff       : StaffComment;
-    adminName   : string | null;
-    adminEmail  : string | null;
-    createdAt   : Date | string;
-    updatedAt   : Date | string;
+    id                  : string;
+    content             : string;
+    staff               : StaffComment;
+    requestSessionId    : string    | null;
+    planningChangeId    : string    | null;
+    createdAt           : Date      | string;
+    updatedAt           : Date      | string;
 }
 
 
