@@ -59,10 +59,12 @@ export default function Header() {
                         <Login />
 
                         <NotificationDialogManager>
-                            {({ onRequestClick, onRequestDetailClick }) => (
+                            {({ onRequestClick, onRequestSessionClick, onPlanningChangeClick, onCommentClick }) => (
                                 <Notifications
-                                    onRequestClick={onRequestClick}
-                                    onRequestDetailClick={onRequestDetailClick}
+                                    onRequestClick          = { onRequestClick }
+                                    onRequestSessionClick   = { onRequestSessionClick }
+                                    onPlanningChangeClick   = { onPlanningChangeClick }
+                                    onCommentClick          = { onCommentClick }
                                 />
                             )}
                         </NotificationDialogManager>
