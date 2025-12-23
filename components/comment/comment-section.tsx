@@ -20,16 +20,15 @@ import { CommentErrorCard }     from "@/components/comment/comment-error-card";
 import { DeleteConfirmDialog }  from "@/components/dialog/DeleteConfirmDialog";
 import { ShowDate }             from "@/components/shared/date";
 
-import { Comment }          from "@/types/comment.model";
-import { useComments }      from "@/hooks/use-comments";
-import { KEY_QUERYS }       from "@/consts/key-queries";
-import { Role, Staff }      from "@/types/staff.model";
-import { useQueryClient }   from "@tanstack/react-query";
+import { Comment }      from "@/types/comment.model";
+import { useComments }  from "@/hooks/use-comments";
+import { Role }         from "@/types/staff.model";
+import { useSession }   from "@/hooks/use-session";
 
 
 interface CommentSectionProps {
-	requestId?          : string;
-	requestDetailId?    : string;
+	planningChangeId?   : string;
+	requestSessionId?   : string;
     enabled             : boolean;
     size?               : string;
 }
@@ -38,18 +37,18 @@ interface CommentSectionProps {
  * Component for displaying and managing comments in a request
  */
 export function CommentSection( { 
-	requestId,
-	requestDetailId,
+	planningChangeId,
+	requestSessionId,
     enabled,
     size = 'h-[450px]'
 }: CommentSectionProps ): JSX.Element {
-	const [newComment, setNewComment]                           = useState( '' );
+    const { staff } = useSession();
+    const isAdmin   = staff?.role === Role.ADMIN || staff?.role === Role.ADMIN_FACULTY;
+
+    const [newComment, setNewComment]                           = useState( '' );
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen]           = useState( false );
 	const [deletingCommentId, setDeletingCommentId]             = useState<string | undefined>( undefined );
 	const [deletingCommentContent, setDeletingCommentContent]   = useState<string>( '' );
-    const queryClient                                           = useQueryClient();
-    const staff                                                 = queryClient.getQueryData<Staff>([ KEY_QUERYS.STAFF ]);
-    const isAdmin                                               = staff?.role === Role.ADMIN || staff?.role === Role.ADMIN_FACULTY;
 
 
 	const {
@@ -61,8 +60,7 @@ export function CommentSection( {
         updateComment,
         deleteComment,
         isCreating
-	} = useComments({ requestId, requestDetailId, enabled });
-
+	} = useComments({ requestSessionId, planningChangeId, enabled });
 
 	/**
 	 * Handle submitting a new comment
@@ -75,8 +73,8 @@ export function CommentSection( {
         createComment.mutate({
             content,
             staffId : staff?.id!,
-            ...(requestId && { requestId }),
-            ...(requestDetailId && { requestDetailId }),
+            ...(planningChangeId && { planningChangeId }),
+            ...(requestSessionId && { requestSessionId }),
         });
 
         setNewComment( '' );
@@ -89,7 +87,6 @@ export function CommentSection( {
         })
     }
 
-
 	/**
 	 * Handle opening delete confirmation dialog
 	 */
@@ -98,7 +95,6 @@ export function CommentSection( {
 		setDeletingCommentContent( commentContent );
 		setIsDeleteDialogOpen( true );
 	};
-
 
 	/**
 	 * Handle confirming comment deletion
@@ -111,7 +107,6 @@ export function CommentSection( {
 			setDeletingCommentContent( "" );
 		}
 	};
-
 
 	/**
 	 * Handle key press in textarea (Ctrl+Enter to submit)
@@ -243,7 +238,6 @@ interface CommentItemProps {
     isAdmin             : boolean;
 }
 
-
 /**
  * Individual comment item component
  */
@@ -258,20 +252,15 @@ function CommentItem( {
 	const [isEditing, setIsEditing]     = useState( false );
 	const [editContent, setEditContent] = useState( comment.content );
 
-
 	/**
 	 * Check if current user can edit/delete this comment
 	 */
 	const canEditComment = () => {
-		if ( !currentUserEmail ) return false;
-        if ( !isAdmin ) return false;
+		if ( !currentUserEmail )    return false;
+        if ( !isAdmin )             return false;
 
-		if ( comment.staff?.email === currentUserEmail ) return true;
-		if ( comment.adminEmail === currentUserEmail ) return true;
-
-		return false;
+		return true;
 	};
-
 
 	/**
 	 * Handle saving edited comment
@@ -291,7 +280,6 @@ function CommentItem( {
 		}
 	};
 
-
 	/**
 	 * Handle canceling edit
 	 */
@@ -300,7 +288,6 @@ function CommentItem( {
 		setIsEditing( false );
 	};
 
-
 	/**
 	 * Handle deleting comment
 	 */
@@ -308,31 +295,25 @@ function CommentItem( {
 		onDelete( comment.id, comment.content );
 	};
 
-
     /**
 	 * Get the author information from comment
 	 */
 	const getAuthorInfo = () => {
-		if ( comment.staff ) {
-			return {
-				name    : comment.staff.name,
-				email   : comment.staff.email,
-				type    : "staff" as const
-			};
-		}
+        const staffInfo = {
+			name    : comment.staff.name,
+			email   : comment.staff.email,
+		};
 
-		if ( comment.adminName && comment.adminEmail ) {
+        if ( !isAdmin ) {
 			return {
-				name    : comment.adminName,
-				email   : comment.adminEmail,
-				type    : "admin" as const
+                ...staffInfo,
+				type: "staff" as const
 			};
 		}
 
 		return {
-			name    : "Usuario desconocido",
-			email   : "",
-			type    : "unknown" as const
+			...staffInfo,
+			type: "admin" as const
 		};
 	};
 
