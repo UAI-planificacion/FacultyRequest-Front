@@ -161,6 +161,7 @@ export function Notifications({
 					variant     = "outline"
 					size        = "icon"
 					className   = "relative bg-black text-white border-zinc-700"
+                    title       = {`Notificaciones (${notificationState.unreadCount})`}
 				>
 					<Bell className="h-5 w-5" />
 

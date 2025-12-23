@@ -38,25 +38,42 @@ export function Theme() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="bg-black text-white border-zinc-700">
-                    {renderIcon(theme)}
+                <Button
+                    variant     = "outline"
+                    size        = "icon"
+                    className   = "bg-black text-white border-zinc-700"
+                    title       = { `Cambiar tema: (${theme})` }
+                >
+                    { renderIcon( theme )}
                     <span className="sr-only">Cambiar tema</span>
                 </Button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setTheme("light")} className="flex items-center justify-between">
+                <DropdownMenuItem
+                    onClick   = {() => setTheme("light")}
+                    className = "flex items-center justify-between"
+                >
                     Claro
+
                     <Sun className="h-[1.2rem] w-[1.2rem]" />
                 </DropdownMenuItem>
 
-                <DropdownMenuItem onClick={() => setTheme("dark")} className="flex items-center justify-between">
+                <DropdownMenuItem
+                    onClick   = {() => setTheme("dark")}
+                    className = "flex items-center justify-between"
+                >
                     Oscuro
+
                     <Moon className="h-[1.2rem] w-[1.2rem]" />
                 </DropdownMenuItem>
 
-                <DropdownMenuItem onClick={() => setTheme("system")} className="flex items-center justify-between">
+                <DropdownMenuItem
+                    onClick   = {() => setTheme("system")}
+                    className = "flex items-center justify-between"
+                >
                     Sistema
+
                     <Computer className="h-[1.2rem] w-[1.2rem]" />
                 </DropdownMenuItem>
             </DropdownMenuContent>

@@ -38,8 +38,9 @@ export function Login(): JSX.Element {
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
-                                variant="outline"
-                                className="gap-2 bg-black text-white border-zinc-700"
+                                variant     = "outline"
+                                className   = "gap-2 bg-black text-white border-zinc-700"
+                                title       = { `Hola ${session?.user?.name || 'User'}` }
                             >
                                 <Image
                                     src         = { session?.user?.image || '/default-avatar.png' }
@@ -55,12 +56,15 @@ export function Login(): JSX.Element {
                         </DropdownMenuTrigger>
 
                         <DropdownMenuContent className="w-56" align="start">
-                            <DropdownMenuLabel>Mi cuenta</DropdownMenuLabel>
+                            <DropdownMenuLabel title="Mi cuenta">Mi cuenta</DropdownMenuLabel>
 
                             <DropdownMenuSeparator />
-                            <DropdownMenuLabel>{session?.user?.name}</DropdownMenuLabel>
+
+                            <DropdownMenuLabel title={session?.user?.name}>{session?.user?.name}</DropdownMenuLabel>
+
                             <DropdownMenuSeparator />
-                            <DropdownMenuLabel>{session?.user?.email}</DropdownMenuLabel>
+
+                            <DropdownMenuLabel title={session?.user?.email}>{session?.user?.email}</DropdownMenuLabel>
 
                             <DropdownMenuSeparator />
 
