@@ -8,7 +8,6 @@ import { fetchApi }     from "@/services/fetch";
 import { Space }        from "@/types/space.model";
 import { ENV }          from "@/config/envs/env";
 
-
 // Interface for flattened space data
 export interface SpaceData {
 	id			: string;
@@ -17,7 +16,6 @@ export interface SpaceData {
 	building	: string;
 	type		: string;
 }
-
 
 // Function to transform cost center data to options format
 export const memoizedSpaceData = (
@@ -30,7 +28,6 @@ export const memoizedSpaceData = (
 	})) ?? [];
 }, [spaceData]);
 
-
 // Function to transform space data to flattened format
 export const memoizedSpaceDataFlat = (
 	spaceData : Space | undefined
@@ -39,17 +36,15 @@ export const memoizedSpaceDataFlat = (
 		id			: space.idlovvals.toString(),
 		name		: space.description,
 		size		: space.skill.size,
-		building	: space.skill.building,
+		building    : space.skill.building,
 		type		: space.skill.type,
 	})) ?? [];
 }, [spaceData]);
-
 
 // Interface for hook parameters
 interface UseSpaceParams {
 	enabled? : boolean;
 }
-
 
 // Interface for hook return values
 interface UseSpaceReturn {
@@ -59,7 +54,6 @@ interface UseSpaceReturn {
 	isError		: boolean;
 	error		: Error | null;
 }
-
 
 /**
  * Custom hook to fetch and manage cost center data
