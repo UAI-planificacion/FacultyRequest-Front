@@ -86,7 +86,7 @@ export function PlanningChangeManagement({
 		return planningChanges.filter( planningChange => {
 			const matchesTitle      = title === "" || planningChange.title.toLowerCase().includes( title.toLowerCase() );
 			const matchesStatus     = statusFilter.length === 0 || statusFilter.includes( planningChange.status );
-			const matchesSection    = sectionFilter.length === 0 || ( planningChange.sectionId && sectionFilter.includes( planningChange.sectionId ));
+			const matchesSection    = sectionFilter.length === 0 || ( planningChange.sectionId || planningChange.session?.sectionId && sectionFilter.includes( planningChange.sectionId || planningChange.session?.sectionId ));
 
 			return matchesTitle && matchesStatus && matchesSection;
 		});
