@@ -109,6 +109,7 @@ export interface PlanningChange {
     professor       : OfferSectionProffesor | null;
     spaceSize       : Size                  | null;
     sessionId       : string                | null;
+    session         : { sectionId: string } | null;
     sectionId       : string                | null;
     createdAt       : Date;
     updatedAt       : Date;
