@@ -216,9 +216,7 @@ export function RequestMain({
             <RequestForm
                 isOpen      = { isFormOpen }
                 onClose     = { () => setIsFormOpen( false )}
-                // onSuccess   = { handleFormSuccess }
                 request     = { editingRequest || undefined }
-                facultyId   = { facultyId || '' }
             />
 
             {/* Delete Confirmation Dialog */}
