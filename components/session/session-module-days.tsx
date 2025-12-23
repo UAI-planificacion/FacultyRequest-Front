@@ -23,8 +23,8 @@ interface Props {
     dayModuleIds        : number[];
     onDayModuleIdsChange: ( dayModuleIds: number[] ) => void;
     enabled             : boolean;
-    multiple            ?: boolean;
-    onDayModuleSelect   ?: ( dayModuleId: number | null ) => void;
+    multiple?           : boolean;
+    onDayModuleSelect?  : ( dayModuleId: number | null ) => void;
 }
 
 
@@ -52,13 +52,8 @@ export function SessionModuleDays({
 	} = useQuery({
 		queryKey    : [KEY_QUERYS.MODULES, 'dayModule'],
 		queryFn     : () => fetchApi<DayModule[]>({ url: 'modules/dayModule' }),
-		// enabled     : enabled && !multiple,
-		enabled     : enabled,
+		enabled,
 	});
-
-
-
-	console.log('🚀 ~ file: session-module-days.tsx:61 ~ dayModules:', dayModules );
 
 
     const availableDays = useMemo(() => {
@@ -86,7 +81,6 @@ export function SessionModuleDays({
 
 
     const [animationKeys, setAnimationKeys] = useState<Record<string, number>>({});
-
 
     // Convert dayModuleIds to a Set of "dayId-moduleId" strings for quick lookup
     const checkedStates = useMemo(() => {
@@ -118,10 +112,10 @@ export function SessionModuleDays({
         }));
 
         // Buscar el dayModuleId correspondiente
-        const dayId     = parseInt( day );
-        const modId     = parseInt( moduleId );
-        const dayModule = dayModules.find( dm => dm.dayId === dayId && dm.moduleId === modId );
-        const dayModuleId = dayModule?.id;
+        const dayId         = parseInt( day );
+        const modId         = parseInt( moduleId );
+        const dayModule     = dayModules.find( dm => dm.dayId === dayId && dm.moduleId === modId );
+        const dayModuleId   = dayModule?.id;
 
         if ( !dayModuleId ) {
             console.error('No se encontró el dayModuleId para', { dayId, modId });
@@ -196,7 +190,7 @@ export function SessionModuleDays({
                                         Módulos
                                     </TableHead>
 
-                                    {availableDays.map((day) => (
+                                    { availableDays.map(( day ) => (
                                         <TableHead
                                             key         = { day.id }
                                             className   = "text-center w-20 min-w-20 px-2 whitespace-nowrap bg-background"
@@ -214,8 +208,8 @@ export function SessionModuleDays({
                 <div className="overflow-x-auto ">
                     <Table>
                         <TableBody>
-                            {modulesWithDays.map((module) => (
-                                <TableRow key={module.id}>
+                            { modulesWithDays.map(( module ) => (
+                                <TableRow key={ module.id }>
                                     <TableCell
                                         className   = "sticky left-0 bg-background z-10 w-32 min-w-32 p-3 border-r shadow-md text-xs truncate"
                                         title       = { `${ module.name } ${ module.difference ?? '' } ${ module.startHour }-${ module.endHour }` }
@@ -223,7 +217,7 @@ export function SessionModuleDays({
                                         { module.name } { module.difference ?? '' } { module.startHour }-{ module.endHour }
                                     </TableCell>
 
-                                    {availableDays.map( day => {
+                                    { availableDays.map( day => {
                                         // Verificar si este módulo está disponible en este día
                                         const isModuleAvailableOnDay = module.days.includes( day.id );
 
@@ -237,14 +231,14 @@ export function SessionModuleDays({
                                                 }`}
                                                 onClick     = {() => {
                                                     if ( !isModuleAvailableOnDay ) return;
-                                                    
+
                                                     const currentChecked = isChecked( day.id.toString(), module.id.toString() );
-                                                    
+
                                                     // Si es modo single y estamos marcando una nueva celda, limpiar selecciones previas
                                                     if ( !multiple && !currentChecked ) {
                                                         // El handleCheckboxChange ya maneja el reemplazo en modo single
                                                     }
-                                                    
+
                                                     handleCheckboxChange( day.id.toString(), module.id.toString(), !currentChecked );
                                                 }}
                                             >
