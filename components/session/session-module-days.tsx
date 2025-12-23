@@ -19,17 +19,9 @@ import { KEY_QUERYS }   from "@/consts/key-queries";
 import { fetchApi }     from "@/services/fetch";
 
 
-interface RequestDetailModule {
-    id?          : string;
-    day          : string;
-    moduleId     : string;
-    dayModuleId? : number;
-}
-
-
 interface Props {
-    requestDetailModule : RequestDetailModule[];
-    onModuleToggle      : ( day: string, moduleId: string, isChecked: boolean, dayModuleId?: number ) => void;
+    dayModuleIds        : number[];
+    onDayModuleIdsChange: ( dayModuleIds: number[] ) => void;
     enabled             : boolean;
     multiple            ?: boolean;
     onDayModuleSelect   ?: ( dayModuleId: number | null ) => void;
@@ -37,8 +29,8 @@ interface Props {
 
 
 export function SessionModuleDays({
-    requestDetailModule,
-    onModuleToggle,
+    dayModuleIds,
+    onDayModuleIdsChange,
     enabled,
     multiple = true,
     onDayModuleSelect
@@ -63,6 +55,8 @@ export function SessionModuleDays({
 		// enabled     : enabled && !multiple,
 		enabled     : enabled,
 	});
+
+
 
 	console.log('🚀 ~ file: session-module-days.tsx:61 ~ dayModules:', dayModules );
 
@@ -94,18 +88,24 @@ export function SessionModuleDays({
     const [animationKeys, setAnimationKeys] = useState<Record<string, number>>({});
 
 
+    // Convert dayModuleIds to a Set of "dayId-moduleId" strings for quick lookup
     const checkedStates = useMemo(() => {
-        const states: Record<string, boolean> = {};
+        const states: Record<string, number> = {}; // key: "dayId-moduleId", value: dayModuleId
 
-        requestDetailModule.forEach(item => {
-            states[`${item.day}-${item.moduleId}`] = true;
+        dayModuleIds.forEach( dayModuleId => {
+            const dayModule = dayModules.find( dm => dm.id === dayModuleId );
+            if ( dayModule ) {
+                const key = `${dayModule.dayId}-${dayModule.moduleId}`;
+                states[key] = dayModuleId;
+            }
         });
+
         return states;
-    }, [requestDetailModule]);
+    }, [ dayModuleIds, dayModules ]);
 
 
     const isChecked = useCallback(( day: string, moduleId: string ): boolean => {
-        return checkedStates[`${day}-${moduleId}`] || false;
+        return !!checkedStates[`${day}-${moduleId}`];
     }, [checkedStates]);
 
 
@@ -123,17 +123,38 @@ export function SessionModuleDays({
         const dayModule = dayModules.find( dm => dm.dayId === dayId && dm.moduleId === modId );
         const dayModuleId = dayModule?.id;
 
+        if ( !dayModuleId ) {
+            console.error('No se encontró el dayModuleId para', { dayId, modId });
+            return;
+        }
+
         // Si es modo single, pasar el dayModuleId al callback
         if ( !multiple && onDayModuleSelect ) {
-            if ( checked && dayModuleId ) {
+            if ( checked ) {
                 onDayModuleSelect( dayModuleId );
             } else {
                 onDayModuleSelect( null );
             }
         }
 
-        onModuleToggle( day, moduleId, checked, dayModuleId );
-    }, [ onModuleToggle, multiple, onDayModuleSelect, dayModules ]);
+        // Actualizar el array de dayModuleIds
+        let newDayModuleIds: number[];
+
+        if ( checked ) {
+            // Agregar el nuevo dayModuleId
+            if ( multiple ) {
+                newDayModuleIds = [...dayModuleIds, dayModuleId];
+            } else {
+                // En modo single, reemplazar todo el array
+                newDayModuleIds = [dayModuleId];
+            }
+        } else {
+            // Remover el dayModuleId
+            newDayModuleIds = dayModuleIds.filter( id => id !== dayModuleId );
+        }
+
+        onDayModuleIdsChange( newDayModuleIds );
+    }, [ dayModuleIds, onDayModuleIdsChange, multiple, onDayModuleSelect, dayModules ]);
 
 
     if ( isLoadingModules || isLoadingDayModules ) {
@@ -219,12 +240,9 @@ export function SessionModuleDays({
                                                     
                                                     const currentChecked = isChecked( day.id.toString(), module.id.toString() );
                                                     
-                                                    // Si es modo single, limpiar selecciones previas
+                                                    // Si es modo single y estamos marcando una nueva celda, limpiar selecciones previas
                                                     if ( !multiple && !currentChecked ) {
-                                                        // Desmarcar todas las celdas
-                                                        requestDetailModule.forEach( item => {
-                                                            onModuleToggle( item.day, item.moduleId, false );
-                                                        });
+                                                        // El handleCheckboxChange ya maneja el reemplazo en modo single
                                                     }
                                                     
                                                     handleCheckboxChange( day.id.toString(), module.id.toString(), !currentChecked );
